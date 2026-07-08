@@ -54,7 +54,8 @@ def render_text_page(
         text: Text content to render (may include newlines).
         canvas_width: Fixed canvas width in pixels (default 1024).
         font_size: Font size in points (default 14, minimum 14 per conservative settings).
-        font_path: Path to a .ttf file (default uses Pillow default).
+        font_path: Path to a .ttf file (default: search for DejaVu Sans Mono,
+            Liberation Mono, or fall back to Pillow default).
         background_color: Canvas background color.
         text_color: Text color.
 
@@ -97,7 +98,31 @@ def render_log_mel_spectrogram(
     #   compute mel spectrogram, convert to dB, normalize, render as image.
 ```
 
-- [ ] **Step 3: Write tests for render utilities**
+- [ ] **Step 3: Create deterministic test fixtures**
+
+    ```python
+    # Generate synthetic audio tones for spectrogram tests.
+    # Run before Step 4 (test writing).
+    import numpy as np
+    import soundfile as sf
+    import os
+
+    os.makedirs("tests/fixtures", exist_ok=True)
+
+    sr = 16000
+    t_5s = np.linspace(0, 5.0, int(sr * 5.0), endpoint=False)
+    tone_5s = 0.5 * np.sin(2 * np.pi * 440 * t_5s)
+    sf.write("tests/fixtures/test_tone.wav", tone_5s, sr)
+
+    t_15s = np.linspace(0, 15.0, int(sr * 15.0), endpoint=False)
+    tone_15s = 0.5 * np.sin(2 * np.pi * 440 * t_15s)
+    sf.write("tests/fixtures/test_15s_tone.wav", tone_15s, sr)
+    ```
+
+    Also create `tests/fixtures/__init__.py` (empty) and ensure
+    `data/preprocessing/__init__.py` exists (empty, per project structure).
+
+- [ ] **Step 4: Write tests for render utilities**
 
 ```python
 def test_render_text_page_creates_image():
@@ -122,27 +147,28 @@ def test_render_log_mel_spectrogram_central_window():
     assert isinstance(img, Image.Image)
 ```
 
-- [ ] **Step 4: Run tests to verify they fail**
+- [ ] **Step 6: Run tests to verify they fail**
 
 Run: `python -m pytest tests/test_render_utils.py -v`
 Expected: FAIL with import errors (render_text_page etc. not yet implemented)
 
-- [ ] **Step 5: Implement both rendering functions**
+- [ ] **Step 7: Implement both rendering functions**
 
 Implement `render_text_page` using `PIL.ImageDraw` with text wrapping. Implement `render_log_mel_spectrogram` using `librosa` to compute the mel spectrogram, convert to dB, normalize to 0-255, and render with `matplotlib` or raw PIL.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [ ] **Step 8: Run tests to verify they pass**
 
 Run: `python -m pytest tests/test_render_utils.py -v`
 Expected: PASS
 
-- [ ] **Step 7: Create requirements-preprocessing.txt**
+- [ ] **Step 9: Create requirements-preprocessing.txt**
 
 ```
 Pillow>=10.0.0
 librosa>=0.10.0
 numpy>=1.24.0
 matplotlib>=3.7.0
+datasets>=2.14.0
 ```
 
 ### Task 2: LibriSpeech ASR preprocessing
@@ -177,7 +203,11 @@ def test_librispeech_asr_metadata_present():
     row = dataset[0]
     assert "source_dataset_id" in row
     assert row["source_dataset_id"] == "openslr/librispeech_asr"
-    assert "modality_label" in row or "target_type" in row
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert "modality_label" in row
+    assert "preprocessing_version" in row
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -187,7 +217,7 @@ Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_librispeech_asr`**
 
-Load `openslr/librispeech_asr` via `datasets.load_dataset`. For each row, load audio, call `render_log_mel_spectrogram`, construct `messages` with spectrogram image + `Transcribe the speech represented by this spectrogram image.` as user, transcript as assistant. Add source metadata.
+Load `openslr/librispeech_asr` via `datasets.load_dataset`. For each row, load audio, call `render_log_mel_spectrogram`, construct `messages` with spectrogram image + `Transcribe the speech represented by this spectrogram image.` as user, transcript as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"openslr/librispeech_asr"`), `split`, `row_id` (unique per split), `render_config` (spectrogram params used), `modality_label` (`"audio"`), `preprocessing_version` (semantic version string).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -214,16 +244,26 @@ def test_densefusion_preprocess_generates_messages():
     assert user_content[0]["type"] == "image"  # source image first
     assert user_content[1]["type"] == "text"
     assert "describe" in user_content[1]["text"].lower()
+
+def test_densefusion_metadata_present():
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    row = dataset[0]
+    assert row["source_dataset_id"] == "BAAI/DenseFusion-1M"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "image-text"
+    assert "preprocessing_version" in row
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2**
 
 Run: `python -m pytest tests/test_densefusion.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_densefusion`**
 
-Load a `BAAI/DenseFusion-1M` subset, preserve source image, construct `messages` with image + `Describe this image.` as user, description as assistant. Include metadata.
+Load a `BAAI/DenseFusion-1M` subset, preserve source image, construct `messages` with image + `Describe this image.` as user, description as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"BAAI/DenseFusion-1M"`), `split`, `row_id`, `render_config`, `modality_label` (`"image-text"`), `preprocessing_version`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -250,16 +290,26 @@ def test_fineweb_edu_preprocess_generates_messages():
     # assistant text should match the raw text that was rendered
     assistant_text = row["messages"][1]["content"][0]["text"]
     assert len(assistant_text) > 0
+
+def test_fineweb_edu_metadata_present():
+    dataset = preprocess_fineweb_edu(max_samples=1, max_chars=2000)
+    row = dataset[0]
+    assert row["source_dataset_id"] == "HuggingFaceFW/fineweb-edu"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "text"
+    assert "preprocessing_version" in row
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2**
 
 Run: `python -m pytest tests/test_fineweb_edu.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_fineweb_edu`**
 
-Load `HuggingFaceFW/fineweb-edu`, chunk text rows, call `render_text_page`, construct `messages` with rendered image + `Transcribe the text shown in the image.` as user, raw text as assistant. Include metadata.
+Load `HuggingFaceFW/fineweb-edu`, chunk text rows, call `render_text_page`, construct `messages` with rendered image + `Transcribe the text shown in the image.` as user, raw text as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"HuggingFaceFW/fineweb-edu"`), `split`, `row_id`, `render_config`, `modality_label` (`"text"`), `preprocessing_version`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -284,16 +334,26 @@ def test_smoltalk_preprocess_generates_messages():
     assert user_content[0]["type"] == "image"
     assert "follow" in user_content[1]["text"].lower()
     assert row["messages"][1]["role"] == "assistant"
+
+def test_smoltalk_metadata_present():
+    dataset = preprocess_smoltalk(max_samples=1)
+    row = dataset[0]
+    assert row["source_dataset_id"] == "HuggingFaceTB/smoltalk"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "text"
+    assert "preprocessing_version" in row
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2**
 
 Run: `python -m pytest tests/test_smoltalk.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_smoltalk`**
 
-Load `HuggingFaceTB/smoltalk`, extract instruction/user turn, call `render_text_page`, construct `messages` with rendered instruction image + `Follow the instruction shown in the image.` as user, response as assistant. Include metadata.
+Load `HuggingFaceTB/smoltalk`, extract instruction/user turn, call `render_text_page`, construct `messages` with rendered instruction image + `Follow the instruction shown in the image.` as user, response as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"HuggingFaceTB/smoltalk"`), `split`, `row_id`, `render_config`, `modality_label` (`"text"`), `preprocessing_version`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -333,16 +393,26 @@ def test_valor32k_image_count_by_modality():
             assert len(images) == 2  # 1 question + 1 spectrogram
         elif modality == "audio-visual":
             assert len(images) == 6  # 1 question + 1 spectrogram + 4 frames
+
+def test_valor32k_metadata_present():
+    dataset = preprocess_valor32k(max_samples=1)
+    row = dataset[0]
+    assert row["source_dataset_id"] == "inesriahi/valor32k-avqa-v2"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] in ("visual", "audio", "audio-visual")
+    assert "preprocessing_version" in row
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2**
 
 Run: `python -m pytest tests/test_valor32k.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_valor32k`**
 
-Load `inesriahi/valor32k-avqa-v2`. For each row, render question + options via `render_text_page`. For `audio`/`audio-visual`, extract audio and render spectrogram. For `visual`/`audio-visual`, sample 4 video frames. Construct `messages` in fixed order: question image, spectrogram (if present), frames (if present), then `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.` Assistant: single letter answer. Use train split for training sets, validation/test for eval sets. Include full metadata.
+Load `inesriahi/valor32k-avqa-v2`. For each row, render question + options via `render_text_page`. For `audio`/`audio-visual`, extract audio and render spectrogram. For `visual`/`audio-visual`, sample 4 video frames. Construct `messages` in fixed order: question image, spectrogram (if present), frames (if present), then `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.` Assistant: single letter answer. Use train split for training sets, validation/test for eval sets. Attach all 6 metadata fields: `source_dataset_id` (`"inesriahi/valor32k-avqa-v2"`), `split`, `row_id`, `render_config`, `modality_label` (`"visual"`/`"audio"`/`"audio-visual"`), `preprocessing_version`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -375,7 +445,13 @@ def test_merge_mixture_preserves_metadata():
         "librispeech": preprocess_librispeech_asr(max_samples=2),
     }
     merged = merge_and_shuffle(sources, seed=42)
-    assert "source_dataset_id" in merged[0]
+    row = merged[0]
+    assert "source_dataset_id" in row
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert "modality_label" in row
+    assert "preprocessing_version" in row
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -390,6 +466,67 @@ Concatenate all source datasets, shuffle with a fixed seed, push to Hugging Face
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `python -m pytest tests/test_merge_mixture.py -v`
+Expected: PASS
+
+- [ ] **Step 5: Write CLI entry-point test**
+
+```python
+import subprocess
+import tempfile
+
+def test_merge_mixture_cli():
+    with tempfile.TemporaryDirectory() as tmp:
+        result = subprocess.run(
+            [
+                "python", "-m", "data.preprocessing.merge_mixture",
+                "--librispeech-samples", "2",
+                "--densefusion-samples", "2",
+                "--fineweb-samples", "2",
+                "--smoltalk-samples", "2",
+                "--valor32k-samples", "2",
+                "--output", tmp,
+                "--seed", "42",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+        # Verify output dataset exists and is loadable
+        import datasets
+        ds = datasets.load_dataset(tmp, split="train")
+        assert len(ds) == 10
+        assert "messages" in ds[0]
+        assert "source_dataset_id" in ds[0]
+        assert "modality_label" in ds[0]
+```
+
+- [ ] **Step 6: Run CLI test to verify it fails**
+
+Run: `python -m pytest tests/test_merge_mixture.py::test_merge_mixture_cli -v`
+Expected: FAIL (no `__main__` block or argparse)
+
+- [ ] **Step 7: Implement CLI entry point**
+
+Add `if __name__ == "__main__"` block to `merge_mixture.py` using `argparse`. Accept per-source `--*-samples N` flags, `--output PATH`, and `--seed INT` (default 42). Load each source preprocessor with the given sample count, call `merge_and_shuffle`, write the merged dataset to `--output` via `datasets.Dataset.save_to_disk`.
+
+```python
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--librispeech-samples", type=int, default=0)
+    parser.add_argument("--densefusion-samples", type=int, default=0)
+    parser.add_argument("--fineweb-samples", type=int, default=0)
+    parser.add_argument("--smoltalk-samples", type=int, default=0)
+    parser.add_argument("--valor32k-samples", type=int, default=0)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    # ... build sources dict, call merge_and_shuffle, save
+```
+
+- [ ] **Step 8: Run CLI test to verify it passes**
+
+Run: `python -m pytest tests/test_merge_mixture.py::test_merge_mixture_cli -v`
 Expected: PASS
 
 ### Task 8: Integration validation
@@ -425,7 +562,7 @@ Confirm each row has `messages` list with valid image objects and text content. 
 - [ ] End-to-end materialization script produces a valid dataset with 5+ source examples
 - [ ] Every user message has images before text instruction
 - [ ] No user message contains native answer-bearing content
-- [ ] Source metadata is present for every row (source_dataset_id, modality_label/ target_type, preprocessing version)
+- [ ] Source metadata is present for every row with all 6 required fields: `source_dataset_id`, `split`, `row_id`, `render_config`, `modality_label`, `preprocessing_version`
 - [ ] Dataset can be loaded by `datasets.load_dataset` and iterated without errors
 
 ## Handoff Notes
