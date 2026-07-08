@@ -27,6 +27,7 @@ def render_text_page(
     background_color: str = "white",
     text_color: str = "black",
 ) -> Image.Image:
+    font_size = max(font_size, 14)
     font_file = _find_font(font_path)
     if font_file is not None:
         font = ImageFont.truetype(font_file, font_size)
