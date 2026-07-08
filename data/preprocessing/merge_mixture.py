@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 
 from datasets import Dataset, concatenate_datasets
 
@@ -10,10 +9,7 @@ def merge_and_shuffle(sources: dict[str, Dataset], seed: int = 42) -> Dataset:
     non_empty = {name: ds for name, ds in sources.items() if len(ds) > 0}
     if not non_empty:
         raise ValueError("No non-empty sources provided to merge.")
-    datasets_to_merge = []
-    for ds in non_empty.values():
-        datasets_to_merge.append(ds)
-    merged = concatenate_datasets(datasets_to_merge)
+    merged = concatenate_datasets(list(non_empty.values()))
     shuffled = merged.shuffle(seed=seed)
     return shuffled
 

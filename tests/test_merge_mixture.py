@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import json
 import tempfile
-from argparse import ArgumentError
 
 import pytest
 from datasets import Dataset, load_from_disk
 from PIL import Image
 
+from data.preprocessing.densefusion import preprocess_densefusion
+from data.preprocessing.fineweb_edu import preprocess_fineweb_edu
+from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
 from data.preprocessing.merge_mixture import merge_and_shuffle, main as cli_main
+from data.preprocessing.smoltalk import preprocess_smoltalk
 
 
 def _make_row(source_id: str, idx: int) -> dict:
@@ -212,7 +215,7 @@ def test_cli_zero_per_source_raises(tmp_path, monkeypatch):
 
 
 def test_cli_rejects_valor32k():
-    with pytest.raises((ArgumentError, SystemExit)):
+    with pytest.raises(SystemExit):
         cli_main([
             "--valor32k-samples", "2",
             "--output", "/tmp/ignored",
@@ -239,6 +242,187 @@ def test_cli_single_source(tmp_path, monkeypatch):
     assert len(loaded) == 3
 
 
+def test_merge_mixture_real_preprocessors_with_mocks(tmp_path, monkeypatch):
+    _mock_image = Image.new("RGB", (64, 64))
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _LibriMock(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        lambda *a, **kw: _mock_image,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _DenseMock(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        lambda *a, **kw: _FineWebMock(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        lambda *a, **kw: _mock_image,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _SmolTalkMock(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        lambda *a, **kw: _mock_image,
+    )
+
+    libri = preprocess_librispeech_asr(max_samples=1)
+    dense = preprocess_densefusion(max_samples=1)
+    fineweb = preprocess_fineweb_edu(max_samples=1)
+    smoltalk = preprocess_smoltalk(max_samples=1)
+
+    sources = {
+        "librispeech": libri,
+        "densefusion": dense,
+        "fineweb": fineweb,
+        "smoltalk": smoltalk,
+    }
+    merged = merge_and_shuffle(sources, seed=42)
+    assert len(merged) == 4
+    for row in merged:
+        assert "messages" in row
+        assert len(row["messages"]) == 2
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        merged.save_to_disk(tmpdir)
+        loaded = load_from_disk(tmpdir)
+    assert len(loaded) == 4
+    for row in loaded:
+        assert "messages" in row
+        assert "source_dataset_id" in row
+        assert "split" in row
+        assert "row_id" in row
+        assert "render_config" in row
+
+
+class _LibriMock:
+    def __init__(self, num_rows):
+        self._rows = [
+            {
+                "audio": {"array": __import__("numpy").zeros(16000, dtype="float32"), "sampling_rate": 16000},
+                "text": f"transcript {i}",
+                "id": f"test-{i}",
+            }
+            for i in range(num_rows)
+        ]
+
+    def __len__(self):
+        return len(self._rows)
+
+    @property
+    def column_names(self):
+        return list(self._rows[0]) if self._rows else []
+
+    def select(self, indices):
+        ds = _LibriMock.__new__(_LibriMock)
+        ds._rows = [self._rows[i] for i in indices]
+        return ds
+
+    def map(self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None):
+        kwargs = fn_kwargs or {}
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            result_rows.append(function(row, i, **kwargs) if with_indices else function(row, **kwargs))
+        return Dataset.from_list(result_rows)
+
+
+class _DenseMock:
+    def __init__(self, num_rows):
+        import numpy as np
+        self._rows = [
+            {
+                "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
+                "description": f"a photo of sample {i}",
+                "id": f"test-{i}",
+            }
+            for i in range(num_rows)
+        ]
+
+    def __len__(self):
+        return len(self._rows)
+
+    @property
+    def column_names(self):
+        return list(self._rows[0]) if self._rows else []
+
+    def select(self, indices):
+        ds = _DenseMock.__new__(_DenseMock)
+        ds._rows = [self._rows[i] for i in indices]
+        return ds
+
+    def map(self, function, *, with_indices=False, remove_columns=None):
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            result_rows.append(function(row, i) if with_indices else function(row))
+        return Dataset.from_list(result_rows)
+
+
+class _FineWebMock:
+    def __init__(self, num_rows):
+        self._rows = [
+            {"text": f"educational text {i} " * 30, "id": f"test-{i}"}
+            for i in range(num_rows)
+        ]
+
+    def __len__(self):
+        return len(self._rows)
+
+    @property
+    def column_names(self):
+        return list(self._rows[0]) if self._rows else []
+
+    def select(self, indices):
+        ds = _FineWebMock.__new__(_FineWebMock)
+        ds._rows = [self._rows[i] for i in indices]
+        return ds
+
+    def map(self, function, *, with_indices=False, remove_columns=None):
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            result_rows.append(function(row, i) if with_indices else function(row))
+        return Dataset.from_list(result_rows)
+
+
+class _SmolTalkMock:
+    def __init__(self, num_rows):
+        self._rows = [
+            {
+                "messages": [
+                    {"role": "user", "content": f"Write about {i}."},
+                    {"role": "assistant", "content": f"Here is text about {i}."},
+                ],
+                "id": f"test-{i}",
+            }
+            for i in range(num_rows)
+        ]
+
+    def __len__(self):
+        return len(self._rows)
+
+    @property
+    def column_names(self):
+        return list(self._rows[0]) if self._rows else []
+
+    def select(self, indices):
+        ds = _SmolTalkMock.__new__(_SmolTalkMock)
+        ds._rows = [self._rows[i] for i in indices]
+        return ds
+
+    def map(self, function, *, with_indices=False, remove_columns=None):
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            result_rows.append(function(row, i) if with_indices else function(row))
+        return Dataset.from_list(result_rows)
+
+
 def test_cli_output_message(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
@@ -252,5 +436,5 @@ def test_cli_output_message(tmp_path, capsys, monkeypatch):
         "--seed", "7",
     ])
     captured = capsys.readouterr()
-    assert str(outdir) in captured.out
-    assert "2" in captured.out
+    assert f"saved to {outdir}" in captured.out
+    assert "with 2 rows" in captured.out
