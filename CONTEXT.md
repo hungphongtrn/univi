@@ -48,6 +48,14 @@ _Avoid_: label leakage, transcript unless discussing audio data specifically
 The model used to test whether visual unification is competitive before custom architecture work.
 _Avoid_: foundation model, backbone unless architecture is the focus
 
+**Image-Only Lane**:
+The experimental baseline lane where rendered text, rendered audio, and natural images are passed as image inputs while native text/audio content is withheld.
+_Avoid_: visual baseline unless native modality paths are explicitly disabled
+
+**Native Upper Bound**:
+The comparison lane where the same model may use its native text, audio, and image pathways.
+_Avoid_: baseline when the distinction from the image-only lane matters
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -58,6 +66,7 @@ _Avoid_: foundation model, backbone unless architecture is the focus
 - The first multi-turn proof uses a two-turn **Compact Transcript Layout**.
 - **Oracle Text** exists for rendered text and transcribed audio datasets, but should not be assumed available to the model at inference time.
 - `google/gemma-4-E2B` is the current candidate **Baseline Model**.
+- The **Image-Only Lane** tests the visual-unification claim; the **Native Upper Bound** estimates the performance lost by forbidding native text/audio paths.
 
 ## Example Dialogue
 
@@ -69,4 +78,4 @@ _Avoid_: foundation model, backbone unless architecture is the focus
 - "Audio-as-Image" resolved for the first proof: use **Log-Mel Spectrogram Image** rather than waveform plots or learned audio renderings.
 - "Single visual modality" resolved for multi-turn: prior user turns, assistant turns, and the current user turn belong in a **Fully Visual Transcript** rather than native text history.
 - "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
-- "Baseline" is unresolved: Gemma 4 E2B has native text, image, and audio support, so the experiment must define whether it is used as-is, constrained to image inputs, or fine-tuned against visualized inputs.
+- "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.

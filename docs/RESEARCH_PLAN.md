@@ -15,7 +15,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 1. What visual token budget can support a two-turn compact fully visual transcript?
 2. What does the model see at turn 2 when the answer depends on turn 1?
 3. Is the goal competitive performance, a compression experiment, a unified data pipeline, or architectural simplicity?
-4. How will the baseline be constrained so Gemma 4 E2B does not use native audio/text pathways when the experiment claims visual unification?
+4. What exact success and failure thresholds make the first proof falsifiable?
 5. What audio duration, mel-bin count, and image dimensions fit the first token budget?
 
 ## Minimum Viable Experiment
@@ -24,14 +24,14 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 - Render QA prompts into images.
 - Fine-tune or prompt the baseline to answer from rendered text only.
-- Compare against the same prompts passed as native text.
+- Compare the image-only lane against a native-text upper bound.
 - Failure signal: OCR or reasoning collapses under shuffled, random, or dense text where linguistic priors cannot fill gaps.
 
 ### Phase 2: Audio-as-Image Single-Turn
 
 - Convert short speech clips to log-mel spectrogram images.
 - Ask transcript or content questions from the rendered audio image.
-- Compare against a native ASR plus LLM pipeline and Gemma 4 E2B native audio if available.
+- Compare the image-only lane against Gemma 4 E2B native audio and an ASR plus LLM pipeline if available.
 - Failure signal: the visual audio path cannot recover speech content above a weak baseline.
 
 ### Phase 3: Mixed Visual Inputs
@@ -62,6 +62,12 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Gemma 4 E2B has native audio and text paths, so the baseline must be constrained or the experiment will not isolate visual unification.
 - Fully visual multi-turn context requires repeatedly re-encoding conversation history instead of using cheap text KV-cache behavior.
 
+## Baseline Protocol
+
+- **Image-only lane**: pass rendered text, rendered audio, natural images, and fully visual transcripts as images; withhold native text/audio equivalents except fixed task instructions needed to query the model.
+- **Native upper bound**: run the same examples through Gemma 4 E2B's native text, audio, and image pathways to estimate the cost of visual unification.
+- Report both lanes together; do not claim visual unification works from native-lane results.
+
 ## Related Work Pointers
 
 - DeepSeek-OCR and DeepSeek-OCR 2: optical context compression, variable visual token budgets, and visual causal flow.
@@ -77,4 +83,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Constrain the Gemma 4 E2B baseline so the visual-unification experiment does not silently use native text or audio paths.
+Choose success and failure thresholds for the first proof.
