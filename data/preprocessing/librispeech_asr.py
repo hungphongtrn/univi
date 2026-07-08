@@ -26,8 +26,8 @@ def _render_defaults(*, sample_rate: int, n_mels: int) -> dict:
 
 
 def preprocess_librispeech_asr(
-    subset: str = "clean-100",
-    split: str = "train",
+    subset: str = "clean",
+    split: str = "train.100",
     max_samples: int | None = None,
     sample_rate: int = 16000,
     n_mels: int = 80,

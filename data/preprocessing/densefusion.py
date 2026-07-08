@@ -37,7 +37,7 @@ def _resolve_image(value: object) -> Image.Image:
 
 
 def preprocess_densefusion(
-    subset: str = "default",
+    subset: str = "DenseFusion-4V-100K",
     split: str = "train",
     max_samples: int | None = None,
 ) -> Dataset:
