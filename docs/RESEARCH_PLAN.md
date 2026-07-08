@@ -12,7 +12,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 ## Core Questions
 
-1. What transcript layout and visual token budget can support a fully visual multi-turn conversation?
+1. What visual token budget can support a two-turn compact fully visual transcript?
 2. What does the model see at turn 2 when the answer depends on turn 1?
 3. Is the goal competitive performance, a compression experiment, a unified data pipeline, or architectural simplicity?
 4. What visual representation of audio is in scope for the first proof-of-concept?
@@ -43,8 +43,8 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 ### Phase 4: Fully Visual Multi-Turn
 
 - Construct two-turn examples where turn 2 requires turn 1 context.
-- Render prior user turns, assistant turns, and the current user turn into a fully visual transcript.
-- Compare at least two transcript layouts before scaling: compact document layout and chat-style layout.
+- Render prior user turns, assistant turns, and the current user turn into a compact document-like visual transcript.
+- Defer chat-style screenshots until the compact layout works, so early failures are less likely to be caused by wasted pixels.
 - Failure signal: context length grows faster than the model can process, or turn-2 accuracy drops to near single-turn/no-context baselines.
 
 ## Dataset Notes
@@ -77,4 +77,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the transcript layout and maximum supported conversation length for the first multi-turn dataset.
+Choose the audio rendering method for the first audio-as-image dataset.

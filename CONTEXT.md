@@ -32,6 +32,10 @@ _Avoid_: chat screenshot unless the layout intentionally mimics a chat UI
 A multi-turn conversation format where the model sees conversation history as pixels rather than native text tokens.
 _Avoid_: visual inputs plus text history, hybrid transcript
 
+**Compact Transcript Layout**:
+A dense document-like rendering of a fully visual transcript with role labels and minimal whitespace.
+_Avoid_: chat UI, chat bubbles, screenshot layout
+
 **Oracle Text**:
 The ground-truth text known during dataset creation but not directly available to the model when it only receives rendered pixels.
 _Avoid_: label leakage, transcript unless discussing audio data specifically
@@ -46,6 +50,7 @@ _Avoid_: foundation model, backbone unless architecture is the focus
 - A **Visual Turn** may contain one or more **Text-as-Image**, **Audio-as-Image**, or **Natural Image** inputs.
 - A **Fully Visual Transcript** preserves multi-turn history by rendering prior turns into a **Composite Conversation Image**.
 - A **Visual Turn** in the fully visual scope depends on the transcript renderer to include enough prior context for follow-up reasoning.
+- The first multi-turn proof uses a two-turn **Compact Transcript Layout**.
 - **Oracle Text** exists for rendered text and transcribed audio datasets, but should not be assumed available to the model at inference time.
 - `google/gemma-4-E2B` is the current candidate **Baseline Model**.
 
@@ -58,5 +63,5 @@ _Avoid_: foundation model, backbone unless architecture is the focus
 
 - "Audio-as-Image" is unresolved: candidates include mel-spectrograms, log-mel spectrograms, waveform plots, or learned audio image/token renderings.
 - "Single visual modality" resolved for multi-turn: prior user turns, assistant turns, and the current user turn belong in a **Fully Visual Transcript** rather than native text history.
-- "Multi-turn" partially resolved: the experiment should use a fully visual transcript, but the layout, maximum turns, and image/token budget are still unresolved.
+- "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
 - "Baseline" is unresolved: Gemma 4 E2B has native text, image, and audio support, so the experiment must define whether it is used as-is, constrained to image inputs, or fine-tuned against visualized inputs.
