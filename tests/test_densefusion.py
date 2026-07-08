@@ -1,0 +1,268 @@
+from __future__ import annotations
+
+import tempfile
+
+import pytest
+from datasets import Dataset, load_from_disk
+from PIL import Image
+
+from data.preprocessing.densefusion import (
+    _find_key,
+    preprocess_densefusion,
+)
+
+
+class _MockDenseFusion:
+    def __init__(self, num_rows=2, rows=None):
+        if rows is not None:
+            self._rows = rows
+        else:
+            self._rows = [
+                {
+                    "image": Image.new(
+                        "RGB", (32, 32), color=(100 + i * 50, 50, 200)
+                    ),
+                    "description": f"a photo of sample number {i}",
+                    "id": f"test-{i}",
+                }
+                for i in range(num_rows)
+            ]
+
+    def __len__(self):
+        return len(self._rows)
+
+    @property
+    def column_names(self):
+        return list(self._rows[0]) if self._rows else []
+
+    def select(self, indices):
+        ds = _MockDenseFusion.__new__(_MockDenseFusion)
+        ds._rows = [self._rows[i] for i in indices]
+        return ds
+
+    def map(self, function, *, with_indices=False, remove_columns=None):
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            if with_indices:
+                new_row = function(row, i)
+            else:
+                new_row = function(row)
+            result_rows.append(new_row)
+        return Dataset.from_list(result_rows)
+
+
+# --- _find_key unit tests ---
+
+
+def test_find_key_finds_first_match():
+    row = {"png": "x", "image": "y", "jpg": "z"}
+    assert _find_key(row, ["image", "jpg", "png"], "image") == "image"
+
+
+def test_find_key_falls_back():
+    row = {"png": "x"}
+    assert _find_key(row, ["image", "jpg", "png"], "image") == "png"
+
+
+def test_find_key_raises_on_missing():
+    row = {"other": "x"}
+    with pytest.raises(KeyError, match="image"):
+        _find_key(row, ["image", "jpg", "png"], "image")
+
+
+# --- Functional tests ---
+
+
+def test_densefusion_preprocess_generates_messages(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(2),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    assert len(dataset) == 2
+    row = dataset[0]
+    assert "messages" in row
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"
+    assert user_content[1]["type"] == "text"
+    assert "describe" in user_content[1]["text"].lower()
+
+
+def test_densefusion_metadata_present(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(1),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    row = dataset[0]
+    assert row["source_dataset_id"] == "BAAI/DenseFusion-1M"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "image-text"
+    assert "preprocessing_version" in row
+
+
+def test_user_instruction_does_not_contain_description(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(2),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    for row in dataset:
+        user_text = row["messages"][0]["content"][1]["text"]
+        description = row["messages"][1]["content"][0]["text"]
+        assert description not in user_text
+
+
+def test_save_load_round_trip(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(2),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=2)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        dataset.save_to_disk(tmpdir)
+        loaded = load_from_disk(tmpdir)
+
+    assert len(loaded) == 2
+    row = loaded[0]
+
+    assert "messages" in row
+    assert len(row["messages"]) == 2
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"
+    assert user_content[1]["type"] == "text"
+
+    assert row["source_dataset_id"] == "BAAI/DenseFusion-1M"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "image-text"
+    assert "preprocessing_version" in row
+
+
+def test_fallback_to_caption_key(monkeypatch):
+    rows = [
+        {
+            "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
+            "caption": "a cat sitting on a chair",
+            "id": "test-0",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    assert "cat" in dataset[0]["messages"][1]["content"][0]["text"]
+
+
+def test_fallback_to_jpg_key(monkeypatch):
+    rows = [
+        {
+            "jpg": Image.new("RGB", (32, 32), color=(200, 100, 50)),
+            "description": "a dog in the park",
+            "id": "test-0",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    assert dataset[0]["messages"][0]["content"][0]["type"] == "image"
+
+
+def test_missing_text_key_raises_key_error(monkeypatch):
+    rows = [
+        {
+            "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
+            "irrelevant": "whatever",
+            "id": "test-0",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    with pytest.raises(KeyError, match="description|caption|text|output"):
+        preprocess_densefusion(subset="default", max_samples=1)
+
+
+def test_missing_image_key_raises_key_error(monkeypatch):
+    rows = [
+        {
+            "description": "a description with no image",
+            "id": "test-0",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    with pytest.raises(KeyError, match="image|jpg|png"):
+        preprocess_densefusion(subset="default", max_samples=1)
+
+
+def test_subset_empty_no_name_param(monkeypatch):
+    recorded_kwargs = {}
+
+    def recording_load(*args, **kwargs):
+        recorded_kwargs["args"] = args
+        recorded_kwargs["kwargs"] = kwargs
+        return _MockDenseFusion(1)
+
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        recording_load,
+    )
+
+    preprocess_densefusion(subset="", max_samples=1)
+    assert "name" not in recorded_kwargs["kwargs"]
+
+
+def test_subset_none_no_name_param(monkeypatch):
+    recorded_kwargs = {}
+
+    def recording_load(*args, **kwargs):
+        recorded_kwargs["args"] = args
+        recorded_kwargs["kwargs"] = kwargs
+        return _MockDenseFusion(1)
+
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        recording_load,
+    )
+
+    preprocess_densefusion(subset=None, max_samples=1)  # type: ignore[arg-type]
+    assert "name" not in recorded_kwargs["kwargs"]
+
+
+def test_map_used_not_direct_iteration(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(2),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    assert len(dataset) == 2
+
+
+def test_max_samples_none(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(5),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=None)
+    assert len(dataset) == 5
