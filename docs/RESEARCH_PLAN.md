@@ -60,10 +60,12 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 ## Dataset Strategy
 
 - Start from public benchmark/data sources first rather than synthetic-only diagnostic data.
-- Text-as-image should use a public text QA or reasoning dataset rendered with controlled fonts, density, and layouts.
-- Audio-as-image should use public short speech clips with transcripts, rendered as log-mel spectrogram images.
-- Natural-image examples should use a public VQA-style dataset.
-- Fully visual multi-turn should use a public multi-turn or dialogue-style source where turn-2 dependency can be measured; if no suitable public source is selected, create only the minimum synthetic control needed for no-history comparison.
+- Prefer datasets that contain visual, audio, and text together.
+- Current first-cut recommendation: Valor32k-AVQA v2.0 for single-turn tri-modal work because it has video, audio, text QA, and per-question modality labels.
+- Current fallback: JointAVBench because it has released clips, Apache 2.0 repository license, and questions designed to require joint audio-visual reasoning.
+- Current small evaluation candidate: Daily-Omni for temporal audio-visual alignment.
+- Current multi-turn candidate: OmniInteract, deferred until the compact fully visual transcript pipeline is stable.
+- See `docs/DATASETS.md` for dataset research notes.
 
 ## Feasibility Risks
 
@@ -94,4 +96,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the exact public datasets and subset sizes for text-as-image, audio-as-image, natural-image, and fully visual multi-turn evaluation.
+Choose whether Valor32k-AVQA v2.0 is the first dataset of record, then choose subset sizes and rendering budgets.
