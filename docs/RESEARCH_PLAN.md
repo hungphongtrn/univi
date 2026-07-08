@@ -61,7 +61,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 - Start from public benchmark/data sources first rather than synthetic-only diagnostic data.
 - Prefer datasets that contain visual, audio, and text together.
-- Current first-cut recommendation: Valor32k-AVQA v2.0 for single-turn tri-modal work because it has video, audio, text QA, and per-question modality labels.
+- Dataset of record for Phases 1-3: Valor32k-AVQA v2.0 for single-turn tri-modal work because it has video, audio, text QA, and per-question modality labels.
 - Current fallback: JointAVBench because it has released clips, Apache 2.0 repository license, and questions designed to require joint audio-visual reasoning.
 - Current small evaluation candidate: Daily-Omni for temporal audio-visual alignment.
 - Current multi-turn candidate: OmniInteract, deferred until the compact fully visual transcript pipeline is stable.
@@ -96,4 +96,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose whether Valor32k-AVQA v2.0 is the first dataset of record, then choose subset sizes and rendering budgets.
+Choose rendering budgets for Valor32k-AVQA v2.0: text image dimensions, log-mel spectrogram dimensions, sampled frame count, and Gemma 4 E2B image token budget.

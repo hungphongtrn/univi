@@ -38,13 +38,13 @@ This project prefers public datasets that contain visual, audio, and text togeth
 - Useful labels: 1Q1A and 1QnA splits, real-time/proactive/nested interaction categories.
 - Fit for Univi: best current candidate for fully visual multi-turn/streaming evaluation, but too complex for the first single-turn MVP.
 
-## Recommended First Cut
+## Dataset Of Record
 
 Use Valor32k-AVQA v2.0 first for Phases 1-3 because it is large, public, tri-modal, and has per-question modality labels. Use the included test videos first to avoid YouTube availability issues.
 
 Keep JointAVBench as the fallback if Valor32k media access or licensing blocks progress. Add Daily-Omni as a small temporal-alignment evaluation once the rendering pipeline works. Defer OmniInteract until the compact two-turn transcript pipeline is stable.
 
-## Proposed Valor32k Usage
+## Valor32k Usage
 
 Dataset of interest: `inesriahi/valor32k-avqa-v2`, specifically the included test videos first.
 
@@ -87,7 +87,6 @@ Key failure criteria:
 
 ## Open Decisions
 
-- Whether to select Valor32k-AVQA v2.0 as the first dataset of record.
 - Exact subset sizes for the first run.
 - Frame sampling rate and maximum video duration.
 - Log-mel spectrogram settings for audio-as-image.

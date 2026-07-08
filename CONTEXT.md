@@ -68,6 +68,10 @@ _Avoid_: ablation unless the removed context is specified
 A dataset strategy that starts from established public datasets before synthetic diagnostic data.
 _Avoid_: synthetic-first, generated-only dataset
 
+**Dataset of Record**:
+The public dataset selected as the primary source for a phase of experiments.
+_Avoid_: candidate dataset, benchmark option after selection is resolved
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -82,6 +86,7 @@ _Avoid_: synthetic-first, generated-only dataset
 - A **Retention Metric** compares the **Image-Only Lane** to the **Native Upper Bound**.
 - A **No-History Control** is required for fully visual multi-turn evaluation.
 - The first dataset cut follows **Public Benchmark First** rather than synthetic-first.
+- Valor32k-AVQA v2.0 is the **Dataset of Record** for Phases 1-3.
 
 ## Example Dialogue
 
@@ -94,4 +99,4 @@ _Avoid_: synthetic-first, generated-only dataset
 - "Single visual modality" resolved for multi-turn: prior user turns, assistant turns, and the current user turn belong in a **Fully Visual Transcript** rather than native text history.
 - "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
 - "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.
-- "Dataset strategy" partially resolved: use public benchmarks/data first, but exact datasets and subset sizes are still unresolved.
+- "Dataset strategy" resolved for Phases 1-3: use Valor32k-AVQA v2.0 as the **Dataset of Record** with included test media first.
