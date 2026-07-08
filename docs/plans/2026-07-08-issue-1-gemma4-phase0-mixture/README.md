@@ -19,7 +19,7 @@ New implementer? Read in this order:
 
 | Phase | Status | Outcome | Document |
 |-------|--------|---------|----------|
-| 1 — Preprocessing Pipeline | 🔲 Not Started | Materialized HF dataset for all 5 sources in messages format | [phase-01](./phase-01-preprocessing-pipeline.md) |
+| 1 — Preprocessing Pipeline | 🔲 Not Started | Materialized HF dataset for 4 active sources; Valor32k deferred behind [#2](https://github.com/hungphongtrn/univi/issues/2) | [phase-01](./phase-01-preprocessing-pipeline.md) |
 | 2 — Smoke Training | 🔲 Pending | RTX 3060 smoke run validates loading, training, checkpoint | [phase-02](./phase-02-smoke-training.md) stub |
 | 3 — Full Training & Evaluation | 🔲 Pending | A100 full run completes with checkpoint reload; metrics reported | [phase-03](./phase-03-full-training-and-evaluation.md) stub |
 | 4 — Diagnostics & Publication | 🔲 Pending | Retention, shuffled-option, invalid-rate diagnostics published | [phase-04](./phase-04-diagnostics-and-publication.md) stub |

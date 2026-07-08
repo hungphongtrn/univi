@@ -50,6 +50,16 @@
 - The failure message explicitly references `decisions.md` so operators know this is a known gap, not a bug.
 - Downstream materialization scripts (Task 7 merge) must ensure media columns are present before calling `preprocess_valor32k`.
 
+## 2026-07-08: Defer Valor32k from current Phase 1 materialization
+
+**Context:** The Hugging Face dataset card documents bundled videos through `load_dataset(..., data_dir="videos")`, but those videos are test split only. Train/validation source videos are not redistributed and require a separate retrieval policy from `video_id`. `CONTEXT.md` currently says Valor32k train is for training while validation/test are held out for evaluation.
+
+**Decision:** Strip Valor32k from the current active Phase 1 materialization and proceed with a four-source mixture: LibriSpeech, DenseFusion, FineWeb-Edu, and SmolTalk. Keep the Valor32k preprocessor code as deferred media-enriched support, but do not call it from the merge CLI until GitHub issue #2 resolves media retrieval and split policy.
+
+**Rationale:** Training on bundled test videos would violate the documented split policy, while implementing YouTube retrieval is a larger research/design decision with availability and legal caveats.
+
+**Consequences:** Task 7/8 should produce a four-source smoke dataset. Valor32k returns to the Phase 0 Training Mixture only after issue #2 is grilled and resolved.
+
 ## 2026-07-08: `row_id` stored as string across all sources
 **Context:** Source datasets use different identifier types. Some provide string ids, some provide numeric ids, and some have no stable id column. Mixed Arrow column types would make source concatenation fragile.
 **Decision:** Store every `row_id` as a string. Use the source id when present and non-empty; if it is missing, `None`, or `""`, use the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.

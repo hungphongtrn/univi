@@ -1,7 +1,7 @@
 # Phase 1: Preprocessing Pipeline
 
 ## Phase Goal
-Materialize all five source datasets as Hugging Face datasets in Gemma 4 multimodal `messages` format, verify the schema is correct for each source, and produce a concatenated-and-shuffled training mixture ready for `FastVisionModel`.
+Materialize four active source datasets as Hugging Face datasets in Gemma 4 multimodal `messages` format, verify the schema is correct for each source, and produce a concatenated-and-shuffled training mixture ready for `FastVisionModel`. Valor32k is temporarily deferred behind GitHub issue #2 because train-split media retrieval needs further discussion.
 
 ## Project Structure After Phase 1
 
@@ -17,7 +17,7 @@ univi/
 │       ├── densefusion.py           # Text-image description pairs
 │       ├── fineweb_edu.py           # Raw text → rendered page image
 │       ├── smoltalk.py              # Instruction → rendered page image
-│       ├── valor32k.py              # Tri-modal visual bundle
+│       ├── valor32k.py              # Deferred media-enriched tri-modal visual bundle
 │       ├── merge_mixture.py         # Concatenate + shuffle all sources
 │       └── render_utils.py          # Shared rendering helpers (text, spectrogram)
 ├── tests/
@@ -392,7 +392,9 @@ Load `HuggingFaceTB/smoltalk` with `config="all"` (default) via `load_dataset("H
 Run: `python -m pytest tests/test_smoltalk.py -v`
 Expected: PASS
 
-### Task 6: Valor32k tri-modal visual bundle preprocessing
+### Task 6: Valor32k tri-modal visual bundle preprocessing — Deferred
+
+> **Deferred from current materialization:** Keep this code and tests as a media-enriched preprocessor, but do not include Valor32k in Task 7/8 until GitHub issue #2 resolves train-split media retrieval and split policy. Raw HF rows expose QA metadata plus `video_id`; bundled HF videos are test split only.
 
 **Files:**
 - Create: `data/preprocessing/valor32k.py`
@@ -471,10 +473,9 @@ def test_merge_mixture_concatenates_and_shuffles():
         "densefusion": preprocess_densefusion(max_samples=5),
         "fineweb": preprocess_fineweb_edu(max_samples=5),
         "smoltalk": preprocess_smoltalk(max_samples=5),
-        "valor32k": preprocess_valor32k(max_samples=5),
     }
     merged = merge_and_shuffle(sources, seed=42)
-    assert len(merged) == 25
+    assert len(merged) == 20
     assert "messages" in merged[0]
 
 def test_merge_mixture_preserves_metadata():
@@ -520,7 +521,6 @@ def test_merge_mixture_cli():
                 "--densefusion-samples", "2",
                 "--fineweb-samples", "2",
                 "--smoltalk-samples", "2",
-                "--valor32k-samples", "2",
                 "--output", tmp,
                 "--seed", "42",
             ],
@@ -531,7 +531,7 @@ def test_merge_mixture_cli():
         # Verify output dataset exists and is loadable
         from datasets import load_from_disk
         ds = load_from_disk(tmp)
-        assert len(ds) == 10
+        assert len(ds) == 8
         assert "messages" in ds[0]
         assert "source_dataset_id" in ds[0]
         assert "modality_label" in ds[0]
@@ -544,7 +544,7 @@ Expected: FAIL (no `__main__` block or argparse)
 
 - [ ] **Step 7: Implement CLI entry point**
 
-Add `if __name__ == "__main__"` block to `merge_mixture.py` using `argparse`. Accept per-source `--*-samples N` flags, `--output PATH`, and `--seed INT` (default 42). Load each source preprocessor with the given sample count, call `merge_and_shuffle`, write the merged dataset to `--output` via `datasets.Dataset.save_to_disk`.
+Add `if __name__ == "__main__"` block to `merge_mixture.py` using `argparse`. Accept per-active-source `--*-samples N` flags, `--output PATH`, and `--seed INT` (default 42). Load each active source preprocessor with the given sample count, call `merge_and_shuffle`, write the merged dataset to `--output` via `datasets.Dataset.save_to_disk`. Do not include `--valor32k-samples` in the current CLI; Valor32k is deferred behind issue #2.
 
 ```python
 def main():
@@ -554,7 +554,6 @@ def main():
     parser.add_argument("--densefusion-samples", type=int, default=0)
     parser.add_argument("--fineweb-samples", type=int, default=0)
     parser.add_argument("--smoltalk-samples", type=int, default=0)
-    parser.add_argument("--valor32k-samples", type=int, default=0)
     parser.add_argument("--output", required=True)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -584,11 +583,10 @@ python -m data.preprocessing.merge_mixture \
     --densefusion-samples 10 \
     --fineweb-samples 10 \
     --smoltalk-samples 10 \
-    --valor32k-samples 10 \
     --output ./data/materialized/smoke-v0
 ```
 
-Expected: Script completes, 50 examples in output dataset, correct schema.
+Expected: Script completes, 40 examples in output dataset, correct schema.
 
 - [ ] **Step 3: Verify schema of output dataset**
 
@@ -603,7 +601,7 @@ Confirm each row has `messages` list with valid image objects and text content. 
 
 ### Source preprocessors must use `datasets.Dataset.map`
 
-All source preprocessors (`librispeech_asr`, `densefusion`, `fineweb_edu`, `smoltalk`, `valor32k`) must transform rows via `source.map(...)` rather than accumulating rows in a Python list and calling `Dataset.from_list`. The list-accumulation pattern materialises the entire resulting dataset in Python heap memory, which does not scale to splits with hundreds of thousands of examples.
+All active source preprocessors (`librispeech_asr`, `densefusion`, `fineweb_edu`, `smoltalk`) must transform rows via `source.map(...)` rather than accumulating rows in a Python list and calling `Dataset.from_list`. Deferred Valor32k code must also keep this pattern when it returns to the active plan. The list-accumulation pattern materialises the entire resulting dataset in Python heap memory, which does not scale to splits with hundreds of thousands of examples.
 
 Acceptable patterns:
 
@@ -618,11 +616,11 @@ All preprocessors must serialize `render_config` with `json.dumps(config, sort_k
 
 ### `row_id` must be a string
 
-Coerce `row_id` to `str` in all preprocessors, even when the source `id` field is numeric: `str(row.get("id", index))`. This guarantees a consistent string feature type across concatenated sources.
+Coerce `row_id` to `str` in all preprocessors, even when the source `id` field is numeric. If the source id is missing, `None`, or `""`, fall back to the `with_indices=True` index: `str(source_id) if source_id not in (None, "") else str(index)`. This guarantees a consistent string feature type across concatenated sources.
 
 ## Phase Completion Criteria
-- [ ] All 7 task test suites pass
-- [ ] End-to-end materialization script produces a valid dataset with 5+ source examples
+- [ ] All active preprocessing test suites pass; Valor32k tests may remain as deferred media-enriched coverage
+- [ ] End-to-end materialization script produces a valid dataset with 4 active source examples
 - [ ] Every user message has images before text instruction
 - [ ] No user message contains native answer-bearing content
 - [ ] Source metadata is present for every row with all 6 required fields: `source_dataset_id`, `split`, `row_id`, `render_config`, `modality_label`, `preprocessing_version`
@@ -633,4 +631,4 @@ Coerce `row_id` to `str` in all preprocessors, even when the source `id` field i
 - The `render_text_page` and `render_log_mel_spectrogram` utilities in `render_utils.py` are shared; do not change their signatures without updating all consumers.
 - Font and colormap choices in `render_utils.py` become experimental hyperparameters — document them in the metadata.
 - The materialized dataset should be pushed to HF Hub (`hungphongtrn/univi-phase0-smoke-v0` for the smoke version) so the training script can load it from anywhere.
-- If any source dataset's media files (`valor32k` video/audio for train split) are not directly accessible via HF dataset, document the resolution in decisions.md and use the available subset or fallback.
+- Valor32k is deferred from the current materialization path. Resolve GitHub issue #2 before re-adding it to the Phase 0 Training Mixture.
