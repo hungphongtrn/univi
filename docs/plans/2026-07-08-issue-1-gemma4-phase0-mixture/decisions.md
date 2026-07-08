@@ -36,6 +36,20 @@
 **Rationale:** JSON strings are the simplest way to maintain heterogeneous config schemas while satisfying Arrow's type uniformity requirement. The penalty of `json.loads` per row is negligible at dataset-iteration scale.
 **Consequences:** All preprocessors must use `json.dumps` with `sort_keys=True`. All test assertions on config contents must go through `json.loads`.
 
+## 2026-07-08: Valor32k preprocessor requires attached media columns
+
+**Context:** `inesriahi/valor32k-avqa-v2` HF Dataset rows expose only QA metadata columns (`question`, `options`, `correct_answer_idx`, `modality`, `video_id`, etc.) and do **not** include decoded audio arrays or video frames. The `video_id` column references the source YouTube video but no media is bundled in the dataset.
+
+**Decision:** The Phase 1 `preprocess_valor32k` function requires attached media columns as input — an `audio` dict with `array`/`sampling_rate` for audio/audio-visual rows, and one of `frames`/`images`/`video_frames`/`image` for visual/audio-visual rows. If required media is missing, the function raises a `RuntimeError` with the `video_id` and a pointer to this decision entry.
+
+**Rationale:** Media retrieval (downloading YouTube videos, extracting audio, sampling frames) is a separate, heavyweight concern outside the scope of Phase 1 schema conversion. Requiring attached media keeps the preprocessor testable with synthetic data and avoids leaking I/O concerns into schema transformation.
+
+**Consequences:**
+- Tests that supply synthetic audio/frames pass; tests against raw HF rows without media columns fail loudly.
+- Future work (Phase 1a or Phase 2) must implement a media-retrieval pipeline that produces the required columns from `video_id`, or find a Valor32k variant with media already included.
+- The failure message explicitly references `decisions.md` so operators know this is a known gap, not a bug.
+- Downstream materialization scripts (Task 7 merge) must ensure media columns are present before calling `preprocess_valor32k`.
+
 ## 2026-07-08: `row_id` stored as string across all sources
 **Context:** Source datasets use different identifier types. Some provide string ids, some provide numeric ids, and some have no stable id column. Mixed Arrow column types would make source concatenation fragile.
 **Decision:** Store every `row_id` as a string. Use the source id when present and non-empty; if it is missing, `None`, or `""`, use the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.

@@ -1008,6 +1008,191 @@ def test_option_a_b_c_d_keys(monkeypatch):
     assert dataset[0]["messages"][1]["content"][0]["text"] == "C"
 
 
+def test_answer_preserves_original_string_when_not_normalizable(monkeypatch):
+    rows = [
+        {
+            "id": 1,
+            "question": "Q?",
+            "options": ["A", "B", "C", "D"],
+            "correct_answer_idx": -1,
+            "answer": "the quick brown fox",
+            "modality": "visual",
+            "frames": [Image.new("RGB", (32, 32)) for _ in range(1)],
+        },
+    ]
+
+    class _PreserveMock:
+        def __init__(self):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _PreserveMock.__new__(_PreserveMock)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(
+            self,
+            function,
+            *,
+            with_indices=False,
+            remove_columns=None,
+            fn_kwargs=None,
+        ):
+            result_rows = []
+            kwargs = fn_kwargs or {}
+            for i, row in enumerate(self._rows):
+                if with_indices:
+                    new_row = function(row, i, **kwargs)
+                else:
+                    new_row = function(row, **kwargs)
+                result_rows.append(new_row)
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.valor32k.load_dataset",
+        lambda *a, **kw: _PreserveMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.valor32k.render_text_page",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_valor32k(max_samples=1)
+    answer_text = dataset[0]["messages"][1]["content"][0]["text"]
+    assert answer_text == "the quick brown fox"
+
+
+def test_missing_audio_for_audio_row_raises(monkeypatch):
+    rows = [
+        {
+            "id": 1,
+            "question": "Sound?",
+            "options": ["A", "B", "C", "D"],
+            "correct_answer_idx": 0,
+            "modality": "audio",
+            "video_id": "test-video-001",
+        },
+    ]
+
+    class _MissingAudioMock:
+        def __init__(self):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _MissingAudioMock.__new__(_MissingAudioMock)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(
+            self,
+            function,
+            *,
+            with_indices=False,
+            remove_columns=None,
+            fn_kwargs=None,
+        ):
+            result_rows = []
+            kwargs = fn_kwargs or {}
+            for i, row in enumerate(self._rows):
+                if with_indices:
+                    new_row = function(row, i, **kwargs)
+                else:
+                    new_row = function(row, **kwargs)
+                result_rows.append(new_row)
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.valor32k.load_dataset",
+        lambda *a, **kw: _MissingAudioMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.valor32k.render_text_page",
+        _mock_renderer,
+    )
+
+    import pytest
+    with pytest.raises(RuntimeError) as exc:
+        preprocess_valor32k(max_samples=1)
+    assert "video_id" in str(exc.value)
+    assert "audio" in str(exc.value)
+
+
+def test_missing_frames_for_visual_row_raises(monkeypatch):
+    rows = [
+        {
+            "id": 1,
+            "question": "Visual?",
+            "options": ["A", "B", "C", "D"],
+            "correct_answer_idx": 0,
+            "modality": "visual",
+            "video_id": "test-video-002",
+        },
+    ]
+
+    class _MissingFramesMock:
+        def __init__(self):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _MissingFramesMock.__new__(_MissingFramesMock)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(
+            self,
+            function,
+            *,
+            with_indices=False,
+            remove_columns=None,
+            fn_kwargs=None,
+        ):
+            result_rows = []
+            kwargs = fn_kwargs or {}
+            for i, row in enumerate(self._rows):
+                if with_indices:
+                    new_row = function(row, i, **kwargs)
+                else:
+                    new_row = function(row, **kwargs)
+                result_rows.append(new_row)
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.valor32k.load_dataset",
+        lambda *a, **kw: _MissingFramesMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.valor32k.render_text_page",
+        _mock_renderer,
+    )
+
+    import pytest
+    with pytest.raises(RuntimeError) as exc:
+        preprocess_valor32k(max_samples=1)
+    assert "video_id" in str(exc.value)
+    assert "visual" in str(exc.value)
+
+
 def test_no_frames_for_pure_audio(monkeypatch):
     rows = [
         {

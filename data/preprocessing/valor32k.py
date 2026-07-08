@@ -79,12 +79,10 @@ def _normalize_answer(row: dict) -> str:
             for letter in _ANSWER_LETTERS:
                 if val_upper.startswith(letter):
                     return letter
+            return val
         if isinstance(val, int) and 0 <= val <= 3:
             return _ANSWER_LETTERS[val]
-    raise KeyError(
-        f"Cannot normalize answer from row. "
-        f"Available keys: {list(row.keys())}"
-    )
+    return ""
 
 
 def _normalize_modality(row: dict) -> str:
@@ -180,6 +178,26 @@ def preprocess_valor32k(
 
         audio_dict = _get_audio_dict(row)
         frames = _get_frames(row, frame_count)
+
+        if modality in ("audio", "audio-visual") and audio_dict is None:
+            video_id = row.get("video_id", "unknown")
+            raise RuntimeError(
+                f"audio/audio-visual row (video_id={video_id}) requires an 'audio' "
+                f"column with 'array' and 'sampling_rate' keys, but none was found. "
+                f"Real Valor32k HF rows expose only QA metadata and video_id; "
+                f"decoded media must be attached before calling this function. "
+                f"See docs/plans/2026-07-08-issue-1-gemma4-phase0-mixture/decisions.md."
+            )
+
+        if modality in ("visual", "audio-visual") and not frames:
+            video_id = row.get("video_id", "unknown")
+            raise RuntimeError(
+                f"{modality} row (video_id={video_id}) requires visual frames via one "
+                f"of {_FRAME_CANDIDATES}, but none was found. "
+                f"Real Valor32k HF rows expose only QA metadata and video_id; "
+                f"decoded frames must be attached before calling this function. "
+                f"See docs/plans/2026-07-08-issue-1-gemma4-phase0-mixture/decisions.md."
+            )
 
         spectrogram_img = None
         if modality in ("audio", "audio-visual") and audio_dict is not None:

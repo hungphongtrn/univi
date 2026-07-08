@@ -446,6 +446,11 @@ Expected: FAIL
 
 Load `inesriahi/valor32k-avqa-v2`. For each row, render question + options via `render_text_page`. For `audio`/`audio-visual`, extract audio and render spectrogram. For `visual`/`audio-visual`, sample 4 video frames. Construct `messages` in fixed order: question image, spectrogram (if present), frames (if present), then `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.` Assistant: single letter answer. Use train split for training sets, validation/test for eval sets. Attach all 6 metadata fields: `source_dataset_id` (`"inesriahi/valor32k-avqa-v2"`), `split`, `row_id`, `render_config`, `modality_label` (`"visual"`/`"audio"`/`"audio-visual"`), `preprocessing_version`.
 
+**Attached-media requirement & failure criterion:** Real Valor32k HF rows expose only QA metadata and `video_id` — they do **not** include decoded `audio` arrays or `frames`/`images`/`video_frames`/`image` columns. The preprocessor requires these media columns to be attached before calling. If required media is absent:
+  - `audio` / `audio-visual` rows without an `audio` dict → `RuntimeError` mentioning `video_id`.
+  - `visual` / `audio-visual` rows without frame columns → `RuntimeError` mentioning `video_id`.
+  - See `decisions.md` for the full rationale.
+
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `python -m pytest tests/test_valor32k.py -v`
