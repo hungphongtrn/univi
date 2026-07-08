@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 
 import numpy as np
@@ -93,10 +94,65 @@ def test_librispeech_asr_metadata_present(monkeypatch):
     row = dataset[0]
     assert row["source_dataset_id"] == "openslr/librispeech_asr"
     assert "split" in row
-    assert "row_id" in row
-    assert "render_config" in row
+    assert isinstance(row["row_id"], str)
+    assert isinstance(row["render_config"], str)
     assert row["modality_label"] == "audio"
     assert "preprocessing_version" in row
+
+
+def test_row_id_is_string_with_numeric_source_id(monkeypatch):
+    rows = [
+        {
+            "audio": {
+                "array": np.zeros(16000 * 5, dtype=np.float32),
+                "sampling_rate": 16000,
+            },
+            "text": "transcript",
+            "id": 999,
+        }
+    ]
+
+    class _NumericIdMock:
+        def __init__(self):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _NumericIdMock.__new__(_NumericIdMock)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(
+            self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None
+        ):
+            result_rows = []
+            kwargs = fn_kwargs or {}
+            for i, row in enumerate(self._rows):
+                if with_indices:
+                    new_row = function(row, i, **kwargs)
+                else:
+                    new_row = function(row, **kwargs)
+                result_rows.append(new_row)
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _NumericIdMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "999"
 
 
 def test_user_instruction_does_not_contain_transcript(monkeypatch):
@@ -114,6 +170,23 @@ def test_user_instruction_does_not_contain_transcript(monkeypatch):
         user_text = row["messages"][0]["content"][1]["text"]
         transcript = row["messages"][1]["content"][0]["text"]
         assert transcript not in user_text
+
+
+def test_render_config_is_valid_json(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    row = dataset[0]
+    config = json.loads(row["render_config"])
+    assert isinstance(config, dict)
+    assert len(config) > 0
 
 
 def test_render_config_matches_renderer_kwargs(monkeypatch):
@@ -138,7 +211,7 @@ def test_render_config_matches_renderer_kwargs(monkeypatch):
     )
 
     row = dataset[0]
-    render_config = row["render_config"]
+    render_config = json.loads(row["render_config"])
     for k, v in recorded_kwargs.items():
         assert k in render_config, f"render_config missing key {k!r}"
         assert render_config[k] == v, (

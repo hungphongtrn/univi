@@ -29,3 +29,9 @@
 **Decision:** Place preprocessing modules directly under `data/preprocessing/` with a `__init__.py` rather than nesting deeper or creating a separate `univi/` package.
 **Rationale:** Flat structure is simpler for a single-purpose research codebase. Refactoring into a proper package can happen later if the project grows.
 **Consequences:** Import paths will be `from data.preprocessing.librispeech_asr import ...` or similar. Tests mirror this structure.
+
+## 2026-07-08: `render_config` stored as JSON string instead of nested dict
+**Context:** `datasets.concatenate_datasets` requires compatible Arrow feature schemas across all sources being concatenated. Each source preprocessor defines a different set of `render_config` keys (e.g. LibriSpeech has `sample_rate/n_mels/n_fft/hop_length` etc., while DenseFusion has `render_method`). If stored as a nested dict, Arrow would assign a struct type per source that varies across the group, causing concatenation to fail.
+**Decision:** Serialise `render_config` as a JSON string via `json.dumps(config, sort_keys=True)`. Downstream consumers parse with `json.loads`. This gives every source the same `Value(string)` Arrow type, making concatenation safe.
+**Rationale:** JSON strings are the simplest way to maintain heterogeneous config schemas while satisfying Arrow's type uniformity requirement. The penalty of `json.loads` per row is negligible at dataset-iteration scale.
+**Consequences:** All preprocessors must use `json.dumps` with `sort_keys=True`. All test assertions on config contents must go through `json.loads`.

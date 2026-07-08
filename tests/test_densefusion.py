@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 
 import pytest
@@ -8,6 +9,7 @@ from PIL import Image
 
 from data.preprocessing.densefusion import (
     _find_key,
+    _resolve_image,
     preprocess_densefusion,
 )
 
@@ -70,6 +72,33 @@ def test_find_key_raises_on_missing():
         _find_key(row, ["image", "jpg", "png"], "image")
 
 
+# --- _resolve_image unit tests ---
+
+
+def test_resolve_image_passthrough():
+    img = Image.new("RGB", (16, 16))
+    assert _resolve_image(img) is img
+
+
+def test_resolve_image_from_path(tmp_path):
+    path = str(tmp_path / "test.png")
+    img = Image.new("RGB", (16, 16))
+    img.save(path)
+    result = _resolve_image(path)
+    assert isinstance(result, Image.Image)
+    assert result.size == (16, 16)
+
+
+def test_resolve_image_raises_on_bad_path():
+    with pytest.raises(ValueError, match="not a valid file path"):
+        _resolve_image("/nonexistent/image.png")
+
+
+def test_resolve_image_raises_on_bad_type():
+    with pytest.raises(TypeError, match="Expected PIL Image or file path"):
+        _resolve_image(42)
+
+
 # --- Functional tests ---
 
 
@@ -99,10 +128,39 @@ def test_densefusion_metadata_present(monkeypatch):
     row = dataset[0]
     assert row["source_dataset_id"] == "BAAI/DenseFusion-1M"
     assert "split" in row
-    assert "row_id" in row
-    assert "render_config" in row
+    assert isinstance(row["row_id"], str)
+    assert isinstance(row["render_config"], str)
     assert row["modality_label"] == "image-text"
     assert "preprocessing_version" in row
+
+
+def test_render_config_is_valid_json_densefusion(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(1),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    config = json.loads(dataset[0]["render_config"])
+    assert config["render_method"] == "preserve_source_image"
+
+
+def test_row_id_is_string_with_numeric_source_id_densefusion(monkeypatch):
+    rows = [
+        {
+            "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
+            "description": "a description",
+            "id": 999,
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "999"
 
 
 def test_user_instruction_does_not_contain_description(monkeypatch):

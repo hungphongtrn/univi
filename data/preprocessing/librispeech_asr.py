@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -71,8 +72,8 @@ def preprocess_librispeech_asr(
             "messages": messages,
             "source_dataset_id": "openslr/librispeech_asr",
             "split": split,
-            "row_id": row.get("id", str(index)),
-            "render_config": dict(render_kwargs),
+            "row_id": str(row.get("id", index)),
+            "render_config": json.dumps(render_kwargs, sort_keys=True),
             "modality_label": "audio",
             "preprocessing_version": _PREPROCESSING_VERSION,
         }

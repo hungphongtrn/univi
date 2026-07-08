@@ -607,6 +607,14 @@ Acceptable patterns:
 - **Streaming**: Future phases may load source datasets with `streaming=True` for even lower memory overhead; `map` remains compatible with streaming datasets.
 - **`with_indices=True`**: Always pass this when the `row_id` fallback needs the row index.
 
+### `render_config` must be a stable JSON string
+
+All preprocessors must serialize `render_config` with `json.dumps(config, sort_keys=True)` rather than storing a native dict. This ensures that future `datasets.concatenate_datasets` does not fail due to incompatible Arrow feature schemas for nested dict columns when different sources have different config keys. Consumers must parse the field with `json.loads` before inspecting.
+
+### `row_id` must be a string
+
+Coerce `row_id` to `str` in all preprocessors, even when the source `id` field is numeric: `str(row.get("id", index))`. This guarantees a consistent string feature type across concatenated sources.
+
 ## Phase Completion Criteria
 - [ ] All 7 task test suites pass
 - [ ] End-to-end materialization script produces a valid dataset with 5+ source examples
