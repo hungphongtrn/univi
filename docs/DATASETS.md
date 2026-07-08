@@ -42,7 +42,7 @@ This project prefers public datasets that contain visual, audio, and text togeth
 
 Use Valor32k-AVQA v2.0 first for Phases 1-3 because it is large, public, tri-modal, and has per-question modality labels. Use the included test videos first to avoid YouTube availability issues.
 
-Keep JointAVBench as the fallback if Valor32k media access or licensing blocks progress. Add Daily-Omni as a small temporal-alignment evaluation once the rendering pipeline works. Defer OmniInteract until the compact two-turn transcript pipeline is stable.
+Keep JointAVBench as the fallback if Valor32k media access or licensing blocks progress. Add Daily-Omni as a small temporal-alignment evaluation once the rendering pipeline works. Defer OmniInteract until Valor32k Phases 1-3 produce interpretable results.
 
 ## Valor32k Usage
 
@@ -108,4 +108,4 @@ Key failure criteria:
 - Exact subset sizes for the first run.
 - Log-mel spectrogram settings for audio-as-image.
 - Spectrogram hop length and color mapping.
-- Whether multi-turn should use OmniInteract immediately or wait until after single-turn tri-modal results.
+- Whether OmniInteract is the Phase 4 dataset after Valor32k results are available.

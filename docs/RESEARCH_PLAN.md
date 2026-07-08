@@ -49,6 +49,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Defer chat-style screenshots until the compact layout works, so early failures are less likely to be caused by wasted pixels.
 - Success signal: image-only accuracy beats a no-history visual control by at least 20 percentage points.
 - Failure signal: context length grows faster than the model can process, or turn-2 accuracy drops to near single-turn/no-context baselines.
+- Timing: defer Phase 4 implementation until Valor32k Phases 1-3 produce interpretable smoke and first-eval results.
 
 ## Success Metrics
 
@@ -134,4 +135,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose whether Phase 4 multi-turn work starts from OmniInteract now or waits until after Valor32k Phases 1-3.
+Choose whether the first Valor32k pass is zero-shot/prompt-only evaluation or fine-tuning.

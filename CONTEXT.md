@@ -92,6 +92,10 @@ _Avoid_: pilot when exact sample counts matter
 The fixed middle segment of a clip used for the first audio-as-image spectrogram.
 _Avoid_: full audio when only the bounded middle segment is used
 
+**Deferred Multi-Turn**:
+The sequencing decision to postpone fully visual multi-turn datasets until single-turn visual unification is measured.
+_Avoid_: abandoned multi-turn, out of scope permanently
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -112,6 +116,7 @@ _Avoid_: full audio when only the bounded middle segment is used
 - The first Valor32k **Visual Bundle** uses **Conservative Render Settings**.
 - The first Valor32k **Smoke Run** uses 100 examples per modality label; the first evaluation run uses 1,000 examples per modality label.
 - The first audio-as-image rendering uses a 10-second **Central Audio Window** with 80 log-mel bins.
+- Fully visual multi-turn work is **Deferred Multi-Turn** until Valor32k Phases 1-3 produce interpretable results.
 
 ## Example Dialogue
 
@@ -129,4 +134,5 @@ _Avoid_: full audio when only the bounded middle segment is used
 - "Render settings" resolved for the first Valor32k run: use **Conservative Render Settings** with a 560-token text image budget and 280-token text ablation.
 - "Subset sizes" resolved for the first Valor32k runs: 100 examples per modality label for smoke, then 1,000 per modality label for first evaluation.
 - "Audio duration" resolved for the first Valor32k runs: use a 10-second **Central Audio Window** rather than full-clip spectrograms.
+- "Multi-turn timing" resolved: defer OmniInteract until after Valor32k smoke and first evaluation.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.
