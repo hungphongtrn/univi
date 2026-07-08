@@ -64,6 +64,10 @@ _Avoid_: accuracy when comparing visual unification against native pathways
 A multi-turn evaluation variant that removes prior visual turns to measure whether the model is actually using visual conversation history.
 _Avoid_: ablation unless the removed context is specified
 
+**Linguistic Prior Dependence**:
+The risk that a model appears to read rendered text while actually reconstructing likely language from priors.
+_Avoid_: OCR success when visual evidence has not been isolated
+
 **Public Benchmark First**:
 A dataset strategy that starts from established public datasets before synthetic diagnostic data.
 _Avoid_: synthetic-first, generated-only dataset
@@ -89,6 +93,7 @@ _Avoid_: prompt when referring specifically to image inputs
 - The **Image-Only Lane** tests the visual-unification claim; the **Native Upper Bound** estimates the performance lost by forbidding native text/audio paths.
 - A **Retention Metric** compares the **Image-Only Lane** to the **Native Upper Bound**.
 - A **No-History Control** is required for fully visual multi-turn evaluation.
+- **Linguistic Prior Dependence** requires shuffled or low-prior controls beyond the **Retention Metric**.
 - The first dataset cut follows **Public Benchmark First** rather than synthetic-first.
 - Valor32k-AVQA v2.0 is the **Dataset of Record** for Phases 1-3.
 - The first Valor32k **Visual Bundle** contains one text image, one log-mel spectrogram image when audio is needed, and four sampled video frames when vision is needed.
@@ -106,3 +111,4 @@ _Avoid_: prompt when referring specifically to image inputs
 - "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.
 - "Dataset strategy" resolved for Phases 1-3: use Valor32k-AVQA v2.0 as the **Dataset of Record** with included test media first.
 - "Visual budget" resolved for the first Valor32k run: use a bounded **Visual Bundle** of 1 text image, 1 spectrogram image, and 4 sampled frames where applicable.
+- "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.

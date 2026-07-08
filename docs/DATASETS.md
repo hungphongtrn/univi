@@ -84,10 +84,12 @@ Primary metrics:
 - Multiple-choice accuracy by modality label.
 - Retention metric: image-only accuracy divided by native upper-bound accuracy.
 - Category breakdown across description, action, count, temporal, location, and relative-position.
+- Shuffled-options accuracy to detect dependence on answer-position or language priors.
 
 Key failure criteria:
 
 - Text-as-image question rendering is unreadable at the chosen visual token budget.
+- Shuffled-options accuracy drops more than 10 percentage points below natural accuracy at the same token budget.
 - Audio-as-image cannot reach 50% retention on `audio` examples.
 - Mixed `audio-visual` examples perform worse than either single-modality slice by more than 10 percentage points.
 - The fixed image bundle requires too many visual tokens to fit Gemma 4 E2B practical inference or fine-tuning limits.

@@ -75,6 +75,20 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Gemma 4 E2B has native audio and text paths, so the baseline must be constrained or the experiment will not isolate visual unification.
 - Fully visual multi-turn context requires repeatedly re-encoding conversation history instead of using cheap text KV-cache behavior.
 
+## DeepSeek-OCR Lessons
+
+- Avoid aggressive text compression in the first proof; DeepSeek-OCR-style results can overstate genuine reading when language priors fill missing visual evidence.
+- Treat text rendering density, font size, and spatial layout as experiment hyperparameters.
+- Add shuffled-answer or low-prior controls for text-as-image evaluation.
+- Use a vertical linear layout for compact transcripts so raster-scan reading order matches conversational causality.
+- Do not assume Gemma 4 E2B has DeepSeek-OCR's document-specialized encoder; success on Gemma is a stronger but riskier test of generic VLM visual reading.
+
+## Text-Reading Controls
+
+- Shuffled-options control: randomly permute answer choices and measure accuracy separately.
+- Low-prior diagnostic: replace answer choices with random strings on a small diagnostic subset to estimate genuine visual character reading.
+- Failure signal: if shuffled-options accuracy drops more than 10 percentage points below natural accuracy at the same token budget, flag likely **Linguistic Prior Dependence**.
+
 ## Baseline Protocol
 
 - **Image-only lane**: pass rendered text, rendered audio, natural images, and fully visual transcripts as images; withhold native text/audio equivalents except fixed task instructions needed to query the model.
