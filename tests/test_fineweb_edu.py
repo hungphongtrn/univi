@@ -179,6 +179,48 @@ def test_row_id_is_string_with_numeric_source_id(monkeypatch):
     assert dataset[0]["row_id"] == "999"
 
 
+def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
+    rows = [
+        {
+            "text": "Some educational content with null id.",
+            "id": None,
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        lambda *a, **kw: _MockFineWebEdu(rows=rows),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_fineweb_edu(max_samples=1, max_chars=2000)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "0"
+
+
+def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
+    rows = [
+        {
+            "text": "Some educational content with empty id.",
+            "id": "",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        lambda *a, **kw: _MockFineWebEdu(rows=rows),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_fineweb_edu(max_samples=1, max_chars=2000)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "0"
+
+
 def test_row_id_falls_back_to_index_when_no_id_column(monkeypatch):
     rows = [
         {
@@ -391,6 +433,22 @@ def test_max_samples_zero_returns_empty(monkeypatch):
 
 
 def test_map_used_not_direct_iteration(monkeypatch):
+    map_kwargs: dict = {}
+
+    def recording_map(self, function, *, with_indices=False, remove_columns=None):
+        map_kwargs["with_indices"] = with_indices
+        map_kwargs["remove_columns"] = remove_columns
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            if with_indices:
+                new_row = function(row, i)
+            else:
+                new_row = function(row)
+            result_rows.append(new_row)
+        return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(_MockFineWebEdu, "map", recording_map)
+
     monkeypatch.setattr(
         "data.preprocessing.fineweb_edu.load_dataset",
         lambda *a, **kw: _MockFineWebEdu(2),
@@ -402,3 +460,5 @@ def test_map_used_not_direct_iteration(monkeypatch):
 
     dataset = preprocess_fineweb_edu(max_samples=2, max_chars=2000)
     assert len(dataset) == 2
+    assert map_kwargs.get("with_indices") is True
+    assert map_kwargs.get("remove_columns") == ["text", "id"]

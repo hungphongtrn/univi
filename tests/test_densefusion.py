@@ -163,6 +163,42 @@ def test_row_id_is_string_with_numeric_source_id_densefusion(monkeypatch):
     assert dataset[0]["row_id"] == "999"
 
 
+def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
+    rows = [
+        {
+            "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
+            "description": "a description with null id",
+            "id": None,
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "0"
+
+
+def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
+    rows = [
+        {
+            "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
+            "description": "a description with empty id",
+            "id": "",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: _MockDenseFusion(rows=rows),
+    )
+
+    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "0"
+
+
 def test_user_instruction_does_not_contain_description(monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.densefusion.load_dataset",
@@ -307,6 +343,22 @@ def test_subset_none_no_name_param(monkeypatch):
 
 
 def test_map_used_not_direct_iteration(monkeypatch):
+    map_kwargs: dict = {}
+
+    def recording_map(self, function, *, with_indices=False, remove_columns=None):
+        map_kwargs["with_indices"] = with_indices
+        map_kwargs["remove_columns"] = remove_columns
+        result_rows = []
+        for i, row in enumerate(self._rows):
+            if with_indices:
+                new_row = function(row, i)
+            else:
+                new_row = function(row)
+            result_rows.append(new_row)
+        return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(_MockDenseFusion, "map", recording_map)
+
     monkeypatch.setattr(
         "data.preprocessing.densefusion.load_dataset",
         lambda *a, **kw: _MockDenseFusion(2),
@@ -314,6 +366,8 @@ def test_map_used_not_direct_iteration(monkeypatch):
 
     dataset = preprocess_densefusion(subset="default", max_samples=2)
     assert len(dataset) == 2
+    assert map_kwargs.get("with_indices") is True
+    assert map_kwargs.get("remove_columns") == ["image", "description", "id"]
 
 
 def test_max_samples_none(monkeypatch):

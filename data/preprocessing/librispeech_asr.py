@@ -68,11 +68,14 @@ def preprocess_librispeech_asr(
             },
         ]
 
+        source_id = row.get("id")
+        row_id = str(source_id) if source_id not in (None, "") else str(index)
+
         return {
             "messages": messages,
             "source_dataset_id": "openslr/librispeech_asr",
             "split": split,
-            "row_id": str(row.get("id", index)),
+            "row_id": row_id,
             "render_config": json.dumps(render_kwargs, sort_keys=True),
             "modality_label": "audio",
             "preprocessing_version": _PREPROCESSING_VERSION,

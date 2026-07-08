@@ -155,6 +155,118 @@ def test_row_id_is_string_with_numeric_source_id(monkeypatch):
     assert dataset[0]["row_id"] == "999"
 
 
+def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
+    rows = [
+        {
+            "audio": {
+                "array": np.zeros(16000 * 5, dtype=np.float32),
+                "sampling_rate": 16000,
+            },
+            "text": "transcript with null id",
+            "id": None,
+        }
+    ]
+
+    class _NullIdMock:
+        def __init__(self):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _NullIdMock.__new__(_NullIdMock)
+            ds._rows = [self._rows[i] for i in indices]
+
+            return ds
+
+        def map(
+            self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None
+        ):
+            result_rows = []
+            kwargs = fn_kwargs or {}
+            for i, row in enumerate(self._rows):
+                if with_indices:
+                    new_row = function(row, i, **kwargs)
+                else:
+                    new_row = function(row, **kwargs)
+                result_rows.append(new_row)
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _NullIdMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "0"
+
+
+def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
+    rows = [
+        {
+            "audio": {
+                "array": np.zeros(16000 * 5, dtype=np.float32),
+                "sampling_rate": 16000,
+            },
+            "text": "transcript with empty id",
+            "id": "",
+        }
+    ]
+
+    class _EmptyIdMock:
+        def __init__(self):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _EmptyIdMock.__new__(_EmptyIdMock)
+            ds._rows = [self._rows[i] for i in indices]
+
+            return ds
+
+        def map(
+            self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None
+        ):
+            result_rows = []
+            kwargs = fn_kwargs or {}
+            for i, row in enumerate(self._rows):
+                if with_indices:
+                    new_row = function(row, i, **kwargs)
+                else:
+                    new_row = function(row, **kwargs)
+                result_rows.append(new_row)
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _EmptyIdMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    assert isinstance(dataset[0]["row_id"], str)
+    assert dataset[0]["row_id"] == "0"
+
+
 def test_user_instruction_does_not_contain_transcript(monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.librispeech_asr.load_dataset",

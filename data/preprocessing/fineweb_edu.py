@@ -57,11 +57,14 @@ def preprocess_fineweb_edu(
             },
         ]
 
+        source_id = row.get("id")
+        row_id = str(source_id) if source_id not in (None, "") else str(index)
+
         return {
             "messages": messages,
             "source_dataset_id": _SOURCE_DATASET_ID,
             "split": split,
-            "row_id": str(row.get("id", index)),
+            "row_id": row_id,
             "render_config": json.dumps(
                 {
                     "render_method": "text_page",
