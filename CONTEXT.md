@@ -96,13 +96,25 @@ _Avoid_: full audio when only the bounded middle segment is used
 The sequencing decision to postpone fully visual multi-turn datasets until single-turn visual unification is measured.
 _Avoid_: abandoned multi-turn, out of scope permanently
 
-**Zero-Shot First**:
-The sequencing decision to evaluate a model without fine-tuning before building training pipelines.
-_Avoid_: no training ever, prompt-only project
+**Train-First Sequencing**:
+The sequencing decision to fine-tune on the visual-unification training mixture before primary evaluation.
+_Avoid_: zero-shot first, prompt-only project
 
-**Phase 0 Calibration**:
-The zero-shot gate that verifies each visualized modality path before Valor32k evaluation.
-_Avoid_: warmup training, pretraining, fine-tuning
+**Phase 0 Training Mixture**:
+The first training mixture combining text-compressed image transcription, audio transcription, image-description, and Valor32k examples.
+_Avoid_: calibration gate, zero-shot gate
+
+**Text-Compressed Image Transcription**:
+A training task where rendered text is given as an image and the model outputs the transcription, answer, or structured text target.
+_Avoid_: native text input, raw OCR unless discussing the source dataset
+
+**Audio Transcription Image**:
+A training task where speech is rendered as a log-mel spectrogram image and the model outputs the spoken transcript.
+_Avoid_: native audio input, audio tokens
+
+**Image-Description Pair**:
+A training task where a natural image is given and the model outputs a descriptive caption.
+_Avoid_: image tag, native metadata
 
 **Generic A-D Instruction**:
 The fixed native text prompt allowed in the image-only lane that describes only the answer format.
@@ -120,9 +132,9 @@ _Avoid_: custom chat template, hand-rolled prompt format
 An output parser that accepts only A, B, C, or D as the first non-whitespace response character.
 _Avoid_: regex-anywhere parsing, judge-based parsing
 
-**ASR Transcript Choice**:
-An audio-as-image calibration task where the model chooses the transcript matching a log-mel spectrogram.
-_Avoid_: full ASR generation for the first calibration gate
+**Unsloth Gemma 4 Training Path**:
+The training implementation path using Unsloth's Gemma 4 multimodal fine-tuning guide, `FastVisionModel`, Gemma 4 chat template, and vision data collator.
+_Avoid_: generic Transformers trainer when discussing the agreed first training implementation
 
 ## Relationships
 
@@ -145,12 +157,13 @@ _Avoid_: full ASR generation for the first calibration gate
 - The first Valor32k **Smoke Run** uses 100 examples per modality label; the first evaluation run uses 1,000 examples per modality label.
 - The first audio-as-image rendering uses a 10-second **Central Audio Window** with 80 log-mel bins.
 - Fully visual multi-turn work is **Deferred Multi-Turn** until Valor32k Phases 1-3 produce interpretable results.
-- The first Valor32k milestone is **Zero-Shot First** evaluation rather than fine-tuning.
+- The first milestone follows **Train-First Sequencing** rather than zero-shot-first evaluation.
 - The image-only lane uses a **Generic A-D Instruction** and must not include native question or answer-choice content.
 - The first **Visual Bundle Order** is rendered question/options, then spectrogram if present, then video frames in chronological order.
 - All Gemma 4 E2B runs must use the **Original Gemma E2B Template**.
 - Valor32k multiple-choice outputs use **Strict First-Letter Parsing**.
-- **Phase 0 Calibration** runs before Valor32k and includes text-as-image, vision-text, and **ASR Transcript Choice** gates.
+- **Phase 0 Training Mixture** trains on **Text-Compressed Image Transcription**, **Audio Transcription Image**, **Image-Description Pair**, and Valor32k examples.
+- **Phase 0 Training Mixture** uses the **Unsloth Gemma 4 Training Path**.
 
 ## Example Dialogue
 
@@ -169,10 +182,10 @@ _Avoid_: full ASR generation for the first calibration gate
 - "Subset sizes" resolved for the first Valor32k runs: 100 examples per modality label for smoke, then 1,000 per modality label for first evaluation.
 - "Audio duration" resolved for the first Valor32k runs: use a 10-second **Central Audio Window** rather than full-clip spectrograms.
 - "Multi-turn timing" resolved: defer OmniInteract until after Valor32k smoke and first evaluation.
-- "Training timing" resolved: run zero-shot/prompt-only Valor32k evaluation before LoRA or other fine-tuning.
+- "Training timing" resolved: train first on the four-source **Phase 0 Training Mixture**, then evaluate.
 - "Native instruction" resolved: use a fixed **Generic A-D Instruction** in the image-only lane.
 - "Image order" resolved: use fixed **Visual Bundle Order** with semantic labels rendered inside images, not native text.
 - "Prompt template" resolved: use the **Original Gemma E2B Template** rather than custom prompt wrappers.
 - "Output parsing" resolved: use **Strict First-Letter Parsing** and count invalid outputs as wrong.
-- "Phase 0" resolved at the dataset-family level: use simple text-as-image diagnostics, a public vision-text MCQ dataset, and LibriSpeech-style ASR transcript choice before Valor32k.
+- "Phase 0" resolved: use a four-source **Phase 0 Training Mixture** rather than zero-shot calibration gates.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.

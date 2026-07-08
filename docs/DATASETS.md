@@ -1,39 +1,46 @@
 # Dataset Notes
 
-This project prefers public datasets that contain visual, audio, and text together instead of stitching separate text-only, audio-only, and image-only benchmarks.
+This project uses a four-source training mixture to teach visualized text, visualized audio, natural-image description, and tri-modal QA before evaluating unified behavior.
 
-## Phase 0 Calibration Datasets
+## Phase 0 Training Data Mixture
 
-Phase 0 uses lightweight calibration datasets before Valor32k. These datasets are not the dataset of record for Phases 1-3; they exist to verify that each modality path is readable under zero-shot prompting.
+Phase 0 fine-tunes Gemma 4 on a four-source training mixture. All answer-bearing inputs are images. A short native system prompt or task instruction is allowed, but it must not include the text to transcribe, the audio transcript, the image caption, or the Valor32k question/choices.
 
-### Text-As-Image Calibration
+### 1. Text-Compressed Image Transcription
 
-- Primary source: synthetic A/B/C/D reading tasks generated locally.
-- Public sanity source: MMLU-style multiple-choice text QA, preferably via `cais/mmlu` or the current Hugging Face MMLU dataset path available in `datasets`.
-- Smoke size: 100 examples.
-- First eval size: 500 examples.
-- Metric: image-only accuracy, native-text upper-bound accuracy, and retention.
-- Failure criterion: retention below 70% or image-only accuracy below 50%.
-- Note: include shuffled-options and low-prior string diagnostics to detect linguistic-prior dependence.
+- Source candidates: rendered text tasks, rendered OCR/document datasets, MMLU-style text rendered as images, and low-prior synthetic strings.
+- Task: present rendered text as an image; output the transcription, answer, or structured target.
+- Input: image first, then a short instruction such as `Transcribe the text shown in the image.`
+- Target: text transcription, answer text, or A/B/C/D depending on source.
+- Initial size: TBD.
+- Failure criterion: held-out text-image tasks do not improve over the base model or collapse under shuffled/low-prior controls.
 
-### Vision-Text Calibration
+### 2. Audio Transcription Image
 
-- Primary source: `zlab-princeton/WorldBench` on Hugging Face.
-- Fallback: `Lin-Chen/MMStar` if WorldBench access or format blocks progress.
-- Task: natural image plus rendered question/options image; predict A/B/C/D.
-- Smoke size: 100 examples.
-- First eval size: 500 examples.
-- Metric: multiple-choice accuracy and invalid output rate.
-- Failure criterion: accuracy below 30% on a four-choice task.
+- Source candidates: `openslr/librispeech_asr`, Common Voice, or another public ASR corpus with clean transcripts.
+- Task: render speech as a log-mel spectrogram image; output the spoken transcript.
+- Input: spectrogram image first, then a short instruction such as `Transcribe the speech represented by this spectrogram image.`
+- Target: transcript text.
+- Initial size: TBD.
+- Failure criterion: held-out spectrogram-to-transcript examples do not improve over the base model.
 
-### ASR Transcript-Choice Calibration
+### 3. Image-Description Pair
 
-- Primary source: `openslr/librispeech_asr`, clean validation split.
-- Task: render audio as a log-mel spectrogram and render four transcript choices, one correct and three distractors from the same split.
-- Smoke size: 100 utterances.
-- First eval size: 500 utterances.
-- Metric: transcript-choice accuracy and invalid output rate; optional retention against Gemma 4 E2B native audio.
-- Failure criterion: accuracy below 30% on a four-choice task.
+- Source candidates: COCO Captions, TextCaps, or another public image-caption dataset.
+- Task: present a natural image; output a descriptive caption.
+- Input: image first, then a short instruction such as `Describe this image.`
+- Target: caption text.
+- Initial size: TBD.
+- Failure criterion: captions remain generic, hallucinated, or worse than base-model captions on held-out examples.
+
+### 4. Valor32k-AVQA v2.0
+
+- Source: `inesriahi/valor32k-avqa-v2`.
+- Task: tri-modal QA from rendered question/options, optional log-mel spectrogram, and optional sampled video frames.
+- Input: rendered question/options image, spectrogram if present, sampled frames if present, then a short A/B/C/D instruction.
+- Target: A/B/C/D answer.
+- Initial size: smoke 300 examples (100 per modality label), first training/eval cut TBD.
+- Failure criterion: mixed examples degrade individual source performance or invalid output rate remains high.
 
 ## Current Shortlist
 
@@ -73,7 +80,7 @@ Phase 0 uses lightweight calibration datasets before Valor32k. These datasets ar
 
 ## Dataset Of Record
 
-Use Valor32k-AVQA v2.0 first for Phases 1-3 because it is large, public, tri-modal, and has per-question modality labels. Use the included test videos first to avoid YouTube availability issues.
+Valor32k-AVQA v2.0 is the tri-modal QA source in the Phase 0 training mixture and the primary post-training evaluation benchmark for mixed visual inputs. Use the included test videos first to avoid YouTube availability issues.
 
 Keep JointAVBench as the fallback if Valor32k media access or licensing blocks progress. Add Daily-Omni as a small temporal-alignment evaluation once the rendering pipeline works. Defer OmniInteract until Valor32k Phases 1-3 produce interpretable results.
 
@@ -116,7 +123,7 @@ Run two lanes for each subset:
 
 - **Image-only lane**: model receives only images: rendered question/options, sampled frames, and/or spectrograms. The fixed native text instruction can say only something like "Answer the multiple-choice question shown in the images." It must not include the actual question or answer choices as native text.
 - **Native upper bound**: model receives the question/options as native text and the video/audio through native supported pathways where available.
-- First milestone: zero-shot/prompt-only evaluation; no fine-tuning until smoke and first-eval results are interpretable.
+- First milestone: LoRA fine-tuning on the four-source Phase 0 training mixture; evaluation follows training.
 
 Fixed image-only instruction:
 
@@ -148,7 +155,10 @@ Key failure criteria:
 
 ## Open Decisions
 
-- Exact subset sizes for the first run.
-- Log-mel spectrogram settings for audio-as-image.
-- Spectrogram hop length and color mapping.
+- Exact source datasets for text-compressed image transcription, audio transcription, and image-description.
+- Mixture ratios across the four Phase 0 sources.
+- Exact subset sizes for the first training run.
+- Log-mel spectrogram hop length and color mapping.
+- LoRA hyperparameters and whether to initially fine-tune vision layers.
+- Gemma 4 template variant: `gemma-4` versus `gemma-4-thinking`, while still using the original Gemma E2B template family.
 - Whether OmniInteract is the Phase 4 dataset after Valor32k results are available.

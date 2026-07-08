@@ -20,38 +20,47 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 ## Minimum Viable Experiment
 
-The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only after the rendering and evaluation pipeline produces interpretable image-only versus native-upper-bound results.
+The first milestone is a LoRA fine-tuning run on a four-source image-input training mixture. Evaluation follows training.
 
-### Phase 0: Modality Calibration
+### Phase 0: Training Data Mixture
 
-Phase 0 verifies that each visualized modality path works before the Valor32k task benchmark. It is not warmup training and does not update model weights.
+Phase 0 trains Gemma 4 E2B with all task inputs presented as images. A small native text system prompt and instruction are allowed, but native text/audio content that carries the answer should not be provided as input.
 
-- Text-as-image gate: render simple synthetic A/B/C/D reading tasks and a small public text multiple-choice slice such as MMLU. Compare image-only against native-text upper bound.
-- Vision-text gate: use a public image+text multiple-choice benchmark such as WorldBench, with MMStar as fallback. Pass the natural image plus rendered question/options image.
-- Audio-as-image gate: use LibriSpeech clean validation audio for ASR transcript choice. Pass the log-mel spectrogram plus rendered transcript choices.
-- Bundle gate: combine rendered text, spectrogram, and a natural image on a tiny hand-checkable subset to verify ordering, token budgets, and parser behavior.
-- Failure signal: any gate is near random chance, has high invalid rate, or fails because the visual bundle is unreadable at the conservative render settings.
+1. **Text-compressed image transcription**: render text into images and train the model to transcribe, answer from, or structurally reproduce the rendered content.
+2. **Audio transcription**: render speech as log-mel spectrogram images and train the model to output the spoken transcript.
+3. **Image-description**: present natural images and train the model to output descriptive captions.
+4. **Valor32k-AVQA v2.0**: present rendered question/options, spectrograms, and sampled video frames as images and train the model to answer A/B/C/D.
 
-### Phase 1: Text-as-Image Single-Turn
+Training follows the Unsloth Gemma 4 multimodal fine-tuning guide at `https://unsloth.ai/docs/models/gemma-4/train`.
 
-- Render QA prompts into images.
-- Fine-tune or prompt the baseline to answer from rendered text only.
-- Compare the image-only lane against a native-text upper bound.
+- Loader: use `FastVisionModel.from_pretrained` for Gemma 4 multimodal fine-tuning.
+- Base model: `unsloth/gemma-4-E2B-it` unless a later decision changes the baseline.
+- Template: use the original Gemma 4 E2B template through Unsloth `get_chat_template`; do not hand-roll chat formatting.
+- Data shape: Unsloth multimodal `messages` examples with image content before short text instruction content.
+- Collator: use `UnslothVisionDataCollator` with TRL `SFTTrainer`.
+- Loss masking: train on assistant responses only; do not train loss on the rendered-input instructions.
+- LoRA: start with parameter-efficient fine-tuning; vision, language, attention, and MLP layer choices are explicit hyperparameters.
+- Failure signal: training diverges, one source dominates the mixture, rendered inputs become unreadable under the chosen token budget, or held-out evaluation does not improve over the base model.
+
+### Phase 1: Text-As-Image Evaluation
+
+- Evaluate held-out rendered text examples.
+- Compare the trained image-only lane against the base model and native-text upper bound.
 - Success signal: image-only accuracy reaches at least 80% of native-text upper-bound accuracy.
 - Failure signal: OCR or reasoning collapses under shuffled, random, or dense text where linguistic priors cannot fill gaps.
 
-### Phase 2: Audio-as-Image Single-Turn
+### Phase 2: Audio-As-Image Evaluation
 
-- Convert short speech clips to log-mel spectrogram images.
+- Evaluate held-out log-mel spectrogram transcription and audio-question examples.
 - Ask transcript or content questions from the rendered audio image.
 - Compare the image-only lane against Gemma 4 E2B native audio and an ASR plus LLM pipeline if available.
 - Success signal: image-only accuracy reaches at least 50% of native-audio or ASR plus LLM upper-bound accuracy on short clean speech.
 - Failure signal: the visual audio path cannot recover speech content above a weak baseline.
 
-### Phase 3: Mixed Visual Inputs
+### Phase 3: Mixed Visual Inputs Evaluation
 
-- Mix text-as-image, audio-as-image, and natural-image examples.
-- Measure whether unified training degrades any single modality.
+- Evaluate mixed text-as-image, audio-as-image, natural-image, and Valor32k examples.
+- Measure whether unified training degrades any single source type.
 - Failure signal: one representation dominates training or hurts the others.
 
 ### Phase 4: Fully Visual Multi-Turn
@@ -65,9 +74,8 @@ Phase 0 verifies that each visualized modality path works before the Valor32k ta
 
 ## Success Metrics
 
-- Phase 0 text-as-image: at least 70% retention against native-text upper bound and at least 50% absolute accuracy on the public text MCQ slice.
-- Phase 0 vision-text: above 30% accuracy on a four-choice public image+text benchmark, with invalid rate reported.
-- Phase 0 ASR transcript choice: above 30% accuracy on four-choice LibriSpeech transcript selection, with invalid rate reported.
+- Phase 0 training: loss should trend down without divergence; Gemma 4 E2B/E4B multimodal losses around 13-15 may be normal per Unsloth guidance.
+- Phase 0 held-out checks: each source type must improve over the base model or justify why it is retained in the mixture.
 - Text-as-image: image-only lane reaches at least 80% retention against the native-text upper bound.
 - Audio-as-image: image-only lane reaches at least 50% retention against native-audio or ASR plus LLM upper bound on short clean speech.
 - Fully visual multi-turn: compact two-turn transcript beats a no-history visual control by at least 20 percentage points.
@@ -77,9 +85,11 @@ Phase 0 verifies that each visualized modality path works before the Valor32k ta
 
 ## Dataset Strategy
 
-- Start from public benchmark/data sources first rather than synthetic-only diagnostic data.
-- Prefer datasets that contain visual, audio, and text together.
-- Dataset of record for Phases 1-3: Valor32k-AVQA v2.0 for single-turn tri-modal work because it has video, audio, text QA, and per-question modality labels.
+- Phase 0 training uses four source types: text-compressed image transcription, audio transcription, image-description, and Valor32k.
+- Text-compressed image transcription can use rendered text tasks, rendered OCR/document data, and controlled low-prior text diagnostics.
+- Audio transcription can use public ASR data such as LibriSpeech or Common Voice rendered as log-mel spectrogram images.
+- Image-description can use public image-caption data such as COCO Captions, TextCaps, or similar datasets.
+- Valor32k-AVQA v2.0 remains the tri-modal QA source because it has video, audio, text QA, and per-question modality labels.
 - Current fallback: JointAVBench because it has released clips, Apache 2.0 repository license, and questions designed to require joint audio-visual reasoning.
 - Current small evaluation candidate: Daily-Omni for temporal audio-visual alignment.
 - Current multi-turn candidate: OmniInteract, deferred until the compact fully visual transcript pipeline is stable.
@@ -115,6 +125,8 @@ Phase 0 verifies that each visualized modality path works before the Valor32k ta
 - Fixed image-only native instruction: `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.`
 - The fixed instruction must not include the actual question, answer choices, transcript, audio transcript, or modality-specific content.
 - All Gemma 4 E2B calls must use the original Gemma E2B model/processor chat template; do not introduce a custom chat template or prompt wrapper.
+
+For training examples, the instruction may vary by task but must stay short and must not include the answer-bearing native content. Example instructions: `Transcribe the text shown in the image.`, `Transcribe the speech represented by this spectrogram image.`, `Describe this image.`, and `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.`
 
 ## First Valor32k Visual Bundle
 
@@ -157,4 +169,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose whether the next step is an implementation plan or direct prototype implementation for Phase 0.
+Choose the first dataset sources, mixture ratios, and LoRA hyperparameters for the four-source training mixture.
