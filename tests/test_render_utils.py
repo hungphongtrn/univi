@@ -33,9 +33,19 @@ def test_render_text_page_uses_minimum_font_size():
 def test_render_log_mel_spectrogram_creates_image():
     img = render_log_mel_spectrogram("tests/fixtures/test_tone.wav")
     assert isinstance(img, Image.Image)
+    assert img.mode == "RGB"
     assert img.width > 0 and img.height > 0
 
 
 def test_render_log_mel_spectrogram_central_window():
-    img = render_log_mel_spectrogram("tests/fixtures/test_15s_tone.wav")
-    assert isinstance(img, Image.Image)
+    img_5s = render_log_mel_spectrogram("tests/fixtures/test_tone.wav")
+    img_15s = render_log_mel_spectrogram("tests/fixtures/test_15s_tone.wav")
+    assert isinstance(img_5s, Image.Image)
+    assert isinstance(img_15s, Image.Image)
+    assert (
+        img_5s.width,
+        img_5s.height,
+    ) == (
+        img_15s.width,
+        img_15s.height,
+    ), "5s and 15s clips should produce same spectrogram dimensions under 10s central window"

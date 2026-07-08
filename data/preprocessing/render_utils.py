@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import math
-
 import librosa
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+
+_SPECTROGRAM_UPSCALE = 4
+_PIXEL_MAX = 255
 
 
 def _find_font(font_path: str | None = None) -> str | None:
@@ -120,11 +121,12 @@ def render_log_mel_spectrogram(
     else:
         normalized = np.zeros_like(log_S)
 
-    normalized = (255 * (1.0 - normalized)).astype(np.uint8)
+    normalized = (_PIXEL_MAX * (1.0 - normalized)).astype(np.uint8)
 
     height, width = normalized.shape
     img = Image.fromarray(normalized, mode="L").resize(
-        (width * 4, height * 4), Image.LANCZOS
+        (width * _SPECTROGRAM_UPSCALE, height * _SPECTROGRAM_UPSCALE),
+        Image.LANCZOS,
     )
 
-    return img
+    return img.convert("RGB")
