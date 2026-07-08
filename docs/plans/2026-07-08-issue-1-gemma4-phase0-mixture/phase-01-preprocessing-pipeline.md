@@ -1,0 +1,436 @@
+# Phase 1: Preprocessing Pipeline
+
+## Phase Goal
+Materialize all five source datasets as Hugging Face datasets in Gemma 4 multimodal `messages` format, verify the schema is correct for each source, and produce a concatenated-and-shuffled training mixture ready for `FastVisionModel`.
+
+## Project Structure After Phase 1
+
+```
+univi/
+├── data/
+│   └── preprocessing/
+│       ├── __init__.py
+│       ├── librispeech_asr.py       # Audio → log-mel spectrogram image
+│       ├── densefusion.py           # Text-image description pairs
+│       ├── fineweb_edu.py           # Raw text → rendered page image
+│       ├── smoltalk.py              # Instruction → rendered page image
+│       ├── valor32k.py              # Tri-modal visual bundle
+│       ├── merge_mixture.py         # Concatenate + shuffle all sources
+│       └── render_utils.py          # Shared rendering helpers (text, spectrogram)
+├── tests/
+│   ├── test_librispeech_asr.py
+│   ├── test_densefusion.py
+│   ├── test_fineweb_edu.py
+│   ├── test_smoltalk.py
+│   ├── test_valor32k.py
+│   ├── test_merge_mixture.py
+│   └── test_render_utils.py
+└── requirements-preprocessing.txt   # Dependencies for preprocessing only
+```
+
+## Tasks
+
+### Task 1: Shared rendering utilities
+
+**Files:**
+- Create: `data/preprocessing/render_utils.py`
+- Create: `data/preprocessing/__init__.py`
+- Test: `tests/test_render_utils.py`
+
+- [ ] **Step 1: Write text rendering utility**
+
+```python
+def render_text_page(
+    text: str,
+    canvas_width: int = 1024,
+    font_size: int = 14,
+    font_path: str | None = None,
+    background_color: str = "white",
+    text_color: str = "black",
+) -> Image.Image:
+    """Render text as a DeepSeek-OCR-style page image.
+
+    Args:
+        text: Text content to render (may include newlines).
+        canvas_width: Fixed canvas width in pixels (default 1024).
+        font_size: Font size in points (default 14, minimum 14 per conservative settings).
+        font_path: Path to a .ttf file (default uses Pillow default).
+        background_color: Canvas background color.
+        text_color: Text color.
+
+    Returns:
+        Pillow Image with rendered text.
+    """
+    # TODO: implement using Pillow ImageDraw; auto-wrap text to fit canvas_width;
+    #   use conservative compression (no high-density packing).
+```
+
+- [ ] **Step 2: Write spectrogram rendering utility**
+
+```python
+def render_log_mel_spectrogram(
+    audio_path: str,
+    sample_rate: int = 16000,
+    n_mels: int = 80,
+    n_fft: int = 400,        # 25 ms at 16 kHz → 400 samples
+    hop_length: int = 160,   # 10 ms at 16 kHz → 160 samples
+    window: str = "hann",
+    central_duration: float = 10.0,
+    power: float = 2.0,
+) -> Image.Image:
+    """Render audio as a Whisper-style log-mel spectrogram image.
+
+    Args:
+        audio_path: Path to audio file.
+        sample_rate: Target sample rate in Hz (default 16000).
+        n_mels: Number of mel bins (default 80).
+        n_fft: FFT window size (default 400 = 25 ms).
+        hop_length: STFT hop length (default 160 = 10 ms).
+        window: STFT window type (default "hann").
+        central_duration: Central audio window in seconds (default 10.0).
+        power: Exponent for power spectrogram (default 2.0).
+
+    Returns:
+        Pillow Image of the log-mel spectrogram.
+    """
+    # TODO: implement using librosa; load audio, trim to central window,
+    #   compute mel spectrogram, convert to dB, normalize, render as image.
+```
+
+- [ ] **Step 3: Write tests for render utilities**
+
+```python
+def test_render_text_page_creates_image():
+    img = render_text_page("Hello world")
+    assert isinstance(img, Image.Image)
+    assert img.width == 1024
+    assert img.height > 0
+
+def test_render_text_page_uses_minimum_font_size():
+    img = render_text_page("Test", font_size=14)
+    assert isinstance(img, Image.Image)
+
+def test_render_log_mel_spectrogram_creates_image():
+    # Use a synthetic tone or a small bundled test audio fixture
+    img = render_log_mel_spectrogram("tests/fixtures/test_tone.wav")
+    assert isinstance(img, Image.Image)
+    assert img.width > 0 and img.height > 0
+
+def test_render_log_mel_spectrogram_central_window():
+    # Verify that a >10s audio clip is trimmed to ~10s window
+    img = render_log_mel_spectrogram("tests/fixtures/test_15s_tone.wav")
+    assert isinstance(img, Image.Image)
+```
+
+- [ ] **Step 4: Run tests to verify they fail**
+
+Run: `python -m pytest tests/test_render_utils.py -v`
+Expected: FAIL with import errors (render_text_page etc. not yet implemented)
+
+- [ ] **Step 5: Implement both rendering functions**
+
+Implement `render_text_page` using `PIL.ImageDraw` with text wrapping. Implement `render_log_mel_spectrogram` using `librosa` to compute the mel spectrogram, convert to dB, normalize to 0-255, and render with `matplotlib` or raw PIL.
+
+- [ ] **Step 6: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_render_utils.py -v`
+Expected: PASS
+
+- [ ] **Step 7: Create requirements-preprocessing.txt**
+
+```
+Pillow>=10.0.0
+librosa>=0.10.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+```
+
+### Task 2: LibriSpeech ASR preprocessing
+
+**Files:**
+- Create: `data/preprocessing/librispeech_asr.py`
+- Test: `tests/test_librispeech_asr.py`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_librispeech_asr_preprocess_generates_messages():
+    dataset = preprocess_librispeech_asr(
+        subset="clean-100",
+        max_samples=2,
+        sample_rate=16000,
+        n_mels=80,
+    )
+    assert len(dataset) == 2
+    row = dataset[0]
+    assert "messages" in row
+    assert len(row["messages"]) == 2  # user + assistant
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"  # spectrogram first
+    assert user_content[1]["type"] == "text"
+    assert "transcribe" in user_content[1]["text"].lower()
+    assert row["messages"][1]["role"] == "assistant"
+    assert len(row["messages"][1]["content"][0]["text"]) > 0
+
+def test_librispeech_asr_metadata_present():
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    row = dataset[0]
+    assert "source_dataset_id" in row
+    assert row["source_dataset_id"] == "openslr/librispeech_asr"
+    assert "modality_label" in row or "target_type" in row
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_librispeech_asr.py -v`
+Expected: FAIL
+
+- [ ] **Step 3: Implement `preprocess_librispeech_asr`**
+
+Load `openslr/librispeech_asr` via `datasets.load_dataset`. For each row, load audio, call `render_log_mel_spectrogram`, construct `messages` with spectrogram image + `Transcribe the speech represented by this spectrogram image.` as user, transcript as assistant. Add source metadata.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_librispeech_asr.py -v`
+Expected: PASS
+
+### Task 3: DenseFusion text-image description preprocessing
+
+**Files:**
+- Create: `data/preprocessing/densefusion.py`
+- Test: `tests/test_densefusion.py`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_densefusion_preprocess_generates_messages():
+    dataset = preprocess_densefusion(
+        subset="default", max_samples=2
+    )
+    assert len(dataset) == 2
+    row = dataset[0]
+    assert "messages" in row
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"  # source image first
+    assert user_content[1]["type"] == "text"
+    assert "describe" in user_content[1]["text"].lower()
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_densefusion.py -v`
+Expected: FAIL
+
+- [ ] **Step 3: Implement `preprocess_densefusion`**
+
+Load a `BAAI/DenseFusion-1M` subset, preserve source image, construct `messages` with image + `Describe this image.` as user, description as assistant. Include metadata.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_densefusion.py -v`
+Expected: PASS
+
+### Task 4: FineWeb-Edu raw text preprocessing
+
+**Files:**
+- Create: `data/preprocessing/fineweb_edu.py`
+- Test: `tests/test_fineweb_edu.py`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_fineweb_edu_preprocess_generates_messages():
+    dataset = preprocess_fineweb_edu(max_samples=2, max_chars=2000)
+    assert len(dataset) == 2
+    row = dataset[0]
+    assert "messages" in row
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"  # rendered text page
+    assert "transcribe" in user_content[1]["text"].lower()
+    # assistant text should match the raw text that was rendered
+    assistant_text = row["messages"][1]["content"][0]["text"]
+    assert len(assistant_text) > 0
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_fineweb_edu.py -v`
+Expected: FAIL
+
+- [ ] **Step 3: Implement `preprocess_fineweb_edu`**
+
+Load `HuggingFaceFW/fineweb-edu`, chunk text rows, call `render_text_page`, construct `messages` with rendered image + `Transcribe the text shown in the image.` as user, raw text as assistant. Include metadata.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_fineweb_edu.py -v`
+Expected: PASS
+
+### Task 5: SmolTalk instruction-following preprocessing
+
+**Files:**
+- Create: `data/preprocessing/smoltalk.py`
+- Test: `tests/test_smoltalk.py`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_smoltalk_preprocess_generates_messages():
+    dataset = preprocess_smoltalk(max_samples=2)
+    assert len(dataset) == 2
+    row = dataset[0]
+    assert "messages" in row
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"
+    assert "follow" in user_content[1]["text"].lower()
+    assert row["messages"][1]["role"] == "assistant"
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_smoltalk.py -v`
+Expected: FAIL
+
+- [ ] **Step 3: Implement `preprocess_smoltalk`**
+
+Load `HuggingFaceTB/smoltalk`, extract instruction/user turn, call `render_text_page`, construct `messages` with rendered instruction image + `Follow the instruction shown in the image.` as user, response as assistant. Include metadata.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_smoltalk.py -v`
+Expected: PASS
+
+### Task 6: Valor32k tri-modal visual bundle preprocessing
+
+**Files:**
+- Create: `data/preprocessing/valor32k.py`
+- Test: `tests/test_valor32k.py`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_valor32k_preprocess_generates_messages():
+    dataset = preprocess_valor32k(
+        max_samples=3,  # 1 visual, 1 audio, 1 audio-visual
+    )
+    assert len(dataset) == 3
+    for row in dataset:
+        assert "messages" in row
+        user_content = row["messages"][0]["content"]
+        # First image is always the rendered question/options
+        assert user_content[0]["type"] == "image"
+        assert user_content[-1]["type"] == "text"  # last is instruction
+        assert "answer" in user_content[-1]["text"].lower()
+
+def test_valor32k_image_count_by_modality():
+    dataset = preprocess_valor32k(max_samples=10)
+    for row in dataset:
+        modality = row.get("modality_label")
+        images = [c for c in row["messages"][0]["content"] if c["type"] == "image"]
+        if modality == "visual":
+            assert len(images) == 5  # 1 question + 4 frames
+        elif modality == "audio":
+            assert len(images) == 2  # 1 question + 1 spectrogram
+        elif modality == "audio-visual":
+            assert len(images) == 6  # 1 question + 1 spectrogram + 4 frames
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_valor32k.py -v`
+Expected: FAIL
+
+- [ ] **Step 3: Implement `preprocess_valor32k`**
+
+Load `inesriahi/valor32k-avqa-v2`. For each row, render question + options via `render_text_page`. For `audio`/`audio-visual`, extract audio and render spectrogram. For `visual`/`audio-visual`, sample 4 video frames. Construct `messages` in fixed order: question image, spectrogram (if present), frames (if present), then `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.` Assistant: single letter answer. Use train split for training sets, validation/test for eval sets. Include full metadata.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_valor32k.py -v`
+Expected: PASS
+
+### Task 7: Merge mixture script
+
+**Files:**
+- Create: `data/preprocessing/merge_mixture.py`
+- Test: `tests/test_merge_mixture.py`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_merge_mixture_concatenates_and_shuffles():
+    sources = {
+        "librispeech": preprocess_librispeech_asr(max_samples=5),
+        "densefusion": preprocess_densefusion(max_samples=5),
+        "fineweb": preprocess_fineweb_edu(max_samples=5),
+        "smoltalk": preprocess_smoltalk(max_samples=5),
+        "valor32k": preprocess_valor32k(max_samples=5),
+    }
+    merged = merge_and_shuffle(sources, seed=42)
+    assert len(merged) == 25
+    assert "messages" in merged[0]
+
+def test_merge_mixture_preserves_metadata():
+    sources = {
+        "librispeech": preprocess_librispeech_asr(max_samples=2),
+    }
+    merged = merge_and_shuffle(sources, seed=42)
+    assert "source_dataset_id" in merged[0]
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_merge_mixture.py -v`
+Expected: FAIL
+
+- [ ] **Step 3: Implement `merge_and_shuffle`**
+
+Concatenate all source datasets, shuffle with a fixed seed, push to Hugging Face Hub (or save locally). Include source metadata column to track provenance.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `python -m pytest tests/test_merge_mixture.py -v`
+Expected: PASS
+
+### Task 8: Integration validation
+
+- [ ] **Step 1: Run all preprocessing tests**
+
+```bash
+python -m pytest tests/ -v
+```
+
+Expected: ALL PASS
+
+- [ ] **Step 2: Run end-to-end materialization with small counts**
+
+```bash
+python -m data.preprocessing.merge_mixture \
+    --librispeech-samples 10 \
+    --densefusion-samples 10 \
+    --fineweb-samples 10 \
+    --smoltalk-samples 10 \
+    --valor32k-samples 10 \
+    --output ./data/materialized/smoke-v0
+```
+
+Expected: Script completes, 50 examples in output dataset, correct schema.
+
+- [ ] **Step 3: Verify schema of output dataset**
+
+Confirm each row has `messages` list with valid image objects and text content. Verify no row contains native answer-bearing text in the user instruction.
+
+## Phase Completion Criteria
+- [ ] All 7 task test suites pass
+- [ ] End-to-end materialization script produces a valid dataset with 5+ source examples
+- [ ] Every user message has images before text instruction
+- [ ] No user message contains native answer-bearing content
+- [ ] Source metadata is present for every row (source_dataset_id, modality_label/ target_type, preprocessing version)
+- [ ] Dataset can be loaded by `datasets.load_dataset` and iterated without errors
+
+## Handoff Notes
+- The smoke training script in Phase 2 expects the dataset to be available at `data/materialized/smoke-v0` or as a HF Hub dataset.
+- The `render_text_page` and `render_log_mel_spectrogram` utilities in `render_utils.py` are shared; do not change their signatures without updating all consumers.
+- Font and colormap choices in `render_utils.py` become experimental hyperparameters — document them in the metadata.
+- The materialized dataset should be pushed to HF Hub (`hungphongtrn/univi-phase0-smoke-v0` for the smoke version) so the training script can load it from anywhere.
+- If any source dataset's media files (`valor32k` video/audio for train split) are not directly accessible via HF dataset, document the resolution in decisions.md and use the available subset or fallback.
