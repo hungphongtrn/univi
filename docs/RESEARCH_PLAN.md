@@ -12,7 +12,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 ## Core Questions
 
-1. What exactly is visualized: only user inputs, or both user inputs and assistant outputs for future turns?
+1. What transcript layout and visual token budget can support a fully visual multi-turn conversation?
 2. What does the model see at turn 2 when the answer depends on turn 1?
 3. Is the goal competitive performance, a compression experiment, a unified data pipeline, or architectural simplicity?
 4. What visual representation of audio is in scope for the first proof-of-concept?
@@ -40,10 +40,11 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Measure whether unified training degrades any single modality.
 - Failure signal: one representation dominates training or hurts the others.
 
-### Phase 4: Multi-Turn
+### Phase 4: Fully Visual Multi-Turn
 
 - Construct two-turn examples where turn 2 requires turn 1 context.
-- Compare composite conversation images, interleaved image inputs, and native text-history variants.
+- Render prior user turns, assistant turns, and the current user turn into a fully visual transcript.
+- Compare at least two transcript layouts before scaling: compact document layout and chat-style layout.
 - Failure signal: context length grows faster than the model can process, or turn-2 accuracy drops to near single-turn/no-context baselines.
 
 ## Dataset Notes
@@ -59,7 +60,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - DeepSeek-OCR-style optical compression may rely on linguistic priors, so evaluations need adversarial or low-prior text.
 - Spectrograms are image-like but not natural images; a generic VLM may need targeted adaptation.
 - Gemma 4 E2B has native audio and text paths, so the baseline must be constrained or the experiment will not isolate visual unification.
-- Multi-turn visual context may require repeatedly re-encoding conversation history instead of using cheap text KV-cache behavior.
+- Fully visual multi-turn context requires repeatedly re-encoding conversation history instead of using cheap text KV-cache behavior.
 
 ## Related Work Pointers
 
@@ -70,6 +71,10 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - AudioCLIP, CLAP, Whisper, Audio Spectrogram Transformer, EnCodec, SoundStream, and WavTokenizer: prior art for audio representations and audio-language alignment.
 - Pix2Struct, Donut, Nougat, LayoutLM-family, DocVQA, and TextVQA: prior art around document/text understanding from pixels.
 
-## First Decision Needed
+## First Decision
 
-Decide the multi-turn representation before implementing data generation. It determines rendering, dataset schema, token budget, evaluation design, and whether the project is a visual-input experiment or a fully visual conversation experiment.
+The project will pursue a fully visual transcript for multi-turn experiments: prior user turns, assistant turns, and the current user turn are rendered as pixels rather than preserved as native text history. This makes layout, compression, and visual token budget primary research constraints.
+
+## Next Decision Needed
+
+Choose the transcript layout and maximum supported conversation length for the first multi-turn dataset.
