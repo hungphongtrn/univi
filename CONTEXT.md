@@ -112,6 +112,10 @@ _Avoid_: arbitrary image order
 The official Gemma 4 E2B chat/input template used by the model and processor without custom prompt wrapping.
 _Avoid_: custom chat template, hand-rolled prompt format
 
+**Strict First-Letter Parsing**:
+An output parser that accepts only A, B, C, or D as the first non-whitespace response character.
+_Avoid_: regex-anywhere parsing, judge-based parsing
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -137,6 +141,7 @@ _Avoid_: custom chat template, hand-rolled prompt format
 - The image-only lane uses a **Generic A-D Instruction** and must not include native question or answer-choice content.
 - The first **Visual Bundle Order** is rendered question/options, then spectrogram if present, then video frames in chronological order.
 - All Gemma 4 E2B runs must use the **Original Gemma E2B Template**.
+- Valor32k multiple-choice outputs use **Strict First-Letter Parsing**.
 
 ## Example Dialogue
 
@@ -159,4 +164,5 @@ _Avoid_: custom chat template, hand-rolled prompt format
 - "Native instruction" resolved: use a fixed **Generic A-D Instruction** in the image-only lane.
 - "Image order" resolved: use fixed **Visual Bundle Order** with semantic labels rendered inside images, not native text.
 - "Prompt template" resolved: use the **Original Gemma E2B Template** rather than custom prompt wrappers.
+- "Output parsing" resolved: use **Strict First-Letter Parsing** and count invalid outputs as wrong.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.

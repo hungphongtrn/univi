@@ -59,6 +59,8 @@ The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only
 - Audio-as-image: image-only lane reaches at least 50% retention against native-audio or ASR plus LLM upper bound on short clean speech.
 - Fully visual multi-turn: compact two-turn transcript beats a no-history visual control by at least 20 percentage points.
 - Mixed visual inputs: no single modality drops by more than 10 percentage points compared with its single-modality image-only run.
+- Output parsing: accept only A, B, C, or D as the first non-whitespace character after punctuation normalization.
+- Invalid outputs: score as wrong and report invalid rate separately.
 
 ## Dataset Strategy
 
@@ -142,4 +144,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the output parsing policy and invalid-answer handling.
+Choose whether the next step is an implementation plan or direct prototype implementation.

@@ -103,6 +103,7 @@ Primary metrics:
 - Retention metric: image-only accuracy divided by native upper-bound accuracy.
 - Category breakdown across description, action, count, temporal, location, and relative-position.
 - Shuffled-options accuracy to detect dependence on answer-position or language priors.
+- Invalid output rate under strict first-letter A/B/C/D parsing.
 
 Key failure criteria:
 
