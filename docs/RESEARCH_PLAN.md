@@ -81,6 +81,13 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - **Native upper bound**: run the same examples through Gemma 4 E2B's native text, audio, and image pathways to estimate the cost of visual unification.
 - Report both lanes together; do not claim visual unification works from native-lane results.
 
+## First Valor32k Visual Bundle
+
+- Text image: one rendered question/options image for every example.
+- Spectrogram image: one log-mel spectrogram image for `audio` and `audio-visual` examples.
+- Video frames: four sampled frames for `visual` and `audio-visual` examples.
+- Omit unused modalities by modality label in the image-only lane to keep the first prompt bounded.
+
 ## Related Work Pointers
 
 - DeepSeek-OCR and DeepSeek-OCR 2: optical context compression, variable visual token budgets, and visual causal flow.
@@ -96,4 +103,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose rendering budgets for Valor32k-AVQA v2.0: text image dimensions, log-mel spectrogram dimensions, sampled frame count, and Gemma 4 E2B image token budget.
+Choose concrete rendering dimensions and sampling settings: text image size, log-mel spectrogram parameters, frame sampling policy, and Gemma 4 E2B image token budget.

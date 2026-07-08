@@ -55,6 +55,13 @@ Each Valor32k example has a video, audio track, question, four answer choices, c
 - **Natural Image**: sample a small fixed number of video frames as ordinary image inputs.
 - **Target**: predict the multiple-choice answer index or answer text.
 
+Initial visual bundle:
+
+- One rendered question/options image for every example.
+- One log-mel spectrogram image for `audio` and `audio-visual` examples.
+- Four sampled video frames for `visual` and `audio-visual` examples.
+- No unused modality images in the first image-only lane.
+
 Use the modality label to control which visual inputs are present:
 
 - `visual`: rendered question/options plus sampled frames; omit the spectrogram in the image-only lane.
@@ -88,6 +95,7 @@ Key failure criteria:
 ## Open Decisions
 
 - Exact subset sizes for the first run.
-- Frame sampling rate and maximum video duration.
+- Frame sampling policy and maximum video duration.
 - Log-mel spectrogram settings for audio-as-image.
+- Text image dimensions and font/layout policy.
 - Whether multi-turn should use OmniInteract immediately or wait until after single-turn tri-modal results.

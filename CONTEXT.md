@@ -72,6 +72,10 @@ _Avoid_: synthetic-first, generated-only dataset
 The public dataset selected as the primary source for a phase of experiments.
 _Avoid_: candidate dataset, benchmark option after selection is resolved
 
+**Visual Bundle**:
+The bounded set of images passed to the image-only lane for one example.
+_Avoid_: prompt when referring specifically to image inputs
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -87,6 +91,7 @@ _Avoid_: candidate dataset, benchmark option after selection is resolved
 - A **No-History Control** is required for fully visual multi-turn evaluation.
 - The first dataset cut follows **Public Benchmark First** rather than synthetic-first.
 - Valor32k-AVQA v2.0 is the **Dataset of Record** for Phases 1-3.
+- The first Valor32k **Visual Bundle** contains one text image, one log-mel spectrogram image when audio is needed, and four sampled video frames when vision is needed.
 
 ## Example Dialogue
 
@@ -100,3 +105,4 @@ _Avoid_: candidate dataset, benchmark option after selection is resolved
 - "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
 - "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.
 - "Dataset strategy" resolved for Phases 1-3: use Valor32k-AVQA v2.0 as the **Dataset of Record** with included test media first.
+- "Visual budget" resolved for the first Valor32k run: use a bounded **Visual Bundle** of 1 text image, 1 spectrogram image, and 4 sampled frames where applicable.
