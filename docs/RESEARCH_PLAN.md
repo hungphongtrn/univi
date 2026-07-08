@@ -15,7 +15,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 1. What visual token budget can support a two-turn compact fully visual transcript?
 2. What does the model see at turn 2 when the answer depends on turn 1?
 3. Is the goal competitive performance, a compression experiment, a unified data pipeline, or architectural simplicity?
-4. Which small datasets should instantiate the first text, audio, image, and multi-turn tasks?
+4. Which public datasets should instantiate the first text, audio, image, and multi-turn tasks?
 5. What audio duration, mel-bin count, and image dimensions fit the first token budget?
 
 ## Minimum Viable Experiment
@@ -57,12 +57,13 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Fully visual multi-turn: compact two-turn transcript beats a no-history visual control by at least 20 percentage points.
 - Mixed visual inputs: no single modality drops by more than 10 percentage points compared with its single-modality image-only run.
 
-## Dataset Notes
+## Dataset Strategy
 
-- Text-as-image can start from small QA sets rendered with controlled fonts, density, and layouts.
-- Audio-as-image can start from short speech clips with transcripts, rendered as log-mel spectrogram images.
-- Natural-image examples can start from small VQA-style data.
-- Multi-turn examples should be synthetic at first so the required dependency between turns is measurable.
+- Start from public benchmark/data sources first rather than synthetic-only diagnostic data.
+- Text-as-image should use a public text QA or reasoning dataset rendered with controlled fonts, density, and layouts.
+- Audio-as-image should use public short speech clips with transcripts, rendered as log-mel spectrogram images.
+- Natural-image examples should use a public VQA-style dataset.
+- Fully visual multi-turn should use a public multi-turn or dialogue-style source where turn-2 dependency can be measured; if no suitable public source is selected, create only the minimum synthetic control needed for no-history comparison.
 
 ## Feasibility Risks
 
@@ -93,4 +94,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the first datasets for text-as-image, audio-as-image, natural-image, and fully visual multi-turn evaluation.
+Choose the exact public datasets and subset sizes for text-as-image, audio-as-image, natural-image, and fully visual multi-turn evaluation.

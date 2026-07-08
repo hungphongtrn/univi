@@ -64,6 +64,10 @@ _Avoid_: accuracy when comparing visual unification against native pathways
 A multi-turn evaluation variant that removes prior visual turns to measure whether the model is actually using visual conversation history.
 _Avoid_: ablation unless the removed context is specified
 
+**Public Benchmark First**:
+A dataset strategy that starts from established public datasets before synthetic diagnostic data.
+_Avoid_: synthetic-first, generated-only dataset
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -77,6 +81,7 @@ _Avoid_: ablation unless the removed context is specified
 - The **Image-Only Lane** tests the visual-unification claim; the **Native Upper Bound** estimates the performance lost by forbidding native text/audio paths.
 - A **Retention Metric** compares the **Image-Only Lane** to the **Native Upper Bound**.
 - A **No-History Control** is required for fully visual multi-turn evaluation.
+- The first dataset cut follows **Public Benchmark First** rather than synthetic-first.
 
 ## Example Dialogue
 
@@ -89,3 +94,4 @@ _Avoid_: ablation unless the removed context is specified
 - "Single visual modality" resolved for multi-turn: prior user turns, assistant turns, and the current user turn belong in a **Fully Visual Transcript** rather than native text history.
 - "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
 - "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.
+- "Dataset strategy" partially resolved: use public benchmarks/data first, but exact datasets and subset sizes are still unresolved.
