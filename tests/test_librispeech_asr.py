@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 
 import numpy as np
-from datasets import load_from_disk
+from datasets import Dataset, load_from_disk
 from PIL import Image
 
 from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
@@ -29,10 +29,25 @@ class _MockLibriSpeech:
     def __iter__(self):
         return iter(self._rows)
 
+    @property
+    def column_names(self) -> list[str]:
+        return list(self._rows[0]) if self._rows else []
+
     def select(self, indices):
         ds = _MockLibriSpeech.__new__(_MockLibriSpeech)
         ds._rows = [self._rows[i] for i in indices]
         return ds
+
+    def map(self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None):
+        result_rows = []
+        kwargs = fn_kwargs or {}
+        for i, row in enumerate(self._rows):
+            if with_indices:
+                new_row = function(row, i, **kwargs)
+            else:
+                new_row = function(row, **kwargs)
+            result_rows.append(new_row)
+        return Dataset.from_list(result_rows)
 
 
 def _mock_renderer(*args, **kwargs):

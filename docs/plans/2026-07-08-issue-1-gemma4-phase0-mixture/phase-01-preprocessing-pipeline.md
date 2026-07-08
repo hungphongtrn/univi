@@ -245,9 +245,11 @@ def test_librispeech_asr_metadata_present():
 Run: `python -m pytest tests/test_librispeech_asr.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement `preprocess_librispeech_asr`**
+- [ ] **Step 3: Implement `preprocess_librispeech_asr` using `datasets.Dataset.map`**
 
-Load `openslr/librispeech_asr` via `datasets.load_dataset`. For each row, load audio, call `render_log_mel_spectrogram`, construct `messages` with spectrogram image + `Transcribe the speech represented by this spectrogram image.` as user, transcript as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"openslr/librispeech_asr"`), `split`, `row_id` (unique per split), `render_config` (spectrogram params used), `modality_label` (`"audio"`), `preprocessing_version` (semantic version string).
+Load `openslr/librispeech_asr` via `datasets.load_dataset`. Transform rows with `source.map(...)` — do **not** accumulate rows in a Python list and call `Dataset.from_list`, because that holds the full materialized source in memory and risks OOM on large splits.
+
+For each row, load audio, call `render_log_mel_spectrogram`, construct `messages` with spectrogram image + `Transcribe the speech represented by this spectrogram image.` as user, transcript as assistant. Use `with_indices=True` so `row_id` has a stable `str(index)` fallback when the source `id` field is absent. Attach all 6 metadata fields: `source_dataset_id` (`"openslr/librispeech_asr"`), `split`, `row_id` (unique per split), `render_config` (spectrogram params used), `modality_label` (`"audio"`), `preprocessing_version` (semantic version string).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -591,6 +593,19 @@ ds = load_from_disk("./data/materialized/smoke-v0")
 ```
 
 Confirm each row has `messages` list with valid image objects and text content. Verify no row contains native answer-bearing text in the user instruction.
+
+## Implementation Patterns
+
+### Source preprocessors must use `datasets.Dataset.map`
+
+All source preprocessors (`librispeech_asr`, `densefusion`, `fineweb_edu`, `smoltalk`, `valor32k`) must transform rows via `source.map(...)` rather than accumulating rows in a Python list and calling `Dataset.from_list`. The list-accumulation pattern materialises the entire resulting dataset in Python heap memory, which does not scale to splits with hundreds of thousands of examples.
+
+Acceptable patterns:
+
+- **Row-wise `map`**: The map function writes temporary files (e.g., audio → WAV for spectrogram rendering) and returns the new row dict. This is fine because rendering is already side-effecty and I/O-bound.
+- **Batched `map`**: If the renderer supports it, use small bounded batches (e.g., `batched=True, batch_size=128`). Never collect all batches into an unbounded Python list.
+- **Streaming**: Future phases may load source datasets with `streaming=True` for even lower memory overhead; `map` remains compatible with streaming datasets.
+- **`with_indices=True`**: Always pass this when the `row_id` fallback needs the row index.
 
 ## Phase Completion Criteria
 - [ ] All 7 task test suites pass

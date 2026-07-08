@@ -37,11 +37,10 @@ def preprocess_librispeech_asr(
 
     render_kwargs = _render_defaults(sample_rate=sample_rate, n_mels=n_mels)
 
-    rows = []
-    for i, row in enumerate(source):
-        audio = row["audio"]
-        audio_array = audio["array"]
-        audio_sr = audio["sampling_rate"]
+    def _process_row(row, index: int):
+        audio_data = row["audio"]
+        audio_array = audio_data["array"]
+        audio_sr = audio_data["sampling_rate"]
 
         tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
         tmp_path = tmp.name
@@ -68,14 +67,18 @@ def preprocess_librispeech_asr(
             },
         ]
 
-        rows.append({
+        return {
             "messages": messages,
             "source_dataset_id": "openslr/librispeech_asr",
             "split": split,
-            "row_id": row.get("id", str(i)),
+            "row_id": row.get("id", str(index)),
             "render_config": dict(render_kwargs),
             "modality_label": "audio",
             "preprocessing_version": _PREPROCESSING_VERSION,
-        })
+        }
 
-    return Dataset.from_list(rows)
+    return source.map(
+        _process_row,
+        with_indices=True,
+        remove_columns=source.column_names,
+    )
