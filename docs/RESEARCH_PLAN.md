@@ -20,27 +20,37 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 ## Minimum Viable Experiment
 
-The first milestone is a LoRA fine-tuning run on a four-source image-input training mixture. Evaluation follows training.
+The first milestone is a LoRA fine-tuning run on the Phase 0 image-input training mixture. Evaluation follows training.
 
 ### Phase 0: Training Data Mixture
 
 Phase 0 trains Gemma 4 E2B with all task inputs presented as images. A small native text system prompt and instruction are allowed, but native text/audio content that carries the answer should not be provided as input.
 
-1. **Text-compressed image transcription**: render text into images and train the model to transcribe, answer from, or structurally reproduce the rendered content.
-2. **Audio transcription**: render speech as log-mel spectrogram images and train the model to output the spoken transcript.
-3. **Image-description**: present natural images and train the model to output descriptive captions.
-4. **Valor32k-AVQA v2.0**: present rendered question/options, spectrograms, and sampled video frames as images and train the model to answer A/B/C/D.
+1. **ASR from LibriSpeech**: render `openslr/librispeech_asr` audio as log-mel spectrogram images and train the model to output the spoken transcript.
+2. **Text-image description**: use a `BAAI/DenseFusion-1M` subset where the image is the answer-bearing input and the target is the paired description.
+3. **Text-compressed raw text**: pack raw text into rendered images and train the model to output the raw text.
+4. **Text-compressed instruction following**: pack `HuggingFaceTB/smoltalk` instruction-following prompts into rendered images and train the model to output the response.
+5. **Valor32k-AVQA v2.0**: use the official Valor train split only for training; present rendered question/options, spectrograms, and sampled video frames as images and train the model to answer A/B/C/D.
 
 Training follows the Unsloth Gemma 4 multimodal fine-tuning guide at `https://unsloth.ai/docs/models/gemma-4/train`.
 
 - Loader: use `FastVisionModel.from_pretrained` for Gemma 4 multimodal fine-tuning.
 - Base model: `unsloth/gemma-4-E2B-it` unless a later decision changes the baseline.
-- Template: use the original Gemma 4 E2B template through Unsloth `get_chat_template`; do not hand-roll chat formatting.
+- Template: use the original non-thinking `gemma-4` template through Unsloth `get_chat_template`; do not hand-roll chat formatting.
+- Reference notebook: adapt `https://colab.research.google.com/github/unslothai/notebooks/blob/main/nb/Gemma4_(E4B)-Vision.ipynb#scrollTo=QmUBVEnvCDJv`, switching the base model to `unsloth/gemma-4-E2B-it`.
 - Data shape: Unsloth multimodal `messages` examples with image content before short text instruction content.
 - Collator: use `UnslothVisionDataCollator` with TRL `SFTTrainer`.
 - Loss masking: train on assistant responses only; do not train loss on the rendered-input instructions.
-- LoRA: start with parameter-efficient fine-tuning; vision, language, attention, and MLP layer choices are explicit hyperparameters.
+- LoRA: start with QLoRA/LoRA and do not freeze the visual path for the first smoke; train adapters over vision, language, attention, and MLP layers unless a measured memory issue forces a smaller target set.
+- Model surgery: first establish a working baseline without stripping Gemma 4 components; removing `audio_tower` is an optimization experiment only after the unmodified `FastVisionModel` path loads, trains, saves, and reloads correctly.
 - Failure signal: training diverges, one source dominates the mixture, rendered inputs become unreadable under the chosen token budget, or held-out evaluation does not improve over the base model.
+
+### Execution Profiles
+
+- Local smoke: run Gemma 4 E2B on the RTX 3060 with QLoRA/LoRA, batch size 1, short max length, and small max steps to validate dataset loading, image collation, loss masking, and checkpoint save/load.
+- Full run: use the A100 40GB when available with the same materialized dataset, longer schedule, longer context if needed, higher LoRA rank if useful, and more complete evaluation.
+- Preprocessing: materialize all rendered examples as Hugging Face datasets in Gemma 4 multimodal `messages` format before training.
+- Split discipline: preserve each dataset's dedicated train/validation/test split during preprocessing; explore exact split mappings during implementation.
 
 ### Phase 1: Text-As-Image Evaluation
 
@@ -85,11 +95,12 @@ Training follows the Unsloth Gemma 4 multimodal fine-tuning guide at `https://un
 
 ## Dataset Strategy
 
-- Phase 0 training uses four source types: text-compressed image transcription, audio transcription, image-description, and Valor32k.
-- Text-compressed image transcription can use rendered text tasks, rendered OCR/document data, and controlled low-prior text diagnostics.
-- Audio transcription can use public ASR data such as LibriSpeech or Common Voice rendered as log-mel spectrogram images.
-- Image-description can use public image-caption data such as COCO Captions, TextCaps, or similar datasets.
-- Valor32k-AVQA v2.0 remains the tri-modal QA source because it has video, audio, text QA, and per-question modality labels.
+- Phase 0 training uses ASR, text-image description, text-compressed raw text, text-compressed instruction following, and Valor32k.
+- ASR source: `openslr/librispeech_asr`, rendered as log-mel spectrogram images.
+- Text-image description source: `BAAI/DenseFusion-1M` subset.
+- Text-compressed raw text source: `HuggingFaceFW/fineweb-edu` packed into images with raw text as the target.
+- Text-compressed instruction-following source: `HuggingFaceTB/smoltalk` rendered instruction images with response text as the target.
+- Valor32k-AVQA v2.0 remains the tri-modal QA source because it has video, audio, text QA, and per-question modality labels; use train for training only and reserve validation/test for evaluation.
 - Current fallback: JointAVBench because it has released clips, Apache 2.0 repository license, and questions designed to require joint audio-visual reasoning.
 - Current small evaluation candidate: Daily-Omni for temporal audio-visual alignment.
 - Current multi-turn candidate: OmniInteract, deferred until the compact fully visual transcript pipeline is stable.
@@ -101,6 +112,7 @@ Training follows the Unsloth Gemma 4 multimodal fine-tuning guide at `https://un
 - DeepSeek-OCR-style optical compression may rely on linguistic priors, so evaluations need adversarial or low-prior text.
 - Spectrograms are image-like but not natural images; a generic VLM may need targeted adaptation.
 - Gemma 4 E2B has native audio and text paths, so the baseline must be constrained or the experiment will not isolate visual unification.
+- Stripping unused Gemma 4 components such as `audio_tower` can break Unsloth patches, processor assumptions, PEFT target discovery, checkpoint loading, or save/reload compatibility; measure this only after the unmodified path works.
 - Fully visual multi-turn context requires repeatedly re-encoding conversation history instead of using cheap text KV-cache behavior.
 
 ## DeepSeek-OCR Lessons
@@ -142,17 +154,18 @@ For training examples, the instruction may vary by task but must stay short and 
 - Text image: 1024px-wide canvas, variable height, white background, black text, left-aligned question and A/B/C/D answer choices.
 - Text font: legible sans-serif or monospace, at least 14pt, with the question preferably at 16pt.
 - Text image token budget: 560 tokens for the main run, with a 280-token ablation in the smoke run.
-- Audio image: one log-mel spectrogram image at a 280-token budget.
+- Text packing policy: use DeepSeek-OCR-style page packing, but keep compression conservative for Gemma E2B; avoid the tiny/high-compression regime in the first run.
+- Audio image: one Whisper-style log-mel spectrogram image at a 280-token budget.
 - Audio window: central 10 seconds of the clip for smoke and first eval.
-- Spectrogram shape: 80 log-mel bins over the central window.
+- Spectrogram shape: mono 16 kHz audio, 25 ms Hann window, 10 ms hop, 80 log-mel bins over the central window.
 - Video frames: four frames sampled uniformly over the clip, each at a 140-token budget.
 - Compact transcript layout: vertical linear order with role labels and separators; no chat bubbles in the first proof.
 
 ## First Valor32k Subsets
 
-- Smoke run: 100 `visual`, 100 `audio`, and 100 `audio-visual` examples from included test media.
-- First evaluation run: 1,000 `visual`, 1,000 `audio`, and 1,000 `audio-visual` examples from included test media.
-- Scale-up: remaining included test examples after smoke and first eval pass without rendering, token-budget, or metric failures.
+- Smoke run: 100 `visual`, 100 `audio`, and 100 `audio-visual` examples from the Valor32k validation split.
+- First evaluation run: 1,000 `visual`, 1,000 `audio`, and 1,000 `audio-visual` examples from held-out Valor32k validation/test splits.
+- Scale-up: remaining held-out Valor32k examples after smoke and first eval pass without rendering, token-budget, or metric failures.
 
 ## Related Work Pointers
 
@@ -169,4 +182,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the first dataset sources, mixture ratios, and LoRA hyperparameters for the four-source training mixture.
+Choose the DenseFusion subset, exact subset sizes, LoRA hyperparameters, and whether `audio_tower` stripping is worth benchmarking after the unmodified smoke run.

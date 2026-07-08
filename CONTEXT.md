@@ -101,19 +101,23 @@ The sequencing decision to fine-tune on the visual-unification training mixture 
 _Avoid_: zero-shot first, prompt-only project
 
 **Phase 0 Training Mixture**:
-The first training mixture combining text-compressed image transcription, audio transcription, image-description, and Valor32k examples.
+The first training mixture combining LibriSpeech ASR as spectrogram images, DenseFusion text-image description, FineWeb-Edu text reconstruction, SmolTalk instruction following, and Valor32k examples.
 _Avoid_: calibration gate, zero-shot gate
 
-**Text-Compressed Image Transcription**:
-A training task where rendered text is given as an image and the model outputs the transcription, answer, or structured text target.
+**Text-Compressed Raw Text**:
+A training task where FineWeb-Edu raw text is packed into rendered images and the model outputs the same raw text.
 _Avoid_: native text input, raw OCR unless discussing the source dataset
+
+**Text-Compressed Instruction Following**:
+A training task where a SmolTalk instruction-following prompt is packed into rendered images and the model outputs the response.
+_Avoid_: native instruction input when the instruction carries the answer-bearing task content
 
 **Audio Transcription Image**:
 A training task where speech is rendered as a log-mel spectrogram image and the model outputs the spoken transcript.
 _Avoid_: native audio input, audio tokens
 
-**Image-Description Pair**:
-A training task where a natural image is given and the model outputs a descriptive caption.
+**Text-Image Description Pair**:
+A training task where a DenseFusion image/text example is given as image input and the model outputs the paired description.
 _Avoid_: image tag, native metadata
 
 **Generic A-D Instruction**:
@@ -136,6 +140,22 @@ _Avoid_: regex-anywhere parsing, judge-based parsing
 The training implementation path using Unsloth's Gemma 4 multimodal fine-tuning guide, `FastVisionModel`, Gemma 4 chat template, and vision data collator.
 _Avoid_: generic Transformers trainer when discussing the agreed first training implementation
 
+**Materialized Render Dataset**:
+A preprocessed Hugging Face dataset where rendered images are stored as dataset image objects or relative dataset files in Gemma 4 multimodal `messages` format.
+_Avoid_: local absolute image paths, render-at-train-time dataset unless explicitly benchmarking preprocessing
+
+**DeepSeek-OCR-Style Text Packing**:
+A page-like text rendering policy that uses dense but readable optical compression while avoiding the high-compression regime where OCR accuracy collapses.
+_Avoid_: chat screenshot, tiny unreadable text, native text tokens
+
+**Whisper-Style Log-Mel Rendering**:
+An audio rendering policy for speech transcription using mono 16 kHz audio, 25 ms window, 10 ms hop, and 80 log-mel bins before rendering as an image.
+_Avoid_: waveform image, arbitrary spectrogram settings for the first ASR run
+
+**Concatenate-And-Shuffle Mixture**:
+The first Phase 0 mixing rule: concatenate all selected source train examples and shuffle, without hand-tuned modality ratios beyond the selected per-source subsets.
+_Avoid_: balanced sampler, learned curriculum unless later results justify it
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -151,7 +171,7 @@ _Avoid_: generic Transformers trainer when discussing the agreed first training 
 - A **No-History Control** is required for fully visual multi-turn evaluation.
 - **Linguistic Prior Dependence** requires shuffled or low-prior controls beyond the **Retention Metric**.
 - The first dataset cut follows **Public Benchmark First** rather than synthetic-first.
-- Valor32k-AVQA v2.0 is the **Dataset of Record** for Phases 1-3.
+- Valor32k-AVQA v2.0 is the **Dataset of Record** for tri-modal training/evaluation, with the train split used only for training and validation/test held out for evaluation.
 - The first Valor32k **Visual Bundle** contains one text image, one log-mel spectrogram image when audio is needed, and four sampled video frames when vision is needed.
 - The first Valor32k **Visual Bundle** uses **Conservative Render Settings**.
 - The first Valor32k **Smoke Run** uses 100 examples per modality label; the first evaluation run uses 1,000 examples per modality label.
@@ -162,8 +182,13 @@ _Avoid_: generic Transformers trainer when discussing the agreed first training 
 - The first **Visual Bundle Order** is rendered question/options, then spectrogram if present, then video frames in chronological order.
 - All Gemma 4 E2B runs must use the **Original Gemma E2B Template**.
 - Valor32k multiple-choice outputs use **Strict First-Letter Parsing**.
-- **Phase 0 Training Mixture** trains on **Text-Compressed Image Transcription**, **Audio Transcription Image**, **Image-Description Pair**, and Valor32k examples.
+- **Phase 0 Training Mixture** trains on **Audio Transcription Image**, **Text-Image Description Pair**, **Text-Compressed Raw Text**, **Text-Compressed Instruction Following**, and Valor32k examples.
 - **Phase 0 Training Mixture** uses the **Unsloth Gemma 4 Training Path**.
+- Preprocessed Phase 0 sources are published as a **Materialized Render Dataset** before training.
+- The first local smoke run uses E2B QLoRA/LoRA on the RTX 3060; the larger run targets the A100 40GB using the same materialized dataset.
+- The first **Phase 0 Training Mixture** uses a **Concatenate-And-Shuffle Mixture**.
+- Text rendering uses **DeepSeek-OCR-Style Text Packing** for both raw text and rendered instruction following.
+- Audio rendering uses **Whisper-Style Log-Mel Rendering** for speech transcription and Valor32k spectrograms.
 
 ## Example Dialogue
 
@@ -176,16 +201,20 @@ _Avoid_: generic Transformers trainer when discussing the agreed first training 
 - "Single visual modality" resolved for multi-turn: prior user turns, assistant turns, and the current user turn belong in a **Fully Visual Transcript** rather than native text history.
 - "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
 - "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.
-- "Dataset strategy" resolved for Phases 1-3: use Valor32k-AVQA v2.0 as the **Dataset of Record** with included test media first.
+- "Dataset strategy" resolved for Phases 1-3: use Valor32k-AVQA v2.0 as the **Dataset of Record** with train for training only and validation/test held out for evaluation.
 - "Visual budget" resolved for the first Valor32k run: use a bounded **Visual Bundle** of 1 text image, 1 spectrogram image, and 4 sampled frames where applicable.
 - "Render settings" resolved for the first Valor32k run: use **Conservative Render Settings** with a 560-token text image budget and 280-token text ablation.
 - "Subset sizes" resolved for the first Valor32k runs: 100 examples per modality label for smoke, then 1,000 per modality label for first evaluation.
 - "Audio duration" resolved for the first Valor32k runs: use a 10-second **Central Audio Window** rather than full-clip spectrograms.
 - "Multi-turn timing" resolved: defer OmniInteract until after Valor32k smoke and first evaluation.
-- "Training timing" resolved: train first on the four-source **Phase 0 Training Mixture**, then evaluate.
+- "Training timing" resolved: train first on the **Phase 0 Training Mixture**, then evaluate.
 - "Native instruction" resolved: use a fixed **Generic A-D Instruction** in the image-only lane.
 - "Image order" resolved: use fixed **Visual Bundle Order** with semantic labels rendered inside images, not native text.
 - "Prompt template" resolved: use the **Original Gemma E2B Template** rather than custom prompt wrappers.
 - "Output parsing" resolved: use **Strict First-Letter Parsing** and count invalid outputs as wrong.
-- "Phase 0" resolved: use a four-source **Phase 0 Training Mixture** rather than zero-shot calibration gates.
+- "Phase 0" resolved: use the specified **Phase 0 Training Mixture** rather than zero-shot calibration gates.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.
+- "Preprocessing artifact" resolved: push a **Materialized Render Dataset** to Hugging Face rather than relying on local absolute image paths.
+- "Mixture rule" resolved: concatenate and shuffle selected Phase 0 train examples without hand-tuned modality ratios in the first run.
+- "Text render policy" resolved: use **DeepSeek-OCR-Style Text Packing** with conservative compression for Gemma E2B.
+- "Audio render policy" resolved: use **Whisper-Style Log-Mel Rendering** as the first ASR spectrogram convention.
