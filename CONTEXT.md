@@ -104,6 +104,14 @@ _Avoid_: no training ever, prompt-only project
 The fixed native text prompt allowed in the image-only lane that describes only the answer format.
 _Avoid_: native question, native choices
 
+**Visual Bundle Order**:
+The fixed sequence in which images are passed to the image-only lane.
+_Avoid_: arbitrary image order
+
+**Original Gemma E2B Template**:
+The official Gemma 4 E2B chat/input template used by the model and processor without custom prompt wrapping.
+_Avoid_: custom chat template, hand-rolled prompt format
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -127,6 +135,8 @@ _Avoid_: native question, native choices
 - Fully visual multi-turn work is **Deferred Multi-Turn** until Valor32k Phases 1-3 produce interpretable results.
 - The first Valor32k milestone is **Zero-Shot First** evaluation rather than fine-tuning.
 - The image-only lane uses a **Generic A-D Instruction** and must not include native question or answer-choice content.
+- The first **Visual Bundle Order** is rendered question/options, then spectrogram if present, then video frames in chronological order.
+- All Gemma 4 E2B runs must use the **Original Gemma E2B Template**.
 
 ## Example Dialogue
 
@@ -147,4 +157,6 @@ _Avoid_: native question, native choices
 - "Multi-turn timing" resolved: defer OmniInteract until after Valor32k smoke and first evaluation.
 - "Training timing" resolved: run zero-shot/prompt-only Valor32k evaluation before LoRA or other fine-tuning.
 - "Native instruction" resolved: use a fixed **Generic A-D Instruction** in the image-only lane.
+- "Image order" resolved: use fixed **Visual Bundle Order** with semantic labels rendered inside images, not native text.
+- "Prompt template" resolved: use the **Original Gemma E2B Template** rather than custom prompt wrappers.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.

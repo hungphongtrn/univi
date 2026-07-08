@@ -99,6 +99,7 @@ The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only
 - Report both lanes together; do not claim visual unification works from native-lane results.
 - Fixed image-only native instruction: `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.`
 - The fixed instruction must not include the actual question, answer choices, transcript, audio transcript, or modality-specific content.
+- All Gemma 4 E2B calls must use the original Gemma E2B model/processor chat template; do not introduce a custom chat template or prompt wrapper.
 
 ## First Valor32k Visual Bundle
 
@@ -106,6 +107,8 @@ The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only
 - Spectrogram image: one log-mel spectrogram image for `audio` and `audio-visual` examples.
 - Video frames: four sampled frames for `visual` and `audio-visual` examples.
 - Omit unused modalities by modality label in the image-only lane to keep the first prompt bounded.
+- Image order: rendered question/options first, spectrogram second if present, then video frames in chronological order.
+- Semantic labels such as `Question`, `Audio spectrogram`, and `Frame 1` should be rendered inside the relevant images rather than supplied as native text.
 
 ## Conservative Render Settings
 
@@ -139,4 +142,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the image ordering for the first Valor32k visual bundle.
+Choose the output parsing policy and invalid-answer handling.

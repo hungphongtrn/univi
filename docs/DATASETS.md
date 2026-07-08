@@ -61,6 +61,8 @@ Initial visual bundle:
 - One log-mel spectrogram image for `audio` and `audio-visual` examples.
 - Four sampled video frames for `visual` and `audio-visual` examples.
 - No unused modality images in the first image-only lane.
+- Image order: rendered question/options, spectrogram if present, then chronological video frames.
+- Bundle role labels are rendered into the images, not supplied as native text.
 
 Conservative render settings:
 
@@ -86,6 +88,8 @@ Run two lanes for each subset:
 Fixed image-only instruction:
 
 `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.`
+
+This instruction must be placed through the original Gemma 4 E2B template. Do not use a custom chat template or wrapper for either the image-only lane or native upper-bound lane.
 
 Initial measurable slices:
 
