@@ -15,8 +15,8 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 1. What visual token budget can support a two-turn compact fully visual transcript?
 2. What does the model see at turn 2 when the answer depends on turn 1?
 3. Is the goal competitive performance, a compression experiment, a unified data pipeline, or architectural simplicity?
-4. What visual representation of audio is in scope for the first proof-of-concept?
-5. How will the baseline be constrained so Gemma 4 E2B does not use native audio/text pathways when the experiment claims visual unification?
+4. How will the baseline be constrained so Gemma 4 E2B does not use native audio/text pathways when the experiment claims visual unification?
+5. What audio duration, mel-bin count, and image dimensions fit the first token budget?
 
 ## Minimum Viable Experiment
 
@@ -29,7 +29,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 ### Phase 2: Audio-as-Image Single-Turn
 
-- Convert short speech clips to spectrogram-like images.
+- Convert short speech clips to log-mel spectrogram images.
 - Ask transcript or content questions from the rendered audio image.
 - Compare against a native ASR plus LLM pipeline and Gemma 4 E2B native audio if available.
 - Failure signal: the visual audio path cannot recover speech content above a weak baseline.
@@ -50,7 +50,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 ## Dataset Notes
 
 - Text-as-image can start from small QA sets rendered with controlled fonts, density, and layouts.
-- Audio-as-image can start from short speech clips with transcripts, rendered as log-mel spectrograms.
+- Audio-as-image can start from short speech clips with transcripts, rendered as log-mel spectrogram images.
 - Natural-image examples can start from small VQA-style data.
 - Multi-turn examples should be synthetic at first so the required dependency between turns is measurable.
 
@@ -77,4 +77,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the audio rendering method for the first audio-as-image dataset.
+Constrain the Gemma 4 E2B baseline so the visual-unification experiment does not silently use native text or audio paths.

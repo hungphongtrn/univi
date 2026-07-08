@@ -13,8 +13,12 @@ Textual input rendered into pixels before it is given to the model.
 _Avoid_: OCR data, screenshot text, optical text unless the rendering/compression mechanism matters
 
 **Audio-as-Image**:
-Audio input converted into a visual representation before it is given to the model.
+Audio input converted into a log-mel spectrogram image before it is given to the model.
 _Avoid_: audio tokens, waveform unless the exact representation is waveform-based
+
+**Log-Mel Spectrogram Image**:
+A 2D time-frequency rendering of audio using mel-scaled frequency bins and log-scaled magnitude.
+_Avoid_: waveform image, raw spectrogram when mel/log scaling matters
 
 **Natural Image**:
 An ordinary visual input that is already an image before preprocessing.
@@ -47,6 +51,7 @@ _Avoid_: foundation model, backbone unless architecture is the focus
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
+- **Audio-as-Image** uses a **Log-Mel Spectrogram Image** in the first proof.
 - A **Visual Turn** may contain one or more **Text-as-Image**, **Audio-as-Image**, or **Natural Image** inputs.
 - A **Fully Visual Transcript** preserves multi-turn history by rendering prior turns into a **Composite Conversation Image**.
 - A **Visual Turn** in the fully visual scope depends on the transcript renderer to include enough prior context for follow-up reasoning.
@@ -61,7 +66,7 @@ _Avoid_: foundation model, backbone unless architecture is the focus
 
 ## Flagged Ambiguities
 
-- "Audio-as-Image" is unresolved: candidates include mel-spectrograms, log-mel spectrograms, waveform plots, or learned audio image/token renderings.
+- "Audio-as-Image" resolved for the first proof: use **Log-Mel Spectrogram Image** rather than waveform plots or learned audio renderings.
 - "Single visual modality" resolved for multi-turn: prior user turns, assistant turns, and the current user turn belong in a **Fully Visual Transcript** rather than native text history.
 - "Multi-turn" partially resolved: the first proof uses a two-turn **Compact Transcript Layout**, but image/token budget is still unresolved.
 - "Baseline" is unresolved: Gemma 4 E2B has native text, image, and audio support, so the experiment must define whether it is used as-is, constrained to image inputs, or fine-tuned against visualized inputs.
