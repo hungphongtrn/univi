@@ -67,6 +67,7 @@ Conservative render settings:
 - Text image: 1024px-wide canvas, variable height, at least 14pt legible sans-serif or monospace font.
 - Text image token budget: 560 tokens, with a 280-token ablation in the smoke run.
 - Spectrogram image token budget: 280 tokens.
+- Spectrogram content: central 10 seconds of audio rendered with 80 log-mel bins.
 - Video frame token budget: 140 tokens per frame.
 - Frame sampling: four frames uniformly sampled over the clip.
 
@@ -106,5 +107,5 @@ Key failure criteria:
 
 - Exact subset sizes for the first run.
 - Log-mel spectrogram settings for audio-as-image.
-- Maximum video/audio duration before clipping.
+- Spectrogram hop length and color mapping.
 - Whether multi-turn should use OmniInteract immediately or wait until after single-turn tri-modal results.

@@ -108,6 +108,8 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Text font: legible sans-serif or monospace, at least 14pt, with the question preferably at 16pt.
 - Text image token budget: 560 tokens for the main run, with a 280-token ablation in the smoke run.
 - Audio image: one log-mel spectrogram image at a 280-token budget.
+- Audio window: central 10 seconds of the clip for smoke and first eval.
+- Spectrogram shape: 80 log-mel bins over the central window.
 - Video frames: four frames sampled uniformly over the clip, each at a 140-token budget.
 - Compact transcript layout: vertical linear order with role labels and separators; no chat bubbles in the first proof.
 
@@ -132,4 +134,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose maximum video/audio duration and log-mel spectrogram parameters.
+Choose whether Phase 4 multi-turn work starts from OmniInteract now or waits until after Valor32k Phases 1-3.
