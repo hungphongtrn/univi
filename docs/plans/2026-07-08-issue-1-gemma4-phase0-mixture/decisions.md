@@ -35,3 +35,9 @@
 **Decision:** Serialise `render_config` as a JSON string via `json.dumps(config, sort_keys=True)`. Downstream consumers parse with `json.loads`. This gives every source the same `Value(string)` Arrow type, making concatenation safe.
 **Rationale:** JSON strings are the simplest way to maintain heterogeneous config schemas while satisfying Arrow's type uniformity requirement. The penalty of `json.loads` per row is negligible at dataset-iteration scale.
 **Consequences:** All preprocessors must use `json.dumps` with `sort_keys=True`. All test assertions on config contents must go through `json.loads`.
+
+## 2026-07-08: `row_id` stored as string across all sources
+**Context:** Source datasets use different identifier types. Some provide string ids, some provide numeric ids, and some have no stable id column. Mixed Arrow column types would make source concatenation fragile.
+**Decision:** Store every `row_id` as a string. Use the source id when present, otherwise the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.
+**Rationale:** A uniform `Value(string)` column keeps the Materialized Render Dataset merge-safe while preserving source provenance.
+**Consequences:** All preprocessors must coerce `row_id` with `str(...)`, and tests should include numeric-id coverage.
