@@ -20,6 +20,8 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 ## Minimum Viable Experiment
 
+The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only after the rendering and evaluation pipeline produces interpretable image-only versus native-upper-bound results.
+
 ### Phase 1: Text-as-Image Single-Turn
 
 - Render QA prompts into images.
@@ -135,4 +137,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose whether the first Valor32k pass is zero-shot/prompt-only evaluation or fine-tuning.
+Choose the fixed native instruction allowed in the image-only lane.

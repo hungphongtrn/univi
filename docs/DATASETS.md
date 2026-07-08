@@ -81,6 +81,7 @@ Run two lanes for each subset:
 
 - **Image-only lane**: model receives only images: rendered question/options, sampled frames, and/or spectrograms. The fixed native text instruction can say only something like "Answer the multiple-choice question shown in the images." It must not include the actual question or answer choices as native text.
 - **Native upper bound**: model receives the question/options as native text and the video/audio through native supported pathways where available.
+- First milestone: zero-shot/prompt-only evaluation; no fine-tuning until smoke and first-eval results are interpretable.
 
 Initial measurable slices:
 
