@@ -8,6 +8,7 @@ from datasets import Dataset, load_from_disk
 from PIL import Image
 
 from data.preprocessing.densefusion import (
+    _SOURCE_DATASET_ID,
     _find_key,
     _resolve_image,
     preprocess_densefusion,
@@ -89,14 +90,50 @@ def test_resolve_image_from_path(tmp_path):
     assert result.size == (16, 16)
 
 
-def test_resolve_image_raises_on_bad_path():
-    with pytest.raises(ValueError, match="not a valid file path"):
+def test_resolve_image_raises_on_bad_path(monkeypatch):
+    def mock_download(repo_id, repo_type, filename):
+        raise ValueError("File not found in HF repo")
+
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.hf_hub_download",
+        mock_download,
+    )
+
+    with pytest.raises(ValueError):
         _resolve_image("/nonexistent/image.png")
 
 
 def test_resolve_image_raises_on_bad_type():
     with pytest.raises(TypeError, match="Expected PIL Image or file path"):
         _resolve_image(42)
+
+
+def test_resolve_image_hf_repo_path(monkeypatch, tmp_path):
+    img_path = str(tmp_path / "test.png")
+    img = Image.new("RGB", (16, 16))
+    img.save(img_path)
+
+    def mock_download(repo_id, repo_type, filename):
+        assert repo_id == _SOURCE_DATASET_ID
+        assert repo_type == "dataset"
+        assert filename == "images/DenseFusion-4V-100K/test.png"
+        return img_path
+
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.hf_hub_download",
+        mock_download,
+    )
+
+    result = _resolve_image("images/DenseFusion-4V-100K/test.png")
+    assert isinstance(result, Image.Image)
+    assert result.size == (16, 16)
+
+
+def test_resolve_image_raises_on_url():
+    with pytest.raises(ValueError, match="URL"):
+        _resolve_image("https://example.com/image.jpg")
+    with pytest.raises(ValueError, match="URL"):
+        _resolve_image("hf://datasets/foo/bar")
 
 
 # --- Functional tests ---
@@ -108,7 +145,7 @@ def test_densefusion_preprocess_generates_messages(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(2),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    dataset = preprocess_densefusion(max_samples=2)
     assert len(dataset) == 2
     row = dataset[0]
     assert "messages" in row
@@ -124,7 +161,7 @@ def test_densefusion_metadata_present(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(1),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     row = dataset[0]
     assert row["source_dataset_id"] == "BAAI/DenseFusion-1M"
     assert "split" in row
@@ -140,7 +177,7 @@ def test_render_config_is_valid_json_densefusion(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(1),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     config = json.loads(dataset[0]["render_config"])
     assert config["render_method"] == "preserve_source_image"
 
@@ -158,7 +195,7 @@ def test_row_id_is_string_with_numeric_source_id_densefusion(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(rows=rows),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     assert isinstance(dataset[0]["row_id"], str)
     assert dataset[0]["row_id"] == "999"
 
@@ -176,7 +213,7 @@ def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(rows=rows),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     assert isinstance(dataset[0]["row_id"], str)
     assert dataset[0]["row_id"] == "0"
 
@@ -194,7 +231,7 @@ def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(rows=rows),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     assert isinstance(dataset[0]["row_id"], str)
     assert dataset[0]["row_id"] == "0"
 
@@ -205,7 +242,7 @@ def test_user_instruction_does_not_contain_description(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(2),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    dataset = preprocess_densefusion(max_samples=2)
     for row in dataset:
         user_text = row["messages"][0]["content"][1]["text"]
         description = row["messages"][1]["content"][0]["text"]
@@ -218,7 +255,7 @@ def test_save_load_round_trip(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(2),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    dataset = preprocess_densefusion(max_samples=2)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         dataset.save_to_disk(tmpdir)
@@ -254,7 +291,7 @@ def test_fallback_to_caption_key(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(rows=rows),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     assert "cat" in dataset[0]["messages"][1]["content"][0]["text"]
 
 
@@ -271,7 +308,7 @@ def test_fallback_to_jpg_key(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(rows=rows),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=1)
+    dataset = preprocess_densefusion(max_samples=1)
     assert dataset[0]["messages"][0]["content"][0]["type"] == "image"
 
 
@@ -289,7 +326,7 @@ def test_missing_text_key_raises_key_error(monkeypatch):
     )
 
     with pytest.raises(KeyError, match="description|caption|text|output"):
-        preprocess_densefusion(subset="default", max_samples=1)
+        preprocess_densefusion(max_samples=1)
 
 
 def test_missing_image_key_raises_key_error(monkeypatch):
@@ -305,7 +342,7 @@ def test_missing_image_key_raises_key_error(monkeypatch):
     )
 
     with pytest.raises(KeyError, match="image|jpg|png"):
-        preprocess_densefusion(subset="default", max_samples=1)
+        preprocess_densefusion(max_samples=1)
 
 
 def test_subset_empty_no_name_param(monkeypatch):
@@ -364,7 +401,7 @@ def test_map_used_not_direct_iteration(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(2),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=2)
+    dataset = preprocess_densefusion(max_samples=2)
     assert len(dataset) == 2
     assert map_kwargs.get("with_indices") is True
     assert map_kwargs.get("remove_columns") == ["image", "description", "id"]
@@ -376,5 +413,5 @@ def test_max_samples_none(monkeypatch):
         lambda *a, **kw: _MockDenseFusion(5),
     )
 
-    dataset = preprocess_densefusion(subset="default", max_samples=None)
+    dataset = preprocess_densefusion(max_samples=None)
     assert len(dataset) == 5

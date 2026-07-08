@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from datasets import Dataset, load_dataset
+from huggingface_hub import hf_hub_download
 from PIL import Image
 
 _PREPROCESSING_VERSION = "0.1.0"
@@ -27,10 +28,18 @@ def _resolve_image(value: object) -> Image.Image:
     if isinstance(value, str):
         path = Path(value)
         if path.is_file():
-            return Image.open(path)
-        raise ValueError(
-            f"Image value is a string but not a valid file path: {value!r}"
+            return Image.open(path).convert("RGB")
+        if value.startswith(("http://", "https://", "hf://")):
+            raise ValueError(
+                f"Image value is a URL which is not supported: {value!r}. "
+                "Use a local file path or HF dataset repo-relative path instead."
+            )
+        local_path = hf_hub_download(
+            repo_id=_SOURCE_DATASET_ID,
+            repo_type="dataset",
+            filename=value,
         )
+        return Image.open(local_path).convert("RGB")
     raise TypeError(
         f"Expected PIL Image or file path string, got {type(value).__name__}: {value!r}"
     )

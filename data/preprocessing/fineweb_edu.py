@@ -29,9 +29,10 @@ def preprocess_fineweb_edu(
     canvas_width: int = 1024,
     font_size: int = 14,
 ) -> Dataset:
-    source = load_dataset(_SOURCE_DATASET_ID, split=split)
     if max_samples is not None:
-        source = source.select(range(min(max_samples, len(source))))
+        source = load_dataset(_SOURCE_DATASET_ID, split=f"{split}[:{max_samples}]")
+    else:
+        source = load_dataset(_SOURCE_DATASET_ID, split=split)
 
     def _process_row(row, index: int):
         text_key = _find_text_key(row)

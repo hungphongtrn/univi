@@ -60,6 +60,19 @@
 
 **Consequences:** Task 7/8 should produce a four-source smoke dataset. Valor32k returns to the Phase 0 Training Mixture only after issue #2 is grilled and resolved.
 
+## 2026-07-09: Native audio decode is preprocessing-only; training lane stays image-only
+
+**Context:** `datasets==5.0.0` uses `torchcodec`-backed audio decoding for datasets like `openslr/librispeech_asr`. The LibriSpeech preprocessor reads raw audio arrays from the HF dataset and renders them into Log-Mel Spectrogram Images for the multimodal messages format. The downstream training lane operates exclusively on images.
+
+**Decision:** Allow native audio decode (via datasets/torchcodec) at preprocessing time only. The training lane remains image-only because audio is rendered into Log-Mel Spectrogram Images before messages are materialized. This means the training pipeline never sees raw audio tensors.
+
+**Rationale:** Preprocessing is a one-time materialization step that converts source-native formats into the unified image-text message format. Letting datasets handle audio decoding natively (instead of requiring pre-decoded WAV files) keeps the preprocessing pipeline simpler and avoids an extra I/O step.
+
+**Consequences:**
+- `torch` and `torchcodec` are now project dependencies (added in Task 0 of phase-01-preprocessing-pipeline.md).
+- The training lane (`FastVisionModel`) receives only images and text — no audio or video tensors.
+- Future audio sources can follow the same pattern: decode at preprocessing time, render to spectrogram image, downstream sees images only.
+
 ## 2026-07-08: `row_id` stored as string across all sources
 **Context:** Source datasets use different identifier types. Some provide string ids, some provide numeric ids, and some have no stable id column. Mixed Arrow column types would make source concatenation fragile.
 **Decision:** Store every `row_id` as a string. Use the source id when present and non-empty; if it is missing, `None`, or `""`, use the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.

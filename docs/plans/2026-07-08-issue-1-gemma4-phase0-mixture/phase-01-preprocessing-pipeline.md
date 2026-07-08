@@ -50,7 +50,7 @@ Expected: `pyproject.toml` and `.python-version` exist, with `requires-python = 
 Run:
 
 ```bash
-uv add 'Pillow>=10.0.0' 'librosa>=0.10.0' 'numpy>=1.24.0' 'matplotlib>=3.7.0' 'datasets>=2.14.0' 'soundfile>=0.12.0'
+uv add 'Pillow>=10.0.0' 'librosa>=0.10.0' 'numpy>=1.24.0' 'matplotlib>=3.7.0' 'datasets>=2.14.0' 'soundfile>=0.12.0' 'torch>=2.13.0' 'torchcodec>=0.14.0'
 ```
 
 Expected: dependencies are recorded in `pyproject.toml` and locked in `uv.lock`.
@@ -198,7 +198,7 @@ Expected: PASS
 
 - [ ] **Step 9: Verify uv-managed dependencies are available**
 
-Run: `uv run python -c "import PIL, librosa, numpy, matplotlib, datasets, soundfile"`
+Run: `uv run python -c "import PIL, librosa, numpy, matplotlib, datasets, soundfile, torch, torchcodec"`
 Expected: PASS with no import errors.
 
 ### Task 2: LibriSpeech ASR preprocessing

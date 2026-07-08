@@ -66,7 +66,7 @@ def test_librispeech_asr_preprocess_generates_messages(monkeypatch):
     )
 
     dataset = preprocess_librispeech_asr(
-        subset="clean-100", max_samples=2, sample_rate=16000, n_mels=80
+        max_samples=2, sample_rate=16000, n_mels=80
     )
     assert len(dataset) == 2
     row = dataset[0]
@@ -90,7 +90,7 @@ def test_librispeech_asr_metadata_present(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    dataset = preprocess_librispeech_asr(max_samples=1)
     row = dataset[0]
     assert row["source_dataset_id"] == "openslr/librispeech_asr"
     assert "split" in row
@@ -150,7 +150,7 @@ def test_row_id_is_string_with_numeric_source_id(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    dataset = preprocess_librispeech_asr(max_samples=1)
     assert isinstance(dataset[0]["row_id"], str)
     assert dataset[0]["row_id"] == "999"
 
@@ -206,7 +206,7 @@ def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    dataset = preprocess_librispeech_asr(max_samples=1)
     assert isinstance(dataset[0]["row_id"], str)
     assert dataset[0]["row_id"] == "0"
 
@@ -262,7 +262,7 @@ def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    dataset = preprocess_librispeech_asr(max_samples=1)
     assert isinstance(dataset[0]["row_id"], str)
     assert dataset[0]["row_id"] == "0"
 
@@ -277,7 +277,7 @@ def test_user_instruction_does_not_contain_transcript(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=2)
+    dataset = preprocess_librispeech_asr(max_samples=2)
     for row in dataset:
         user_text = row["messages"][0]["content"][1]["text"]
         transcript = row["messages"][1]["content"][0]["text"]
@@ -294,7 +294,7 @@ def test_render_config_is_valid_json(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    dataset = preprocess_librispeech_asr(max_samples=1)
     row = dataset[0]
     config = json.loads(row["render_config"])
     assert isinstance(config, dict)
@@ -319,7 +319,7 @@ def test_render_config_matches_renderer_kwargs(monkeypatch):
     )
 
     dataset = preprocess_librispeech_asr(
-        subset="clean-100", max_samples=1, sample_rate=16000, n_mels=80
+        max_samples=1, sample_rate=16000, n_mels=80
     )
 
     row = dataset[0]
@@ -341,7 +341,7 @@ def test_save_load_round_trip(monkeypatch):
         _mock_renderer,
     )
 
-    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=2)
+    dataset = preprocess_librispeech_asr(max_samples=2)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         dataset.save_to_disk(tmpdir)

@@ -421,7 +421,7 @@ def test_max_samples_none_loads_all(monkeypatch):
 def test_max_samples_zero_returns_empty(monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.fineweb_edu.load_dataset",
-        lambda *a, **kw: _MockFineWebEdu(5),
+        lambda *a, **kw: _MockFineWebEdu(0),
     )
     monkeypatch.setattr(
         "data.preprocessing.fineweb_edu.render_text_page",
@@ -430,6 +430,31 @@ def test_max_samples_zero_returns_empty(monkeypatch):
 
     dataset = preprocess_fineweb_edu(max_samples=0, max_chars=2000)
     assert len(dataset) == 0
+
+
+def test_max_samples_uses_split_slicing(monkeypatch):
+    recorded_kwargs: dict = {}
+
+    def recording_load(*args, **kwargs):
+        recorded_kwargs.clear()
+        recorded_kwargs.update(kwargs)
+        return _MockFineWebEdu(2)
+
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        recording_load,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        _mock_renderer,
+    )
+
+    preprocess_fineweb_edu(max_samples=2, max_chars=2000)
+    assert recorded_kwargs.get("split") == "train[:2]"
+
+    recorded_kwargs.clear()
+    preprocess_fineweb_edu(max_samples=None, max_chars=2000)
+    assert recorded_kwargs.get("split") == "train"
 
 
 def test_map_used_not_direct_iteration(monkeypatch):
