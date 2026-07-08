@@ -38,6 +38,6 @@
 
 ## 2026-07-08: `row_id` stored as string across all sources
 **Context:** Source datasets use different identifier types. Some provide string ids, some provide numeric ids, and some have no stable id column. Mixed Arrow column types would make source concatenation fragile.
-**Decision:** Store every `row_id` as a string. Use the source id when present, otherwise the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.
+**Decision:** Store every `row_id` as a string. Use the source id when present and non-empty; if it is missing, `None`, or `""`, use the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.
 **Rationale:** A uniform `Value(string)` column keeps the Materialized Render Dataset merge-safe while preserving source provenance.
 **Consequences:** All preprocessors must coerce `row_id` with `str(...)`, and tests should include numeric-id coverage.
