@@ -111,6 +111,12 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Video frames: four frames sampled uniformly over the clip, each at a 140-token budget.
 - Compact transcript layout: vertical linear order with role labels and separators; no chat bubbles in the first proof.
 
+## First Valor32k Subsets
+
+- Smoke run: 100 `visual`, 100 `audio`, and 100 `audio-visual` examples from included test media.
+- First evaluation run: 1,000 `visual`, 1,000 `audio`, and 1,000 `audio-visual` examples from included test media.
+- Scale-up: remaining included test examples after smoke and first eval pass without rendering, token-budget, or metric failures.
+
 ## Related Work Pointers
 
 - DeepSeek-OCR and DeepSeek-OCR 2: optical context compression, variable visual token budgets, and visual causal flow.
@@ -126,4 +132,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose subset sizes for the first Valor32k smoke run and first evaluation run.
+Choose maximum video/audio duration and log-mel spectrogram parameters.
