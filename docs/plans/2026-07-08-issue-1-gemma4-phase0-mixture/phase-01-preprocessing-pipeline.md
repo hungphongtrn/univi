@@ -7,6 +7,9 @@ Materialize all five source datasets as Hugging Face datasets in Gemma 4 multimo
 
 ```
 univi/
+├── .python-version              # Python 3.12.0 for uv-managed environment
+├── pyproject.toml               # uv-managed project dependencies
+├── uv.lock                      # Locked dependency graph
 ├── data/
 │   └── preprocessing/
 │       ├── __init__.py
@@ -25,10 +28,42 @@ univi/
 │   ├── test_valor32k.py
 │   ├── test_merge_mixture.py
 │   └── test_render_utils.py
-└── requirements-preprocessing.txt   # Dependencies for preprocessing only
 ```
 
 ## Tasks
+
+### Task 0: Initialize uv Python project
+
+**Files:**
+- Create: `pyproject.toml`
+- Create: `uv.lock`
+- Create: `.python-version`
+
+- [x] **Step 1: Initialize the project with uv**
+
+Run: `uv init --python 3.12.0 --no-readme`
+
+Expected: `pyproject.toml` and `.python-version` exist, with `requires-python = ">=3.12.0"`.
+
+- [x] **Step 2: Add preprocessing dependencies with uv**
+
+Run:
+
+```bash
+uv add 'Pillow>=10.0.0' 'librosa>=0.10.0' 'numpy>=1.24.0' 'matplotlib>=3.7.0' 'datasets>=2.14.0' 'soundfile>=0.12.0'
+```
+
+Expected: dependencies are recorded in `pyproject.toml` and locked in `uv.lock`.
+
+- [x] **Step 3: Add pytest as a development dependency**
+
+Run: `uv add --dev pytest`
+
+Expected: `pytest` is recorded in the `dev` dependency group so later tasks can run `uv run pytest ...`.
+
+- [x] **Step 4: Remove default uv application scaffold**
+
+Remove the generated `main.py`, because Phase 1 defines preprocessing modules and CLIs rather than an application entry point.
 
 ### Task 1: Shared rendering utilities
 
@@ -161,15 +196,10 @@ Implement `render_text_page` using `PIL.ImageDraw` with text wrapping. Implement
 Run: `python -m pytest tests/test_render_utils.py -v`
 Expected: PASS
 
-- [ ] **Step 9: Create requirements-preprocessing.txt**
+- [ ] **Step 9: Verify uv-managed dependencies are available**
 
-```
-Pillow>=10.0.0
-librosa>=0.10.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-datasets>=2.14.0
-```
+Run: `uv run python -c "import PIL, librosa, numpy, matplotlib, datasets, soundfile"`
+Expected: PASS with no import errors.
 
 ### Task 2: LibriSpeech ASR preprocessing
 
