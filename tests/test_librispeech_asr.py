@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import tempfile
+
 import numpy as np
+from datasets import load_from_disk
 from PIL import Image
 
 from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
@@ -96,3 +99,66 @@ def test_user_instruction_does_not_contain_transcript(monkeypatch):
         user_text = row["messages"][0]["content"][1]["text"]
         transcript = row["messages"][1]["content"][0]["text"]
         assert transcript not in user_text
+
+
+def test_render_config_matches_renderer_kwargs(monkeypatch):
+    recorded_kwargs: dict = {}
+
+    def recording_renderer(*args, **kwargs):
+        recorded_kwargs.clear()
+        recorded_kwargs.update(kwargs)
+        return Image.new("RGB", (64, 64))
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        recording_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(
+        subset="clean-100", max_samples=1, sample_rate=16000, n_mels=80
+    )
+
+    row = dataset[0]
+    render_config = row["render_config"]
+    for k, v in recorded_kwargs.items():
+        assert k in render_config, f"render_config missing key {k!r}"
+        assert render_config[k] == v, (
+            f"render_config[{k!r}] = {render_config[k]!r} != recorded {v!r}"
+        )
+
+
+def test_save_load_round_trip(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(2),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=2)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        dataset.save_to_disk(tmpdir)
+        loaded = load_from_disk(tmpdir)
+
+    assert len(loaded) == 2
+    row = loaded[0]
+
+    assert "messages" in row
+    assert len(row["messages"]) == 2
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"
+    assert user_content[1]["type"] == "text"
+
+    assert row["source_dataset_id"] == "openslr/librispeech_asr"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "audio"
+    assert "preprocessing_version" in row

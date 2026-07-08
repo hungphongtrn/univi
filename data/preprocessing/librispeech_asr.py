@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import soundfile as sf
 from datasets import Dataset, load_dataset
@@ -13,7 +12,7 @@ _PREPROCESSING_VERSION = "0.1.0"
 _USER_INSTRUCTION = "Transcribe the speech represented by this spectrogram image."
 
 
-def _make_render_config(*, sample_rate: int, n_mels: int, **kwargs: Any) -> dict[str, Any]:
+def _render_defaults(*, sample_rate: int, n_mels: int) -> dict:
     return {
         "sample_rate": sample_rate,
         "n_mels": n_mels,
@@ -36,6 +35,8 @@ def preprocess_librispeech_asr(
     if max_samples is not None:
         source = source.select(range(min(max_samples, len(source))))
 
+    render_kwargs = _render_defaults(sample_rate=sample_rate, n_mels=n_mels)
+
     rows = []
     for i, row in enumerate(source):
         audio = row["audio"]
@@ -47,11 +48,7 @@ def preprocess_librispeech_asr(
         tmp.close()
         try:
             sf.write(tmp_path, audio_array, audio_sr)
-            spectrogram = render_log_mel_spectrogram(
-                tmp_path,
-                sample_rate=sample_rate,
-                n_mels=n_mels,
-            )
+            spectrogram = render_log_mel_spectrogram(tmp_path, **render_kwargs)
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
@@ -59,14 +56,14 @@ def preprocess_librispeech_asr(
             {
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": spectrogram},
-                    {"type": "text", "text": _USER_INSTRUCTION},
+                    {"type": "image", "image": spectrogram, "text": None},
+                    {"type": "text", "image": None, "text": _USER_INSTRUCTION},
                 ],
             },
             {
                 "role": "assistant",
                 "content": [
-                    {"type": "text", "text": row["text"]},
+                    {"type": "text", "image": None, "text": row["text"]},
                 ],
             },
         ]
@@ -76,7 +73,7 @@ def preprocess_librispeech_asr(
             "source_dataset_id": "openslr/librispeech_asr",
             "split": split,
             "row_id": row.get("id", str(i)),
-            "render_config": _make_render_config(sample_rate=sample_rate, n_mels=n_mels),
+            "render_config": dict(render_kwargs),
             "modality_label": "audio",
             "preprocessing_version": _PREPROCESSING_VERSION,
         })
