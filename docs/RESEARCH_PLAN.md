@@ -15,7 +15,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 1. What visual token budget can support a two-turn compact fully visual transcript?
 2. What does the model see at turn 2 when the answer depends on turn 1?
 3. Is the goal competitive performance, a compression experiment, a unified data pipeline, or architectural simplicity?
-4. What exact success and failure thresholds make the first proof falsifiable?
+4. Which small datasets should instantiate the first text, audio, image, and multi-turn tasks?
 5. What audio duration, mel-bin count, and image dimensions fit the first token budget?
 
 ## Minimum Viable Experiment
@@ -25,6 +25,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Render QA prompts into images.
 - Fine-tune or prompt the baseline to answer from rendered text only.
 - Compare the image-only lane against a native-text upper bound.
+- Success signal: image-only accuracy reaches at least 80% of native-text upper-bound accuracy.
 - Failure signal: OCR or reasoning collapses under shuffled, random, or dense text where linguistic priors cannot fill gaps.
 
 ### Phase 2: Audio-as-Image Single-Turn
@@ -32,6 +33,7 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Convert short speech clips to log-mel spectrogram images.
 - Ask transcript or content questions from the rendered audio image.
 - Compare the image-only lane against Gemma 4 E2B native audio and an ASR plus LLM pipeline if available.
+- Success signal: image-only accuracy reaches at least 50% of native-audio or ASR plus LLM upper-bound accuracy on short clean speech.
 - Failure signal: the visual audio path cannot recover speech content above a weak baseline.
 
 ### Phase 3: Mixed Visual Inputs
@@ -45,7 +47,15 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Construct two-turn examples where turn 2 requires turn 1 context.
 - Render prior user turns, assistant turns, and the current user turn into a compact document-like visual transcript.
 - Defer chat-style screenshots until the compact layout works, so early failures are less likely to be caused by wasted pixels.
+- Success signal: image-only accuracy beats a no-history visual control by at least 20 percentage points.
 - Failure signal: context length grows faster than the model can process, or turn-2 accuracy drops to near single-turn/no-context baselines.
+
+## Success Metrics
+
+- Text-as-image: image-only lane reaches at least 80% retention against the native-text upper bound.
+- Audio-as-image: image-only lane reaches at least 50% retention against native-audio or ASR plus LLM upper bound on short clean speech.
+- Fully visual multi-turn: compact two-turn transcript beats a no-history visual control by at least 20 percentage points.
+- Mixed visual inputs: no single modality drops by more than 10 percentage points compared with its single-modality image-only run.
 
 ## Dataset Notes
 
@@ -83,4 +93,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose success and failure thresholds for the first proof.
+Choose the first datasets for text-as-image, audio-as-image, natural-image, and fully visual multi-turn evaluation.

@@ -56,6 +56,14 @@ _Avoid_: visual baseline unless native modality paths are explicitly disabled
 The comparison lane where the same model may use its native text, audio, and image pathways.
 _Avoid_: baseline when the distinction from the image-only lane matters
 
+**Retention Metric**:
+The image-only lane score expressed as a percentage of the native upper-bound score for the same task.
+_Avoid_: accuracy when comparing visual unification against native pathways
+
+**No-History Control**:
+A multi-turn evaluation variant that removes prior visual turns to measure whether the model is actually using visual conversation history.
+_Avoid_: ablation unless the removed context is specified
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -67,6 +75,8 @@ _Avoid_: baseline when the distinction from the image-only lane matters
 - **Oracle Text** exists for rendered text and transcribed audio datasets, but should not be assumed available to the model at inference time.
 - `google/gemma-4-E2B` is the current candidate **Baseline Model**.
 - The **Image-Only Lane** tests the visual-unification claim; the **Native Upper Bound** estimates the performance lost by forbidding native text/audio paths.
+- A **Retention Metric** compares the **Image-Only Lane** to the **Native Upper Bound**.
+- A **No-History Control** is required for fully visual multi-turn evaluation.
 
 ## Example Dialogue
 
