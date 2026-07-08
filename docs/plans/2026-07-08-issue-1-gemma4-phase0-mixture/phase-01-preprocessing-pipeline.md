@@ -385,7 +385,7 @@ Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_smoltalk`**
 
-Load `HuggingFaceTB/smoltalk`, extract instruction/user turn, call `render_text_page`, construct `messages` with rendered instruction image + `Follow the instruction shown in the image.` as user, response as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"HuggingFaceTB/smoltalk"`), `split`, `row_id`, `render_config`, `modality_label` (`"text"`), `preprocessing_version`.
+Load `HuggingFaceTB/smoltalk` with `config="all"` (default) via `load_dataset("HuggingFaceTB/smoltalk", config, split=split)`. Extract instruction/user turn, truncate to `max_chars=2000` (default) before calling `render_text_page`, construct `messages` with rendered instruction image + `Follow the instruction shown in the image.` as user, response as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"HuggingFaceTB/smoltalk"`), `split`, `row_id`, `render_config` (includes `config` and `max_chars`), `modality_label` (`"text"`), `preprocessing_version`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 

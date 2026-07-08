@@ -245,6 +245,7 @@ def test_no_native_instruction_or_response_leakage(monkeypatch):
     for row in dataset:
         user_text = row["messages"][0]["content"][1]["text"]
         assistant_text = row["messages"][1]["content"][0]["text"]
+        assert user_text == "Follow the instruction shown in the image."
         assert assistant_text not in user_text
 
 
@@ -264,6 +265,8 @@ def test_render_config_is_valid_json_and_contains_expected_keys(monkeypatch):
     config = json.loads(dataset[0]["render_config"])
     assert isinstance(config, dict)
     assert config["render_method"] == "text_page"
+    assert config["config"] == "all"
+    assert config["max_chars"] == 2000
     assert config["canvas_width"] == 1024
     assert config["font_size"] == 14
 
@@ -293,6 +296,8 @@ def test_render_config_matches_renderer_kwargs(monkeypatch):
     render_config = json.loads(row["render_config"])
     assert render_config["canvas_width"] == recorded_kwargs.get("canvas_width")
     assert render_config["font_size"] == recorded_kwargs.get("font_size")
+    assert render_config["config"] == "all"
+    assert render_config["max_chars"] == 2000
 
 
 def test_row_id_is_string_with_numeric_source_id(monkeypatch):
@@ -479,6 +484,107 @@ def test_map_used_not_direct_iteration(monkeypatch):
     assert len(dataset) == 2
     assert map_kwargs.get("with_indices") is True
     assert map_kwargs.get("remove_columns") == ["messages", "id"]
+
+
+def test_load_dataset_called_with_config_and_split(monkeypatch):
+    captured: list = [(), {}]
+
+    def recording_load(*args, **kwargs):
+        captured[0] = args
+        captured[1] = kwargs
+        return _MockSmolTalk(1)
+
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        recording_load,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        _mock_renderer,
+    )
+
+    preprocess_smoltalk(config="all", split="train", max_samples=1)
+    assert len(captured[0]) >= 2
+    assert captured[0][0] == "HuggingFaceTB/smoltalk"
+    assert captured[0][1] == "all"
+    assert captured[1].get("split") == "train"
+
+
+def test_default_config_is_all(monkeypatch):
+    captured: list = [()]
+
+    def recording_load(*args, **kwargs):
+        captured[0] = args
+        return _MockSmolTalk(1)
+
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        recording_load,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        _mock_renderer,
+    )
+
+    preprocess_smoltalk(max_samples=1)
+    assert captured[0][1] == "all"
+
+
+def test_custom_config_propagates(monkeypatch):
+    captured: list = [()]
+
+    def recording_load(*args, **kwargs):
+        captured[0] = args
+        return _MockSmolTalk(1)
+
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        recording_load,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        _mock_renderer,
+    )
+
+    preprocess_smoltalk(config="everyday-conversations", max_samples=1)
+    assert captured[0][1] == "everyday-conversations"
+
+
+def test_instruction_truncated_before_rendering(monkeypatch):
+    captured: list = [""]
+
+    def recording_renderer(text, **kwargs):
+        captured[0] = text
+        return Image.new("RGB", (64, 64))
+
+    rows = [
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "A" * 5000,
+                },
+                {
+                    "role": "assistant",
+                    "content": "short response",
+                },
+            ],
+            "id": "0",
+        }
+    ]
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _MockSmolTalk(rows=rows),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        recording_renderer,
+    )
+
+    dataset = preprocess_smoltalk(max_samples=1, max_chars=100)
+    assert len(captured[0]) == 100
+    assistant_text = dataset[0]["messages"][1]["content"][0]["text"]
+    assert assistant_text == "short response"
 
 
 def test_messages_schema_variant(monkeypatch):

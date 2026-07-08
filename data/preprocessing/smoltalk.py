@@ -108,17 +108,22 @@ def _extract_instruction_and_response(row: dict) -> tuple[str, str]:
 
 
 def preprocess_smoltalk(
+    config: str = "all",
     split: str = "train",
     max_samples: int | None = None,
+    max_chars: int = 2000,
     canvas_width: int = 1024,
     font_size: int = 14,
 ) -> Dataset:
-    source = load_dataset(_SOURCE_DATASET_ID, split=split)
+    source = load_dataset(_SOURCE_DATASET_ID, config, split=split)
     if max_samples is not None:
         source = source.select(range(min(max_samples, len(source))))
 
     def _process_row(row, index: int):
         instruction, response = _extract_instruction_and_response(row)
+
+        if max_chars is not None:
+            instruction = instruction[:max_chars]
 
         image = render_text_page(
             instruction, canvas_width=canvas_width, font_size=font_size
@@ -151,6 +156,8 @@ def preprocess_smoltalk(
             "render_config": json.dumps(
                 {
                     "render_method": "text_page",
+                    "config": config,
+                    "max_chars": max_chars,
                     "canvas_width": canvas_width,
                     "font_size": font_size,
                 },
