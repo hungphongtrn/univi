@@ -44,6 +44,47 @@ Use Valor32k-AVQA v2.0 first for Phases 1-3 because it is large, public, tri-mod
 
 Keep JointAVBench as the fallback if Valor32k media access or licensing blocks progress. Add Daily-Omni as a small temporal-alignment evaluation once the rendering pipeline works. Defer OmniInteract until the compact two-turn transcript pipeline is stable.
 
+## Proposed Valor32k Usage
+
+Dataset of interest: `inesriahi/valor32k-avqa-v2`, specifically the included test videos first.
+
+Each Valor32k example has a video, audio track, question, four answer choices, correct answer index, modality label, and question category. Univi would convert each example into an image-only prompt bundle:
+
+- **Text-as-Image**: render the question and answer choices into a compact text image.
+- **Audio-as-Image**: extract the video audio and render it as a log-mel spectrogram image.
+- **Natural Image**: sample a small fixed number of video frames as ordinary image inputs.
+- **Target**: predict the multiple-choice answer index or answer text.
+
+Use the modality label to control which visual inputs are present:
+
+- `visual`: rendered question/options plus sampled frames; omit the spectrogram in the image-only lane.
+- `audio`: rendered question/options plus log-mel spectrogram; omit sampled frames unless needed as a negative-control variant.
+- `audio-visual`: rendered question/options plus sampled frames plus log-mel spectrogram.
+
+Run two lanes for each subset:
+
+- **Image-only lane**: model receives only images: rendered question/options, sampled frames, and/or spectrograms. The fixed native text instruction can say only something like "Answer the multiple-choice question shown in the images." It must not include the actual question or answer choices as native text.
+- **Native upper bound**: model receives the question/options as native text and the video/audio through native supported pathways where available.
+
+Initial measurable slices:
+
+- Smoke: 100 examples per modality label.
+- First eval: 1,000 `visual`, 1,000 `audio`, and 1,000 `audio-visual` examples from the included test media.
+- Scale-up: all included test examples if media processing and token budgets are stable.
+
+Primary metrics:
+
+- Multiple-choice accuracy by modality label.
+- Retention metric: image-only accuracy divided by native upper-bound accuracy.
+- Category breakdown across description, action, count, temporal, location, and relative-position.
+
+Key failure criteria:
+
+- Text-as-image question rendering is unreadable at the chosen visual token budget.
+- Audio-as-image cannot reach 50% retention on `audio` examples.
+- Mixed `audio-visual` examples perform worse than either single-modality slice by more than 10 percentage points.
+- The fixed image bundle requires too many visual tokens to fit Gemma 4 E2B practical inference or fine-tuning limits.
+
 ## Open Decisions
 
 - Whether to select Valor32k-AVQA v2.0 as the first dataset of record.
