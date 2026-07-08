@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+import numpy as np
+from PIL import Image
+
+from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
+
+
+class _MockLibriSpeech:
+    def __init__(self, num_rows: int = 2):
+        self._rows = [
+            {
+                "audio": {
+                    "array": np.zeros(16000 * 5, dtype=np.float32),
+                    "sampling_rate": 16000,
+                },
+                "text": f"transcript number {i}",
+                "id": f"test-{i}",
+            }
+            for i in range(num_rows)
+        ]
+
+    def __len__(self) -> int:
+        return len(self._rows)
+
+    def __iter__(self):
+        return iter(self._rows)
+
+    def select(self, indices):
+        ds = _MockLibriSpeech.__new__(_MockLibriSpeech)
+        ds._rows = [self._rows[i] for i in indices]
+        return ds
+
+
+def _mock_renderer(*args, **kwargs):
+    return Image.new("RGB", (64, 64))
+
+
+def test_librispeech_asr_preprocess_generates_messages(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(2),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(
+        subset="clean-100", max_samples=2, sample_rate=16000, n_mels=80
+    )
+    assert len(dataset) == 2
+    row = dataset[0]
+    assert "messages" in row
+    assert len(row["messages"]) == 2
+    user_content = row["messages"][0]["content"]
+    assert user_content[0]["type"] == "image"
+    assert user_content[1]["type"] == "text"
+    assert "transcribe" in user_content[1]["text"].lower()
+    assert row["messages"][1]["role"] == "assistant"
+    assert len(row["messages"][1]["content"][0]["text"]) > 0
+
+
+def test_librispeech_asr_metadata_present(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=1)
+    row = dataset[0]
+    assert row["source_dataset_id"] == "openslr/librispeech_asr"
+    assert "split" in row
+    assert "row_id" in row
+    assert "render_config" in row
+    assert row["modality_label"] == "audio"
+    assert "preprocessing_version" in row
+
+
+def test_user_instruction_does_not_contain_transcript(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(2),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(subset="clean-100", max_samples=2)
+    for row in dataset:
+        user_text = row["messages"][0]["content"][1]["text"]
+        transcript = row["messages"][1]["content"][0]["text"]
+        assert transcript not in user_text
