@@ -97,6 +97,8 @@ The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only
 - **Image-only lane**: pass rendered text, rendered audio, natural images, and fully visual transcripts as images; withhold native text/audio equivalents except fixed task instructions needed to query the model.
 - **Native upper bound**: run the same examples through Gemma 4 E2B's native text, audio, and image pathways to estimate the cost of visual unification.
 - Report both lanes together; do not claim visual unification works from native-lane results.
+- Fixed image-only native instruction: `Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.`
+- The fixed instruction must not include the actual question, answer choices, transcript, audio transcript, or modality-specific content.
 
 ## First Valor32k Visual Bundle
 
@@ -137,4 +139,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose the fixed native instruction allowed in the image-only lane.
+Choose the image ordering for the first Valor32k visual bundle.

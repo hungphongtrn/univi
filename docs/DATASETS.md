@@ -83,6 +83,10 @@ Run two lanes for each subset:
 - **Native upper bound**: model receives the question/options as native text and the video/audio through native supported pathways where available.
 - First milestone: zero-shot/prompt-only evaluation; no fine-tuning until smoke and first-eval results are interpretable.
 
+Fixed image-only instruction:
+
+`Answer the multiple-choice question shown in the images. Reply with only A, B, C, or D.`
+
 Initial measurable slices:
 
 - Smoke: 100 examples per modality label.

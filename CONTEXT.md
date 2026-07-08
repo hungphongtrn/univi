@@ -100,6 +100,10 @@ _Avoid_: abandoned multi-turn, out of scope permanently
 The sequencing decision to evaluate a model without fine-tuning before building training pipelines.
 _Avoid_: no training ever, prompt-only project
 
+**Generic A-D Instruction**:
+The fixed native text prompt allowed in the image-only lane that describes only the answer format.
+_Avoid_: native question, native choices
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -122,6 +126,7 @@ _Avoid_: no training ever, prompt-only project
 - The first audio-as-image rendering uses a 10-second **Central Audio Window** with 80 log-mel bins.
 - Fully visual multi-turn work is **Deferred Multi-Turn** until Valor32k Phases 1-3 produce interpretable results.
 - The first Valor32k milestone is **Zero-Shot First** evaluation rather than fine-tuning.
+- The image-only lane uses a **Generic A-D Instruction** and must not include native question or answer-choice content.
 
 ## Example Dialogue
 
@@ -141,4 +146,5 @@ _Avoid_: no training ever, prompt-only project
 - "Audio duration" resolved for the first Valor32k runs: use a 10-second **Central Audio Window** rather than full-clip spectrograms.
 - "Multi-turn timing" resolved: defer OmniInteract until after Valor32k smoke and first evaluation.
 - "Training timing" resolved: run zero-shot/prompt-only Valor32k evaluation before LoRA or other fine-tuning.
+- "Native instruction" resolved: use a fixed **Generic A-D Instruction** in the image-only lane.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.
