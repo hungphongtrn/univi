@@ -100,6 +100,10 @@ _Avoid_: abandoned multi-turn, out of scope permanently
 The sequencing decision to evaluate a model without fine-tuning before building training pipelines.
 _Avoid_: no training ever, prompt-only project
 
+**Phase 0 Calibration**:
+The zero-shot gate that verifies each visualized modality path before Valor32k evaluation.
+_Avoid_: warmup training, pretraining, fine-tuning
+
 **Generic A-D Instruction**:
 The fixed native text prompt allowed in the image-only lane that describes only the answer format.
 _Avoid_: native question, native choices
@@ -115,6 +119,10 @@ _Avoid_: custom chat template, hand-rolled prompt format
 **Strict First-Letter Parsing**:
 An output parser that accepts only A, B, C, or D as the first non-whitespace response character.
 _Avoid_: regex-anywhere parsing, judge-based parsing
+
+**ASR Transcript Choice**:
+An audio-as-image calibration task where the model chooses the transcript matching a log-mel spectrogram.
+_Avoid_: full ASR generation for the first calibration gate
 
 ## Relationships
 
@@ -142,6 +150,7 @@ _Avoid_: regex-anywhere parsing, judge-based parsing
 - The first **Visual Bundle Order** is rendered question/options, then spectrogram if present, then video frames in chronological order.
 - All Gemma 4 E2B runs must use the **Original Gemma E2B Template**.
 - Valor32k multiple-choice outputs use **Strict First-Letter Parsing**.
+- **Phase 0 Calibration** runs before Valor32k and includes text-as-image, vision-text, and **ASR Transcript Choice** gates.
 
 ## Example Dialogue
 
@@ -165,4 +174,5 @@ _Avoid_: regex-anywhere parsing, judge-based parsing
 - "Image order" resolved: use fixed **Visual Bundle Order** with semantic labels rendered inside images, not native text.
 - "Prompt template" resolved: use the **Original Gemma E2B Template** rather than custom prompt wrappers.
 - "Output parsing" resolved: use **Strict First-Letter Parsing** and count invalid outputs as wrong.
+- "Phase 0" resolved at the dataset-family level: use simple text-as-image diagnostics, a public vision-text MCQ dataset, and LibriSpeech-style ASR transcript choice before Valor32k.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.

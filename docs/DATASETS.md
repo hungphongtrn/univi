@@ -2,6 +2,39 @@
 
 This project prefers public datasets that contain visual, audio, and text together instead of stitching separate text-only, audio-only, and image-only benchmarks.
 
+## Phase 0 Calibration Datasets
+
+Phase 0 uses lightweight calibration datasets before Valor32k. These datasets are not the dataset of record for Phases 1-3; they exist to verify that each modality path is readable under zero-shot prompting.
+
+### Text-As-Image Calibration
+
+- Primary source: synthetic A/B/C/D reading tasks generated locally.
+- Public sanity source: MMLU-style multiple-choice text QA, preferably via `cais/mmlu` or the current Hugging Face MMLU dataset path available in `datasets`.
+- Smoke size: 100 examples.
+- First eval size: 500 examples.
+- Metric: image-only accuracy, native-text upper-bound accuracy, and retention.
+- Failure criterion: retention below 70% or image-only accuracy below 50%.
+- Note: include shuffled-options and low-prior string diagnostics to detect linguistic-prior dependence.
+
+### Vision-Text Calibration
+
+- Primary source: `zlab-princeton/WorldBench` on Hugging Face.
+- Fallback: `Lin-Chen/MMStar` if WorldBench access or format blocks progress.
+- Task: natural image plus rendered question/options image; predict A/B/C/D.
+- Smoke size: 100 examples.
+- First eval size: 500 examples.
+- Metric: multiple-choice accuracy and invalid output rate.
+- Failure criterion: accuracy below 30% on a four-choice task.
+
+### ASR Transcript-Choice Calibration
+
+- Primary source: `openslr/librispeech_asr`, clean validation split.
+- Task: render audio as a log-mel spectrogram and render four transcript choices, one correct and three distractors from the same split.
+- Smoke size: 100 utterances.
+- First eval size: 500 utterances.
+- Metric: transcript-choice accuracy and invalid output rate; optional retention against Gemma 4 E2B native audio.
+- Failure criterion: accuracy below 30% on a four-choice task.
+
 ## Current Shortlist
 
 ### Valor32k-AVQA v2.0

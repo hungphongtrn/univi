@@ -22,6 +22,16 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 
 The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only after the rendering and evaluation pipeline produces interpretable image-only versus native-upper-bound results.
 
+### Phase 0: Modality Calibration
+
+Phase 0 verifies that each visualized modality path works before the Valor32k task benchmark. It is not warmup training and does not update model weights.
+
+- Text-as-image gate: render simple synthetic A/B/C/D reading tasks and a small public text multiple-choice slice such as MMLU. Compare image-only against native-text upper bound.
+- Vision-text gate: use a public image+text multiple-choice benchmark such as WorldBench, with MMStar as fallback. Pass the natural image plus rendered question/options image.
+- Audio-as-image gate: use LibriSpeech clean validation audio for ASR transcript choice. Pass the log-mel spectrogram plus rendered transcript choices.
+- Bundle gate: combine rendered text, spectrogram, and a natural image on a tiny hand-checkable subset to verify ordering, token budgets, and parser behavior.
+- Failure signal: any gate is near random chance, has high invalid rate, or fails because the visual bundle is unreadable at the conservative render settings.
+
 ### Phase 1: Text-as-Image Single-Turn
 
 - Render QA prompts into images.
@@ -55,6 +65,9 @@ The first milestone is zero-shot/prompt-only evaluation. Fine-tuning starts only
 
 ## Success Metrics
 
+- Phase 0 text-as-image: at least 70% retention against native-text upper bound and at least 50% absolute accuracy on the public text MCQ slice.
+- Phase 0 vision-text: above 30% accuracy on a four-choice public image+text benchmark, with invalid rate reported.
+- Phase 0 ASR transcript choice: above 30% accuracy on four-choice LibriSpeech transcript selection, with invalid rate reported.
 - Text-as-image: image-only lane reaches at least 80% retention against the native-text upper bound.
 - Audio-as-image: image-only lane reaches at least 50% retention against native-audio or ASR plus LLM upper bound on short clean speech.
 - Fully visual multi-turn: compact two-turn transcript beats a no-history visual control by at least 20 percentage points.
@@ -144,4 +157,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose whether the next step is an implementation plan or direct prototype implementation.
+Choose whether the next step is an implementation plan or direct prototype implementation for Phase 0.
