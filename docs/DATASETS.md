@@ -62,6 +62,14 @@ Initial visual bundle:
 - Four sampled video frames for `visual` and `audio-visual` examples.
 - No unused modality images in the first image-only lane.
 
+Conservative render settings:
+
+- Text image: 1024px-wide canvas, variable height, at least 14pt legible sans-serif or monospace font.
+- Text image token budget: 560 tokens, with a 280-token ablation in the smoke run.
+- Spectrogram image token budget: 280 tokens.
+- Video frame token budget: 140 tokens per frame.
+- Frame sampling: four frames uniformly sampled over the clip.
+
 Use the modality label to control which visual inputs are present:
 
 - `visual`: rendered question/options plus sampled frames; omit the spectrogram in the image-only lane.
@@ -97,7 +105,6 @@ Key failure criteria:
 ## Open Decisions
 
 - Exact subset sizes for the first run.
-- Frame sampling policy and maximum video duration.
 - Log-mel spectrogram settings for audio-as-image.
-- Text image dimensions and font/layout policy.
+- Maximum video/audio duration before clipping.
 - Whether multi-turn should use OmniInteract immediately or wait until after single-turn tri-modal results.

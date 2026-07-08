@@ -102,6 +102,15 @@ This is not final. The first grilling target is to make the hypothesis falsifiab
 - Video frames: four sampled frames for `visual` and `audio-visual` examples.
 - Omit unused modalities by modality label in the image-only lane to keep the first prompt bounded.
 
+## Conservative Render Settings
+
+- Text image: 1024px-wide canvas, variable height, white background, black text, left-aligned question and A/B/C/D answer choices.
+- Text font: legible sans-serif or monospace, at least 14pt, with the question preferably at 16pt.
+- Text image token budget: 560 tokens for the main run, with a 280-token ablation in the smoke run.
+- Audio image: one log-mel spectrogram image at a 280-token budget.
+- Video frames: four frames sampled uniformly over the clip, each at a 140-token budget.
+- Compact transcript layout: vertical linear order with role labels and separators; no chat bubbles in the first proof.
+
 ## Related Work Pointers
 
 - DeepSeek-OCR and DeepSeek-OCR 2: optical context compression, variable visual token budgets, and visual causal flow.
@@ -117,4 +126,4 @@ The project will pursue a fully visual transcript for multi-turn experiments: pr
 
 ## Next Decision Needed
 
-Choose concrete rendering dimensions and sampling settings: text image size, log-mel spectrogram parameters, frame sampling policy, and Gemma 4 E2B image token budget.
+Choose subset sizes for the first Valor32k smoke run and first evaluation run.

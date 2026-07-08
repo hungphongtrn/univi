@@ -80,6 +80,10 @@ _Avoid_: candidate dataset, benchmark option after selection is resolved
 The bounded set of images passed to the image-only lane for one example.
 _Avoid_: prompt when referring specifically to image inputs
 
+**Conservative Render Settings**:
+The first Valor32k rendering profile that favors readability over compression.
+_Avoid_: default settings unless the token budgets are specified
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.
@@ -97,6 +101,7 @@ _Avoid_: prompt when referring specifically to image inputs
 - The first dataset cut follows **Public Benchmark First** rather than synthetic-first.
 - Valor32k-AVQA v2.0 is the **Dataset of Record** for Phases 1-3.
 - The first Valor32k **Visual Bundle** contains one text image, one log-mel spectrogram image when audio is needed, and four sampled video frames when vision is needed.
+- The first Valor32k **Visual Bundle** uses **Conservative Render Settings**.
 
 ## Example Dialogue
 
@@ -111,4 +116,5 @@ _Avoid_: prompt when referring specifically to image inputs
 - "Baseline" resolved for the first proof: run both an **Image-Only Lane** and a **Native Upper Bound** with Gemma 4 E2B.
 - "Dataset strategy" resolved for Phases 1-3: use Valor32k-AVQA v2.0 as the **Dataset of Record** with included test media first.
 - "Visual budget" resolved for the first Valor32k run: use a bounded **Visual Bundle** of 1 text image, 1 spectrogram image, and 4 sampled frames where applicable.
+- "Render settings" resolved for the first Valor32k run: use **Conservative Render Settings** with a 560-token text image budget and 280-token text ablation.
 - "DeepSeek-OCR lesson" resolved: do not treat natural-text OCR success as proof of visual reading without shuffled or low-prior controls.
