@@ -461,7 +461,7 @@ Expected: FAIL
 
 - [ ] **Step 3: Implement `merge_and_shuffle`**
 
-Concatenate all source datasets, shuffle with a fixed seed, push to Hugging Face Hub (or save locally). Include source metadata column to track provenance.
+Concatenate all source datasets, shuffle with a fixed seed, return the merged dataset. Include source metadata column to track provenance. (Pushing to HF Hub is deferred — the CLI entry point in Step 7 writes locally via `save_to_disk`.)
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -492,8 +492,8 @@ def test_merge_mixture_cli():
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"
         # Verify output dataset exists and is loadable
-        import datasets
-        ds = datasets.load_dataset(tmp, split="train")
+        from datasets import load_from_disk
+        ds = load_from_disk(tmp)
         assert len(ds) == 10
         assert "messages" in ds[0]
         assert "source_dataset_id" in ds[0]
@@ -555,6 +555,11 @@ Expected: Script completes, 50 examples in output dataset, correct schema.
 
 - [ ] **Step 3: Verify schema of output dataset**
 
+```python
+from datasets import load_from_disk
+ds = load_from_disk("./data/materialized/smoke-v0")
+```
+
 Confirm each row has `messages` list with valid image objects and text content. Verify no row contains native answer-bearing text in the user instruction.
 
 ## Phase Completion Criteria
@@ -563,7 +568,7 @@ Confirm each row has `messages` list with valid image objects and text content. 
 - [ ] Every user message has images before text instruction
 - [ ] No user message contains native answer-bearing content
 - [ ] Source metadata is present for every row with all 6 required fields: `source_dataset_id`, `split`, `row_id`, `render_config`, `modality_label`, `preprocessing_version`
-- [ ] Dataset can be loaded by `datasets.load_dataset` and iterated without errors
+- [ ] Dataset can be loaded by `datasets.load_from_disk` and iterated without errors
 
 ## Handoff Notes
 - The smoke training script in Phase 2 expects the dataset to be available at `data/materialized/smoke-v0` or as a HF Hub dataset.
