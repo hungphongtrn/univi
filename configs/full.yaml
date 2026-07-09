@@ -1,0 +1,41 @@
+# configs/full.yaml — A100 full run for visual modality unification.
+model:
+  name: "unsloth/gemma-4-E2B-it"
+  load_in_4bit: true
+  use_gradient_checkpointing: true
+
+lora:
+  r: 32
+  alpha: 64
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  finetune_vision_layers: true
+
+training:
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 4
+  max_steps: 500
+  max_seq_length: 2048
+  learning_rate: 2.0e-4
+  warmup_steps: 20
+  lr_scheduler_type: "cosine"
+  optim: "adamw_8bit"
+  logging_steps: 10
+  save_steps: 100
+  output_dir: "data/checkpoints/full-v0"
+  report_to: "none"
+  remove_unused_columns: false
+  dataloader_num_workers: 2
+
+dataset:
+  path: "data/materialized/full-v0"
+  hf_hub_repo_id: "hungphongtrn/univi-phase0-dataset-full-v0"
+
+hub:
+  model_repo_id: "hungphongtrn/univi-phase0-full-model-v0"

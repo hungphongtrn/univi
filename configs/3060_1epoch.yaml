@@ -1,0 +1,47 @@
+# configs/3060_1epoch.yaml — RTX 3060 12GB: full data, 1 epoch.
+# Uses epoch-based training (num_train_epochs) instead of fixed max_steps.
+# LoRA r=8 to comfortably fit vision encoder + LLM at seq_len 1536.
+
+model:
+  name: "unsloth/gemma-4-E2B-it"
+  load_in_4bit: true
+  use_gradient_checkpointing: true
+  max_seq_length: 1536
+  gpu_memory_utilization: 0.85
+  float8_kv_cache: true
+  unsloth_tiled_mlp: true
+
+lora:
+  r: 8
+  alpha: 16
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  finetune_vision_layers: true
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4
+  num_train_epochs: 1
+  max_seq_length: 1536
+  learning_rate: 2.0e-4
+  warmup_steps: 20
+  lr_scheduler_type: "cosine"
+  optim: "adamw_8bit"
+  logging_steps: 10
+  save_steps: 500
+  output_dir: "data/checkpoints/3060-1epoch-v0"
+  report_to: "none"
+  remove_unused_columns: false
+  dataloader_num_workers: 2
+
+dataset:
+  path: "data/materialized/full-v0"
+
+hub:
+  model_repo_id: "hungphongtrn/univi-phase0-3060-1epoch-model-v0"

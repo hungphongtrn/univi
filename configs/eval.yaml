@@ -1,0 +1,13 @@
+# configs/eval.yaml — Evaluation configuration for Phase 0 full run.
+base_model: "unsloth/gemma-4-E2B-it"
+checkpoint_path: "data/checkpoints/full-v0/final"
+eval_datasets:
+  librispeech: "data/materialized/eval-v0/librispeech"
+  densefusion: "data/materialized/eval-v0/densefusion"
+  fineweb: "data/materialized/eval-v0/fineweb"
+  smoltalk: "data/materialized/eval-v0/smoltalk"
+output: "data/eval/full-v0/results.json"
+generation:
+  max_new_tokens: 256
+  temperature: 0.0
+  do_sample: false

@@ -1,0 +1,49 @@
+# configs/smoke.yaml — RTX 3060 smoke run on CUDA 13 + Torch 2.10
+# Model ID: pinned to unsloth/gemma-4-E2B-it (chat-tuned variant).
+#   If this becomes unavailable, set name to "google/gemma-4-E2B" and verify the
+#   chat template is compatible (manual template injection may be needed).
+model:
+  name: "unsloth/gemma-4-E2B-it"
+  load_in_4bit: true
+  use_gradient_checkpointing: true
+
+# LoRA configuration.
+#   finetune_vision_layers is the preferred Unsloth flag for vision-encoder
+#   fine-tuning; listing "vision_encoder" in target_modules is not needed
+#   and may fail if the encoder uses non-Linear layers.
+lora:
+  r: 16
+  alpha: 32
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  finetune_vision_layers: true
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4
+  max_steps: 50
+  max_seq_length: 1024
+  learning_rate: 2.0e-4
+  warmup_steps: 5
+  lr_scheduler_type: "cosine"
+  optim: "adamw_8bit"
+  logging_steps: 5
+  save_steps: 25
+  output_dir: "data/checkpoints/smoke-v0"
+  report_to: "none"
+  remove_unused_columns: false
+  dataloader_num_workers: 0
+
+dataset:
+  path: "data/materialized/smoke-v0"
+  hf_hub_repo_id: "hungphongtrn/univi-phase0-dataset-smoke-v0"
+
+# Separate model repo from dataset repo to avoid confusion.
+hub:
+  model_repo_id: "hungphongtrn/univi-phase0-smoke-model-v0"
