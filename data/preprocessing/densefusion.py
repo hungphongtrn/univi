@@ -152,6 +152,7 @@ def preprocess_densefusion(
         _process_row,
         with_indices=True,
         remove_columns=source.column_names,
+        num_proc=4,
     )
     if len(ds) > 0:
         ds = ds.cast_column("images", List(HfImage()))
