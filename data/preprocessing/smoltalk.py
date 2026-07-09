@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import io
 import json
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset, Image as HfImage, List, load_dataset
 
 from data.preprocessing.render_utils import render_text_page
 
@@ -111,13 +112,15 @@ def preprocess_smoltalk(
     config: str = "all",
     split: str = "train",
     max_samples: int | None = None,
+    offset: int = 0,
     max_chars: int = 2000,
     canvas_width: int = 1024,
     font_size: int = 14,
+    include_native: bool = False,
 ) -> Dataset:
     source = load_dataset(_SOURCE_DATASET_ID, config, split=split)
     if max_samples is not None:
-        source = source.select(range(min(max_samples, len(source))))
+        source = source.select(range(offset, min(offset + max_samples, len(source))))
 
     def _process_row(row, index: int):
         instruction, response = _extract_instruction_and_response(row)
@@ -129,26 +132,31 @@ def preprocess_smoltalk(
             instruction, canvas_width=canvas_width, font_size=font_size
         )
 
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        image_bytes = buf.getvalue()
+
         messages = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": image, "text": None},
-                    {"type": "text", "image": None, "text": _USER_INSTRUCTION},
+                    {"type": "image"},
+                    {"type": "text", "text": _USER_INSTRUCTION},
                 ],
             },
             {
                 "role": "assistant",
                 "content": [
-                    {"type": "text", "image": None, "text": response},
+                    {"type": "text", "text": response},
                 ],
             },
         ]
 
         source_id = row.get("id")
-        row_id = str(source_id) if source_id not in (None, "") else str(index)
+        row_id = str(source_id) if source_id not in (None, "") else str(offset + index)
 
-        return {
+        result = {
+            "images": [image_bytes],
             "messages": messages,
             "source_dataset_id": _SOURCE_DATASET_ID,
             "split": split,
@@ -166,9 +174,18 @@ def preprocess_smoltalk(
             "modality_label": "text",
             "preprocessing_version": _PREPROCESSING_VERSION,
         }
+        if include_native:
+            result["native_user_content"] = instruction
+            result["target_text"] = response
+            result["native_available"] = True
+            result["native_equals_image_only"] = False
+        return result
 
-    return source.map(
+    ds = source.map(
         _process_row,
         with_indices=True,
         remove_columns=source.column_names,
     )
+    if len(ds) > 0:
+        ds = ds.cast_column("images", List(HfImage()))
+    return ds

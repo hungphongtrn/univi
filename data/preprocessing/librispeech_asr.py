@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import io
 import json
 import tempfile
 from pathlib import Path
 
 import soundfile as sf
-from datasets import Dataset, load_dataset
+from datasets import Dataset, Image as HfImage, List, load_dataset
 
 from data.preprocessing.render_utils import render_log_mel_spectrogram
 
@@ -29,12 +30,14 @@ def preprocess_librispeech_asr(
     subset: str = "clean",
     split: str = "train.100",
     max_samples: int | None = None,
+    offset: int = 0,
     sample_rate: int = 16000,
     n_mels: int = 80,
+    include_native: bool = False,
 ) -> Dataset:
     source = load_dataset("openslr/librispeech_asr", subset, split=split)
     if max_samples is not None:
-        source = source.select(range(min(max_samples, len(source))))
+        source = source.select(range(offset, min(offset + max_samples, len(source))))
 
     render_kwargs = _render_defaults(sample_rate=sample_rate, n_mels=n_mels)
 
@@ -52,26 +55,31 @@ def preprocess_librispeech_asr(
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
+        buf = io.BytesIO()
+        spectrogram.save(buf, format="PNG")
+        image_bytes = buf.getvalue()
+
         messages = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": spectrogram, "text": None},
-                    {"type": "text", "image": None, "text": _USER_INSTRUCTION},
+                    {"type": "image"},
+                    {"type": "text", "text": _USER_INSTRUCTION},
                 ],
             },
             {
                 "role": "assistant",
                 "content": [
-                    {"type": "text", "image": None, "text": row["text"]},
+                    {"type": "text", "text": row["text"]},
                 ],
             },
         ]
 
         source_id = row.get("id")
-        row_id = str(source_id) if source_id not in (None, "") else str(index)
+        row_id = str(source_id) if source_id not in (None, "") else str(offset + index)
 
-        return {
+        result = {
+            "images": [image_bytes],
             "messages": messages,
             "source_dataset_id": "openslr/librispeech_asr",
             "split": split,
@@ -80,9 +88,18 @@ def preprocess_librispeech_asr(
             "modality_label": "audio",
             "preprocessing_version": _PREPROCESSING_VERSION,
         }
+        if include_native:
+            result["native_user_content"] = None
+            result["target_text"] = row["text"]
+            result["native_available"] = False
+            result["native_equals_image_only"] = False
+        return result
 
-    return source.map(
+    ds = source.map(
         _process_row,
         with_indices=True,
         remove_columns=source.column_names,
     )
+    if len(ds) > 0:
+        ds = ds.cast_column("images", List(HfImage()))
+    return ds

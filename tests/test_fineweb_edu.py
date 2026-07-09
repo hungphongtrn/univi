@@ -126,6 +126,7 @@ def test_render_config_is_valid_json_and_contains_expected_keys(monkeypatch):
     config = json.loads(dataset[0]["render_config"])
     assert isinstance(config, dict)
     assert config["render_method"] == "text_page"
+    assert config["source_config"] == "sample-10BT"
     assert config["max_chars"] == 2000
     assert config["canvas_width"] == 1024
     assert config["font_size"] == 14
@@ -432,10 +433,13 @@ def test_max_samples_zero_returns_empty(monkeypatch):
     assert len(dataset) == 0
 
 
-def test_max_samples_uses_split_slicing(monkeypatch):
+def test_loads_sample_10bt_subset_with_split_slicing(monkeypatch):
+    recorded_args: tuple = ()
     recorded_kwargs: dict = {}
 
     def recording_load(*args, **kwargs):
+        nonlocal recorded_args
+        recorded_args = args
         recorded_kwargs.clear()
         recorded_kwargs.update(kwargs)
         return _MockFineWebEdu(2)
@@ -450,10 +454,13 @@ def test_max_samples_uses_split_slicing(monkeypatch):
     )
 
     preprocess_fineweb_edu(max_samples=2, max_chars=2000)
-    assert recorded_kwargs.get("split") == "train[:2]"
+    assert recorded_args == ("HuggingFaceFW/fineweb-edu", "sample-10BT")
+    assert recorded_kwargs.get("split") == "train[0:2]"
 
+    recorded_args = ()
     recorded_kwargs.clear()
     preprocess_fineweb_edu(max_samples=None, max_chars=2000)
+    assert recorded_args == ("HuggingFaceFW/fineweb-edu", "sample-10BT")
     assert recorded_kwargs.get("split") == "train"
 
 

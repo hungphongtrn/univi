@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+import zipfile
 
 import pytest
 from datasets import Dataset, load_from_disk
@@ -10,6 +11,7 @@ from PIL import Image
 from data.preprocessing.densefusion import (
     _SOURCE_DATASET_ID,
     _find_key,
+    _resolve_densefusion_image,
     _resolve_image,
     preprocess_densefusion,
 )
@@ -134,6 +136,35 @@ def test_resolve_image_raises_on_url():
         _resolve_image("https://example.com/image.jpg")
     with pytest.raises(ValueError, match="URL"):
         _resolve_image("hf://datasets/foo/bar")
+
+
+def test_resolve_densefusion_image_from_zip_with_bare_member_name(
+    monkeypatch, tmp_path
+):
+    img = Image.new("RGB", (16, 16), color=(10, 20, 30))
+    image_path = "DenseFusion-4V-100K/000000/1000866019454.png"
+    archive_path = tmp_path / "000000.zip"
+    member_name = "1000866019454.png"
+
+    with zipfile.ZipFile(archive_path, "w") as zf:
+        image_file = tmp_path / member_name
+        img.save(image_file)
+        zf.write(image_file, member_name)
+
+    def mock_download(repo_id, repo_type, filename):
+        assert repo_id == _SOURCE_DATASET_ID
+        assert repo_type == "dataset"
+        assert filename == "images/DenseFusion-4V-100K/000000.zip"
+        return archive_path
+
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.hf_hub_download",
+        mock_download,
+    )
+
+    result = _resolve_densefusion_image(image_path)
+    assert isinstance(result, Image.Image)
+    assert result.size == (16, 16)
 
 
 # --- Functional tests ---

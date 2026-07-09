@@ -183,7 +183,7 @@ def test_merge_mixture_save_load_round_trip():
 def test_cli_with_two_per_source(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples: _make_dataset(name, samples),
+        lambda name, samples, offset=0: _make_dataset(name, samples),
     )
     outdir = tmp_path / "merged"
     cli_main([
@@ -204,7 +204,7 @@ def test_cli_with_two_per_source(tmp_path, monkeypatch):
 def test_cli_zero_per_source_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples: _make_dataset(name, samples),
+        lambda name, samples, offset=0: _make_dataset(name, samples),
     )
     outdir = tmp_path / "merged"
     with pytest.raises(ValueError, match="No non-empty sources"):
@@ -230,7 +230,7 @@ def test_cli_missing_output_raises():
 def test_cli_single_source(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples: _make_dataset(name, samples),
+        lambda name, samples, offset=0: _make_dataset(name, samples),
     )
     outdir = tmp_path / "single"
     cli_main([
@@ -426,7 +426,7 @@ class _SmolTalkMock:
 def test_cli_output_message(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples: _make_dataset(name, samples),
+        lambda name, samples, offset=0: _make_dataset(name, samples),
     )
     outdir = tmp_path / "msg"
     cli_main([
@@ -438,3 +438,332 @@ def test_cli_output_message(tmp_path, capsys, monkeypatch):
     captured = capsys.readouterr()
     assert f"saved to {outdir}" in captured.out
     assert "with 2 rows" in captured.out
+
+
+# --- Offset selection ---
+
+
+def test_preprocessor_offset_selects_different_rows(monkeypatch):
+    mock_image = Image.new("RGB", (8, 8))
+    rows = [
+        {"instruction": f"instr {i}", "response": f"resp {i}", "id": str(i)}
+        for i in range(20)
+    ]
+
+    class _MockDS:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _MockDS.__new__(_MockDS)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(self, function, *, with_indices=False, remove_columns=None):
+            result_rows = []
+            for i, row in enumerate(self._rows):
+                result_rows.append(function(row, i) if with_indices else function(row))
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _MockDS(rows),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        lambda *a, **kw: mock_image,
+    )
+    from data.preprocessing.smoltalk import preprocess_smoltalk
+
+    ds_a = preprocess_smoltalk(max_samples=5, offset=0)
+    ds_b = preprocess_smoltalk(max_samples=5, offset=5)
+
+    assert len(ds_a) == 5
+    assert len(ds_b) == 5
+    ids_a = {r["row_id"] for r in ds_a}
+    ids_b = {r["row_id"] for r in ds_b}
+    assert ids_a.isdisjoint(ids_b), "offset groups must not overlap"
+
+
+def test_offset_non_overlap_via_cli(tmp_path, monkeypatch):
+    mock_image = Image.new("RGB", (8, 8))
+
+    class _MockSmolTalk:
+        def __init__(self, num_rows):
+            self._rows = [
+                {"instruction": f"instr {i}", "response": f"resp {i}", "id": f"st-{i}"}
+                for i in range(num_rows)
+            ]
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _MockSmolTalk.__new__(_MockSmolTalk)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(self, function, *, with_indices=False, remove_columns=None):
+            result_rows = []
+            for i, row in enumerate(self._rows):
+                result_rows.append(function(row, i) if with_indices else function(row))
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _MockSmolTalk(10),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        lambda *a, **kw: mock_image,
+    )
+    outdir_a = tmp_path / "set_a"
+    cli_main([
+        "--smoltalk-samples", "3",
+        "--smoltalk-offset", "0",
+        "--output", str(outdir_a),
+        "--seed", "0",
+    ])
+    outdir_b = tmp_path / "set_b"
+    cli_main([
+        "--smoltalk-samples", "3",
+        "--smoltalk-offset", "3",
+        "--output", str(outdir_b),
+        "--seed", "0",
+    ])
+    from datasets import load_from_disk
+    set_a = load_from_disk(str(outdir_a))
+    set_b = load_from_disk(str(outdir_b))
+    ids_a = {r["row_id"] for r in set_a}
+    ids_b = {r["row_id"] for r in set_b}
+    assert len(set_a) == 3
+    assert len(set_b) == 3
+    assert ids_a.isdisjoint(ids_b), "offset groups via CLI must not overlap"
+
+
+# --- No-id offset fallback (row_id uniqueness) ---
+
+
+def _make_no_id_mock(rows: list[dict]):
+    """Return a mock dataset class whose rows lack an ``id`` column."""
+
+    class _MockNoId:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _MockNoId.__new__(_MockNoId)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(self, function, *, with_indices=False, remove_columns=None):
+            result_rows = []
+            for i, row in enumerate(self._rows):
+                result_rows.append(function(row, i) if with_indices else function(row))
+            return Dataset.from_list(result_rows)
+
+    return _MockNoId(rows)
+
+
+def _no_id_rows_libri(n: int):
+    return [
+        {
+            "audio": {"array": __import__("numpy").zeros(16000, dtype="float32"), "sampling_rate": 16000},
+            "text": f"transcript {i}",
+        }
+        for i in range(n)
+    ]
+
+
+def _no_id_rows_dense(n: int):
+    return [
+        {"image": Image.new("RGB", (8, 8)), "description": f"desc {i}"}
+        for i in range(n)
+    ]
+
+
+def _no_id_rows_fineweb(n: int):
+    return [{"text": f"content {i} " * 20} for i in range(n)]
+
+
+def _no_id_rows_smoltalk(n: int):
+    return [
+        {"instruction": f"instr {i}", "response": f"resp {i}"}
+        for i in range(n)
+    ]
+
+
+def test_librispeech_offset_no_id_non_overlap(monkeypatch):
+    n = 20
+    mock_ds = _make_no_id_mock(_no_id_rows_libri(n))
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: mock_ds,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        lambda *a, **kw: Image.new("RGB", (8, 8)),
+    )
+    ds_a = preprocess_librispeech_asr(max_samples=5, offset=0)
+    ds_b = preprocess_librispeech_asr(max_samples=5, offset=5)
+    ids_a = {r["row_id"] for r in ds_a}
+    ids_b = {r["row_id"] for r in ds_b}
+    assert ids_a == {"0", "1", "2", "3", "4"}
+    assert ids_b == {"5", "6", "7", "8", "9"}
+    assert ids_a.isdisjoint(ids_b)
+
+
+def test_densefusion_offset_no_id_non_overlap(monkeypatch):
+    n = 20
+    mock_ds = _make_no_id_mock(_no_id_rows_dense(n))
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion.load_dataset",
+        lambda *a, **kw: mock_ds,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.densefusion._resolve_densefusion_image",
+        lambda *a, **kw: Image.new("RGB", (8, 8)),
+    )
+    ds_a = preprocess_densefusion(max_samples=4, offset=0)
+    ds_b = preprocess_densefusion(max_samples=4, offset=6)
+    ids_a = {r["row_id"] for r in ds_a}
+    ids_b = {r["row_id"] for r in ds_b}
+    assert ids_a == {"0", "1", "2", "3"}
+    assert ids_b == {"6", "7", "8", "9"}
+    assert ids_a.isdisjoint(ids_b)
+
+
+def test_fineweb_offset_no_id_non_overlap(monkeypatch):
+    n = 20
+    mock_cls = _make_no_id_mock(_no_id_rows_fineweb(n))
+
+    class _FineWebSplitMock:
+        """FineWeb uses split syntax for slicing, so we handle that."""
+
+        def __init__(self, num_rows):
+            self._num_rows = num_rows
+
+        def __len__(self):
+            return self._num_rows
+
+        @property
+        def column_names(self):
+            return ["text"]
+
+        def map(self, function, *, with_indices=False, remove_columns=None):
+            result_rows = []
+            for i in range(self._num_rows):
+                row = {"text": f"content {i} " * 20}
+                result_rows.append(function(row, i) if with_indices else function(row))
+            return Dataset.from_list(result_rows)
+
+    def _load_side_effect(*args, **kw):
+        split = kw.get("split", "train")
+        if "[" in split:
+            offset, rest = split.split("[")[1].split(":")
+            # ignore rest for mock purposes
+            start = int(offset)
+            end = int(rest.rstrip("]"))
+            return _FineWebSplitMock(end - start)
+        return _FineWebSplitMock(100)
+
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        _load_side_effect,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        lambda *a, **kw: Image.new("RGB", (8, 8)),
+    )
+    ds_a = preprocess_fineweb_edu(max_samples=3, offset=0)
+    ds_b = preprocess_fineweb_edu(max_samples=3, offset=4)
+    ids_a = {r["row_id"] for r in ds_a}
+    ids_b = {r["row_id"] for r in ds_b}
+    assert ids_a == {"0", "1", "2"}
+    assert ids_b == {"4", "5", "6"}
+    assert ids_a.isdisjoint(ids_b)
+
+
+def test_smoltalk_offset_no_id_non_overlap(monkeypatch):
+    n = 20
+    mock_ds = _make_no_id_mock(_no_id_rows_smoltalk(n))
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: mock_ds,
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        lambda *a, **kw: Image.new("RGB", (8, 8)),
+    )
+    ds_a = preprocess_smoltalk(max_samples=5, offset=0)
+    ds_b = preprocess_smoltalk(max_samples=5, offset=5)
+    ids_a = {r["row_id"] for r in ds_a}
+    ids_b = {r["row_id"] for r in ds_b}
+    assert ids_a == {"0", "1", "2", "3", "4"}
+    assert ids_b == {"5", "6", "7", "8", "9"}
+    assert ids_a.isdisjoint(ids_b)
+
+
+def test_preprocessor_offset_preserves_existing_behavior(monkeypatch):
+    mock_image = Image.new("RGB", (8, 8))
+    rows = [
+        {"instruction": f"instr {i}", "response": f"resp {i}", "id": str(i)}
+        for i in range(10)
+    ]
+
+    class _MockDS:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            ds = _MockDS.__new__(_MockDS)
+            ds._rows = [self._rows[i] for i in indices]
+            return ds
+
+        def map(self, function, *, with_indices=False, remove_columns=None):
+            result_rows = []
+            for i, row in enumerate(self._rows):
+                result_rows.append(function(row, i) if with_indices else function(row))
+            return Dataset.from_list(result_rows)
+
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _MockDS(rows),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        lambda *a, **kw: mock_image,
+    )
+    from data.preprocessing.smoltalk import preprocess_smoltalk
+
+    ds_default = preprocess_smoltalk(max_samples=5)
+    ds_offset0 = preprocess_smoltalk(max_samples=5, offset=0)
+
+    assert len(ds_default) == len(ds_offset0)
+    assert [r["row_id"] for r in ds_default] == [r["row_id"] for r in ds_offset0]
+

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import io
 import json
 import tempfile
 from pathlib import Path
 
 import soundfile as sf
-from datasets import Dataset, load_dataset
+from datasets import Dataset, Image as HfImage, List, load_dataset
 from PIL import Image
 
 from data.preprocessing.render_utils import render_log_mel_spectrogram, render_text_page
@@ -212,23 +213,29 @@ def preprocess_valor32k(
             finally:
                 Path(tmp_path).unlink(missing_ok=True)
 
-        user_content = []
-        user_content.append({"type": "image", "image": question_img, "text": None})
+        def _pil_to_bytes(img: Image.Image) -> bytes:
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            return buf.getvalue()
+
+        image_bytes_list = [_pil_to_bytes(question_img)]
         if spectrogram_img is not None:
-            user_content.append(
-                {"type": "image", "image": spectrogram_img, "text": None}
-            )
+            image_bytes_list.append(_pil_to_bytes(spectrogram_img))
         for frame in frames:
-            user_content.append({"type": "image", "image": frame, "text": None})
+            image_bytes_list.append(_pil_to_bytes(frame))
+
+        user_content = []
+        for _ in image_bytes_list:
+            user_content.append({"type": "image"})
         user_content.append(
-            {"type": "text", "image": None, "text": _GENERIC_A_D_INSTRUCTION}
+            {"type": "text", "text": _GENERIC_A_D_INSTRUCTION}
         )
 
         messages = [
             {"role": "user", "content": user_content},
             {
                 "role": "assistant",
-                "content": [{"type": "text", "image": None, "text": answer}],
+                "content": [{"type": "text", "text": answer}],
             },
         ]
 
@@ -258,6 +265,7 @@ def preprocess_valor32k(
         )
 
         return {
+            "images": image_bytes_list,
             "messages": messages,
             "source_dataset_id": _SOURCE_DATASET_ID,
             "split": split,
@@ -267,8 +275,11 @@ def preprocess_valor32k(
             "preprocessing_version": _PREPROCESSING_VERSION,
         }
 
-    return source.map(
+    ds = source.map(
         _process_row,
         with_indices=True,
         remove_columns=source.column_names,
     )
+    if len(ds) > 0:
+        ds = ds.cast_column("images", List(HfImage()))
+    return ds
