@@ -64,6 +64,8 @@
 
 **Context:** `datasets==5.0.0` uses `torchcodec`-backed audio decoding for datasets like `openslr/librispeech_asr`. The LibriSpeech preprocessor reads raw audio arrays from the HF dataset and renders them into Log-Mel Spectrogram Images for the multimodal messages format. The downstream training lane operates exclusively on images.
 
+**Constraint:** torchcodec versions must match the pinned PyTorch version. Current pin is `torch==2.10.0+cu130` → `torchcodec==0.10`. Upgrading requires coordinated torch + torchcodec bump.
+
 **Decision:** Allow native audio decode (via datasets/torchcodec) at preprocessing time only. The training lane remains image-only because audio is rendered into Log-Mel Spectrogram Images before messages are materialized. This means the training pipeline never sees raw audio tensors.
 
 **Rationale:** Preprocessing is a one-time materialization step that converts source-native formats into the unified image-text message format. Letting datasets handle audio decoding natively (instead of requiring pre-decoded WAV files) keeps the preprocessing pipeline simpler and avoids an extra I/O step.
@@ -78,3 +80,13 @@
 **Decision:** Store every `row_id` as a string. Use the source id when present and non-empty; if it is missing, `None`, or `""`, use the `datasets.map(..., with_indices=True)` index, coerced with `str(...)`.
 **Rationale:** A uniform `Value(string)` column keeps the Materialized Render Dataset merge-safe while preserving source provenance.
 **Consequences:** All preprocessors must coerce `row_id` with `str(...)`, and tests should include numeric-id coverage.
+
+## 2026-07-09: Phase 3 scales from smoke-v0 to full-v0 with non-overlap controls
+
+**Context:** The earlier smoke/full decision said the same materialized dataset serves both smoke and full runs. Phase 2 validated the dataset schema, Unsloth collation, training loop, checkpoint save, and checkpoint reload on `data/materialized/smoke-v0`. Phase 3 now needs enough rows to make A100 training and held-out evaluation meaningful.
+
+**Decision:** Keep the same materialized dataset schema and rendering methods, but materialize a larger `data/materialized/full-v0` training dataset and separate `data/materialized/eval-v0/*` evaluation datasets. Phase 3 must add deterministic slicing/offset metadata and tests that assert source/split/row identifiers do not overlap between train and eval rows.
+
+**Rationale:** Reusing only the 40-row smoke dataset would validate mechanics but not the larger training/evaluation behavior. Scaling the sample count while preserving schema keeps the Phase 2 validation relevant and makes the full run reproducible.
+
+**Consequences:** Phase 3 implementation must not silently use default first-N train rows for both train and eval. Eval materialization must preserve native input fields (`native_user_content`, `target_text`, native availability flags) because the existing rendered-only training rows cannot reconstruct Native Upper Bound inputs reliably.

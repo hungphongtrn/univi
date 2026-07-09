@@ -27,7 +27,7 @@ Phase 0 fine-tunes Gemma 4 on the datasets below. All answer-bearing inputs are 
 
 ### 3. Text-Compressed Raw Text
 
-- Source: `HuggingFaceFW/fineweb-edu`.
+- Source: `HuggingFaceFW/fineweb-edu`, config `sample-10BT`.
 - Preprocessing: pack raw text into rendered images.
 - Task: present rendered raw text; output the same raw text.
 - Input: rendered text image first, then a short instruction such as `Transcribe the text shown in the image.`
@@ -215,7 +215,7 @@ All Phase 0 sources are converted into the same Gemma 4 multimodal `messages` fo
 
 ### Raw Text To Images
 
-- Source: `HuggingFaceFW/fineweb-edu`.
+- Source: `HuggingFaceFW/fineweb-edu`, config `sample-10BT`.
 - Select raw text rows from the source split.
 - Pack bounded text chunks into rendered text images using DeepSeek-OCR-style optical compression practice: fixed page-like canvases, dense readable text, no chat chrome, and compression kept conservative enough to stay below the failure-prone high-compression regime.
 - Store each rendered page as a materialized HF image.

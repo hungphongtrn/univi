@@ -50,7 +50,7 @@ Expected: `pyproject.toml` and `.python-version` exist, with `requires-python = 
 Run:
 
 ```bash
-uv add 'Pillow>=10.0.0' 'librosa>=0.10.0' 'numpy>=1.24.0' 'matplotlib>=3.7.0' 'datasets>=2.14.0' 'soundfile>=0.12.0' 'torch>=2.13.0' 'torchcodec>=0.14.0'
+uv add 'Pillow>=10.0.0' 'librosa>=0.10.0' 'numpy>=1.24.0' 'matplotlib>=3.7.0' 'datasets>=2.14.0' 'soundfile>=0.12.0' 'torch==2.10.0+cu130' 'torchcodec==0.10'
 ```
 
 Expected: dependencies are recorded in `pyproject.toml` and locked in `uv.lock`.
@@ -341,7 +341,7 @@ Expected: FAIL
 
 - [ ] **Step 3: Implement `preprocess_fineweb_edu`**
 
-Load `HuggingFaceFW/fineweb-edu`, chunk text rows, call `render_text_page`, construct `messages` with rendered image + `Transcribe the text shown in the image.` as user, raw text as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"HuggingFaceFW/fineweb-edu"`), `split`, `row_id`, `render_config`, `modality_label` (`"text"`), `preprocessing_version`.
+Load `HuggingFaceFW/fineweb-edu` with config `sample-10BT`, chunk text rows, call `render_text_page`, construct `messages` with rendered image + `Transcribe the text shown in the image.` as user, raw text as assistant. Attach all 6 metadata fields: `source_dataset_id` (`"HuggingFaceFW/fineweb-edu"`), `split`, `row_id`, `render_config`, `modality_label` (`"text"`), `preprocessing_version`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -630,5 +630,5 @@ Coerce `row_id` to `str` in all preprocessors, even when the source `id` field i
 - The smoke training script in Phase 2 expects the dataset to be available at `data/materialized/smoke-v0` or as a HF Hub dataset.
 - The `render_text_page` and `render_log_mel_spectrogram` utilities in `render_utils.py` are shared; do not change their signatures without updating all consumers.
 - Font and colormap choices in `render_utils.py` become experimental hyperparameters — document them in the metadata.
-- The materialized dataset should be pushed to HF Hub (`hungphongtrn/univi-phase0-smoke-v0` for the smoke version) so the training script can load it from anywhere.
+- The materialized dataset should be pushed to HF Hub (`hungphongtrn/univi-phase0-dataset-smoke-v0` for the smoke version) so the training script can load it from anywhere.
 - Valor32k is deferred from the current materialization path. Resolve GitHub issue #2 before re-adding it to the Phase 0 Training Mixture.
