@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import zipfile
 from pathlib import Path
 
 from datasets import Dataset, Image as HfImage, List, load_dataset
 from huggingface_hub import hf_hub_download
+from huggingface_hub.errors import EntryNotFoundError
 from PIL import Image
 
 _PREPROCESSING_VERSION = "0.1.0"
@@ -24,19 +26,32 @@ def _find_key(row: dict, candidates: list[str], purpose: str) -> str:
     )
 
 
-def _resolve_densefusion_image(image_path: str) -> Image.Image:
-    parts = image_path.split("/")
-    if len(parts) < 3:
-        raise ValueError(
-            "DenseFusion image_path must have format "
-            f"'<subset>/<batch_id>/<filename>', got {image_path!r}"
-        )
+def _download_densefusion_zip(
+    parts: list[str], force: bool = False
+) -> tuple[str, str]:
     zip_path = f"images/{parts[0]}/{parts[1]}.zip"
-    local_zip = hf_hub_download(
-        repo_id=_SOURCE_DATASET_ID,
-        repo_type="dataset",
-        filename=zip_path,
-    )
+    try:
+        local = hf_hub_download(
+            repo_id=_SOURCE_DATASET_ID,
+            repo_type="dataset",
+            filename=zip_path,
+            force_download=force,
+        )
+        return local, zip_path
+    except EntryNotFoundError:
+        alt = f"images/DenseFusion-1M/{parts[1]}.zip"
+        local = hf_hub_download(
+            repo_id=_SOURCE_DATASET_ID,
+            repo_type="dataset",
+            filename=alt,
+            force_download=force,
+        )
+        return local, alt
+
+
+def _extract_image_from_zip(
+    local_zip: str, image_path: str, parts: list[str], zip_path: str
+) -> Image.Image:
     with zipfile.ZipFile(local_zip) as zf:
         candidates = list(
             dict.fromkeys(
@@ -56,6 +71,22 @@ def _resolve_densefusion_image(image_path: str) -> Image.Image:
             f"Could not find DenseFusion image {image_path!r} in {zip_path!r}; "
             f"tried archive members {candidates!r}"
         )
+
+
+def _resolve_densefusion_image(image_path: str) -> Image.Image:
+    parts = image_path.split("/")
+    if len(parts) < 3:
+        raise ValueError(
+            "DenseFusion image_path must have format "
+            f"'<subset>/<batch_id>/<filename>', got {image_path!r}"
+        )
+    local_zip, zip_path = _download_densefusion_zip(parts)
+    try:
+        return _extract_image_from_zip(local_zip, image_path, parts, zip_path)
+    except zipfile.BadZipFile:
+        # Corrupt cache — force re-download once
+        local_zip, zip_path = _download_densefusion_zip(parts, force=True)
+        return _extract_image_from_zip(local_zip, image_path, parts, zip_path)
 
 
 def _resolve_image(value: object) -> Image.Image:
