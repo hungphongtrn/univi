@@ -11,9 +11,11 @@ from __future__ import annotations
 
 from pathlib import Path
 from io import BytesIO
+import json
 
 import pytest
 import torch
+from datasets import Dataset
 from PIL import Image
 
 
@@ -138,6 +140,103 @@ def test_univi_trainer_imports():
     assert hasattr(mod, "train")
 
 
+def test_load_dataset_combines_local_source_configurations(tmp_path):
+    from univi.trainer import load_dataset
+
+    rows = []
+    for name in ("fineweb-edu", "smoltalk"):
+        subset_path = tmp_path / name / "train"
+        subset_path.parent.mkdir()
+        Dataset.from_list([{"source_dataset_id": name, "value": name}]).save_to_disk(
+            subset_path
+        )
+        rows.append(
+            {
+                "config_name": name,
+                "path": name,
+                "split": "train",
+                "path": f"{name}/train",
+                "rows": 1,
+                "source_dataset_id": name,
+                "is_training_split": True,
+            }
+        )
+    (tmp_path / "manifest.json").write_text(
+        json.dumps({"subsets": rows}), encoding="utf-8"
+    )
+
+    dataset = load_dataset(
+        {
+            "dataset": {
+                "path": str(tmp_path),
+                "subsets": ["fineweb-edu", "smoltalk"],
+                "shuffle_seed": 42,
+            }
+        }
+    )
+
+    assert len(dataset) == 2
+    assert set(dataset["source_dataset_id"]) == {"fineweb-edu", "smoltalk"}
+
+
+def test_load_dataset_ignores_local_held_out_splits(tmp_path):
+    from univi.trainer import load_dataset
+
+    entries = []
+    for split, is_training in (("train", True), ("test", False)):
+        path = tmp_path / "smoltalk" / split
+        path.parent.mkdir(exist_ok=True)
+        Dataset.from_list([{"split": split}]).save_to_disk(path)
+        entries.append(
+            {
+                "config_name": "smoltalk",
+                "split": split,
+                "path": f"smoltalk/{split}",
+                "is_training_split": is_training,
+            }
+        )
+    (tmp_path / "manifest.json").write_text(
+        json.dumps({"subsets": entries}), encoding="utf-8"
+    )
+
+    dataset = load_dataset(
+        {"dataset": {"path": str(tmp_path), "subsets": ["smoltalk"]}}
+    )
+
+    assert dataset["split"] == ["train"]
+
+
+def test_load_dataset_uses_configured_hub_training_splits(tmp_path, monkeypatch):
+    from univi import trainer
+
+    calls = []
+
+    def fake_load(repo, name, split):
+        calls.append((repo, name, split))
+        return Dataset.from_list([{"split": split}])
+
+    monkeypatch.setattr(trainer, "hf_load", fake_load)
+    dataset = trainer.load_dataset(
+        {
+            "dataset": {
+                "path": str(tmp_path / "missing"),
+                "hf_hub_repo_id": "hungphongtrn/univi-3M-v0",
+                "subsets": ["librispeech", "smoltalk"],
+                "train_splits": {
+                    "librispeech": ["train"],
+                    "smoltalk": ["train"],
+                },
+            }
+        }
+    )
+
+    assert len(dataset) == 2
+    assert calls == [
+        ("hungphongtrn/univi-3M-v0", "librispeech", "train"),
+        ("hungphongtrn/univi-3M-v0", "smoltalk", "train"),
+    ]
+
+
 # --- Full-config tests ---
 
 
@@ -178,8 +277,16 @@ def test_full_config_loads():
     assert tr["remove_unused_columns"] is False
     assert tr["dataloader_num_workers"] == 2
 
-    assert cfg["dataset"]["path"] == "data/materialized/full-v0"
-    assert cfg["dataset"]["hf_hub_repo_id"] == "hungphongtrn/univi-phase0-dataset-full-v0"
+    assert cfg["dataset"]["path"] == "data/materialized/univi-3M-v0"
+    assert cfg["dataset"]["hf_hub_repo_id"] == "hungphongtrn/univi-3M-v0"
+    assert cfg["dataset"]["subsets"] == [
+        "fineweb-edu",
+        "densefusion",
+        "smoltalk",
+        "librispeech",
+    ]
+    assert "librispeech" in cfg["dataset"]["train_splits"]
+    assert cfg["dataset"]["train_splits"]["librispeech"] == ["train"]
 
     assert cfg["hub"]["model_repo_id"] == "hungphongtrn/univi-phase0-full-model-v0"
 

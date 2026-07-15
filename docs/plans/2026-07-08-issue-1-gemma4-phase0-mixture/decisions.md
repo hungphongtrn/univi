@@ -90,3 +90,23 @@
 **Rationale:** Reusing only the 40-row smoke dataset would validate mechanics but not the larger training/evaluation behavior. Scaling the sample count while preserving schema keeps the Phase 2 validation relevant and makes the full run reproducible.
 
 **Consequences:** Phase 3 implementation must not silently use default first-N train rows for both train and eval. Eval materialization must preserve native input fields (`native_user_content`, `target_text`, native availability flags) because the existing rendered-only training rows cannot reconstruct Native Upper Bound inputs reliably.
+
+## 2026-07-13: Rebuild the 3M artifact as four source configurations
+
+**Context:** The published `univi-3M-v0` artifact rendered FineWeb-Edu and SmolTalk as one unbounded-height image after silently truncating their input to 2,000 characters. LibriSpeech ASR and DenseFusion rows are correctly materialized.
+
+**Decision:** Publish `fineweb-edu`, `librispeech_asr`, `densefusion`, and `smoltalk` as distinct Hugging Face configurations. Retain the existing LibriSpeech ASR and DenseFusion rows. Rebuild one million FineWeb-Edu examples and one million SmolTalk examples. Render the complete answer-bearing input on fixed 1024 px pages at a readable font size and use multiple ordered images when content overflows. Keep one output row per selected source row. Limit every assistant target to the first 1,024 Gemma tokenizer tokens; this cap applies to the output only and does not truncate the rendered input.
+
+**Rationale:** Fixed pages preserve optical readability and source-specific configurations make composition auditable. Token-aware targets avoid silently exceeding the training context, while complete visual inputs retain the source content for later output-budget ablations.
+
+**Consequences:** Materialization requires the `unsloth/gemma-4-E2B-it` tokenizer. Render metadata must record page geometry, image count policy, tokenizer, and output-token cap. The old `full-v0` directory remains immutable while the replacement is built and validated.
+
+## 2026-07-13: Keep the 3060 pilot and A100 scale-up sequence-equivalent
+
+**Context:** The first full-data training pass will run on an RTX 3060 with 12 GB VRAM before scaling to an A100 40 GB.
+
+**Decision:** Use a 2,048-token total sequence contract for both runs. The RTX 3060 pilot uses 4-bit QLoRA, batch size 1, gradient accumulation, gradient checkpointing, and LoRA rank 8. The A100 run may increase batch size and LoRA rank, but must not change the materialized examples or sequence contract.
+
+**Rationale:** Holding data and context length fixed makes stability and quality differences attributable to optimization scale rather than a changed task.
+
+**Consequences:** The 1,024-token target cap is not an independent context budget: visual tokens, generic instructions, and target tokens must jointly fit within 2,048 tokens. Worst-case multi-page rows require a processor-level preflight before the 3060 run.

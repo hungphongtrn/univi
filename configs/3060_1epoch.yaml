@@ -1,12 +1,12 @@
 # configs/3060_1epoch.yaml — RTX 3060 12GB: full data, 1 epoch.
 # Uses epoch-based training (num_train_epochs) instead of fixed max_steps.
-# LoRA r=8 to comfortably fit vision encoder + LLM at seq_len 1536.
+# LoRA r=8 pilot with the same 2048-token contract as the A100 scale-up.
 
 model:
   name: "unsloth/gemma-4-E2B-it"
   load_in_4bit: true
   use_gradient_checkpointing: true
-  max_seq_length: 1536
+  max_seq_length: 2048
   gpu_memory_utilization: 0.85
   float8_kv_cache: true
   unsloth_tiled_mlp: true
@@ -28,7 +28,7 @@ training:
   per_device_train_batch_size: 1
   gradient_accumulation_steps: 4
   num_train_epochs: 1
-  max_seq_length: 1536
+  max_seq_length: 2048
   learning_rate: 2.0e-4
   warmup_steps: 20
   lr_scheduler_type: "cosine"
@@ -41,7 +41,15 @@ training:
   dataloader_num_workers: 2
 
 dataset:
-  path: "data/materialized/full-v0"
+  path: "data/materialized/univi-3M-v0"
+  hf_hub_repo_id: "hungphongtrn/univi-3M-v0"
+  subsets: ["fineweb-edu", "densefusion", "smoltalk", "librispeech"]
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+  shuffle_seed: 42
 
 hub:
   model_repo_id: "hungphongtrn/univi-phase0-3060-1epoch-model-v0"

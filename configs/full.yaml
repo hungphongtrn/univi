@@ -34,8 +34,20 @@ training:
   dataloader_num_workers: 2
 
 dataset:
-  path: "data/materialized/full-v0"
-  hf_hub_repo_id: "hungphongtrn/univi-phase0-dataset-full-v0"
+  path: "data/materialized/univi-3M-v0"
+  hf_hub_repo_id: "hungphongtrn/univi-3M-v0"
+  subsets: ["fineweb-edu", "densefusion", "smoltalk", "librispeech"]
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+  validation_splits:
+    fineweb-edu: ["validation"]
+    librispeech: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+  shuffle_seed: 42
 
 hub:
   model_repo_id: "hungphongtrn/univi-phase0-full-model-v0"

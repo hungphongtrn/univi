@@ -1,8 +1,8 @@
 # configs/3060_full.yaml — RTX 3060 12GB full-data run with Unsloth optimizations.
 # Differences from full.yaml (A100 config):
 #   - per_device_train_batch_size: 1 (12GB cannot fit batch 2 at seq 2048)
-#   - max_seq_length: 1536 (reduced to fit vision embeddings + text)
-#   - LoRA r: 16 (save memory vs r32, still effective for fine-tuning)
+#   - max_seq_length: 2048 (same sequence contract as the A100 scale-up)
+#   - LoRA r: 8 (pilot capacity; the A100 scale-up uses r32)
 #   - gpu_memory_utilization: 0.85 (use more of the 12GB)
 #   - float8_kv_cache: true (Ampere+, saves KV cache memory)
 #   - unsloth_tiled_mlp: true (Ampere+, speeds up MLP)
@@ -11,14 +11,14 @@ model:
   name: "unsloth/gemma-4-E2B-it"
   load_in_4bit: true
   use_gradient_checkpointing: true
-  max_seq_length: 1536
+  max_seq_length: 2048
   gpu_memory_utilization: 0.85
   float8_kv_cache: true
   unsloth_tiled_mlp: true
 
 lora:
-  r: 16
-  alpha: 32
+  r: 8
+  alpha: 16
   target_modules:
     - "q_proj"
     - "k_proj"
@@ -33,7 +33,7 @@ training:
   per_device_train_batch_size: 1
   gradient_accumulation_steps: 4
   max_steps: 500
-  max_seq_length: 1536
+  max_seq_length: 2048
   learning_rate: 2.0e-4
   warmup_steps: 20
   lr_scheduler_type: "cosine"
@@ -46,8 +46,15 @@ training:
   dataloader_num_workers: 2
 
 dataset:
-  path: "data/materialized/full-v0"
-  hf_hub_repo_id: "hungphongtrn/univi-phase0-dataset-full-v0"
+  path: "data/materialized/univi-3M-v0"
+  hf_hub_repo_id: "hungphongtrn/univi-3M-v0"
+  subsets: ["fineweb-edu", "densefusion", "smoltalk", "librispeech"]
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+  shuffle_seed: 42
 
 hub:
   model_repo_id: "hungphongtrn/univi-phase0-3060-full-model-v0"

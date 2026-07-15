@@ -10,11 +10,12 @@ Loss masking:
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 
 import torch
 import yaml
-from datasets import load_dataset as hf_load
+from datasets import concatenate_datasets, load_dataset as hf_load
 from datasets import load_from_disk
 
 # Unsloth must be imported before trl/transformers/peft so its
@@ -63,10 +64,33 @@ def apply_lora(model, lora_cfg: dict):
 
 def load_dataset(config: dict):
     path = config["dataset"]["path"]
-    if Path(path).exists():
+    dataset_cfg = config["dataset"]
+    local_path = Path(path)
+    subsets = dataset_cfg.get("subsets", [])
+    seed = dataset_cfg.get("shuffle_seed", 42)
+    if local_path.exists():
+        manifest_path = local_path / "manifest.json"
+        if manifest_path.exists():
+            with manifest_path.open() as handle:
+                manifest = json.load(handle)
+            entries = [
+                item
+                for item in manifest["subsets"]
+                if item.get("is_training_split", True)
+                and (not subsets or item["config_name"] in subsets)
+            ]
+            datasets = [load_from_disk(local_path / item["path"]) for item in entries]
+            return concatenate_datasets(datasets).shuffle(seed=seed)
         return load_from_disk(path)
     hub_repo = config["dataset"].get("hf_hub_repo_id")
     if hub_repo:
+        if subsets:
+            split_map = dataset_cfg.get("train_splits", {})
+            datasets = []
+            for name in subsets:
+                for split in split_map.get(name, ["train"]):
+                    datasets.append(hf_load(hub_repo, name=name, split=split))
+            return concatenate_datasets(datasets).shuffle(seed=seed)
         return hf_load(hub_repo, split="train")
     raise FileNotFoundError(
         f"Dataset not found at {path} and no hf_hub_repo_id configured."
