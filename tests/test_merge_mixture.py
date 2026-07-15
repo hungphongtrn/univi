@@ -183,7 +183,7 @@ def test_merge_mixture_save_load_round_trip():
 def test_cli_with_two_per_source(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples, offset=0: _make_dataset(name, samples),
+        lambda name, samples, offset=0, **kwargs: _make_dataset(name, samples),
     )
     outdir = tmp_path / "merged"
     cli_main([
@@ -204,7 +204,7 @@ def test_cli_with_two_per_source(tmp_path, monkeypatch):
 def test_cli_zero_per_source_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples, offset=0: _make_dataset(name, samples),
+        lambda name, samples, offset=0, **kwargs: _make_dataset(name, samples),
     )
     outdir = tmp_path / "merged"
     with pytest.raises(ValueError, match="No non-empty sources"):
@@ -230,7 +230,7 @@ def test_cli_missing_output_raises():
 def test_cli_single_source(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples, offset=0: _make_dataset(name, samples),
+        lambda name, samples, offset=0, **kwargs: _make_dataset(name, samples),
     )
     outdir = tmp_path / "single"
     cli_main([
@@ -326,25 +326,33 @@ class _LibriMock:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None):
-        kwargs = fn_kwargs or {}
+    def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         result_rows = []
         for i, row in enumerate(self._rows):
-            result_rows.append(function(row, i, **kwargs) if with_indices else function(row, **kwargs))
+            result_rows.append(function(row, i) if with_indices else function(row))
         return Dataset.from_list(result_rows)
 
 
 class _DenseMock:
     def __init__(self, num_rows):
-        import numpy as np
-        self._rows = [
-            {
-                "image": Image.new("RGB", (32, 32), color=(100, 50, 200)),
-                "description": f"a photo of sample {i}",
-                "id": f"test-{i}",
-            }
-            for i in range(num_rows)
-        ]
+        import io
+        self._rows = []
+        for i in range(num_rows):
+            buf = io.BytesIO()
+            Image.new("RGB", (32, 32), color=(100, 50, 200)).save(buf, format="PNG")
+            self._rows.append({
+                "images": [{"bytes": buf.getvalue(), "path": None}],
+                "texts": [{"user": "What do you observe?", "assistant": f"a photo of sample {i}"}],
+                "source": "densefusion_1m",
+                "relevance_ratings": [5],
+                "relevance_min": 5,
+                "image_correspondence_ratings": [2],
+                "image_correspondence_min": 2,
+                "formatting_ratings": [4],
+                "formatting_min": 4,
+                "visual_dependency_ratings": [5],
+                "visual_dependency_min": 5,
+            })
 
     def __len__(self):
         return len(self._rows)
@@ -358,12 +366,23 @@ class _DenseMock:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None):
+    def map(self, function, *, with_indices=False, batched=False, remove_columns=None, batch_size=1000, **kwargs):
+        remove_set = set(remove_columns or [])
+        if batched:
+            batch = {col: [row.get(col) for row in self._rows] for col in self.column_names}
+            indices = list(range(len(self._rows)))
+            new_columns = function(batch, indices)
+            result_rows = []
+            for i in range(len(self._rows)):
+                merged = {k: v for k, v in self._rows[i].items() if k not in remove_set}
+                for key in new_columns:
+                    merged[key] = new_columns[key][i]
+                result_rows.append(merged)
+            return Dataset.from_list(result_rows)
         result_rows = []
         for i, row in enumerate(self._rows):
             result_rows.append(function(row, i) if with_indices else function(row))
         return Dataset.from_list(result_rows)
-
 
 class _FineWebMock:
     def __init__(self, num_rows):
@@ -384,7 +403,7 @@ class _FineWebMock:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None):
+    def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         result_rows = []
         for i, row in enumerate(self._rows):
             result_rows.append(function(row, i) if with_indices else function(row))
@@ -416,7 +435,7 @@ class _SmolTalkMock:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None):
+    def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         result_rows = []
         for i, row in enumerate(self._rows):
             result_rows.append(function(row, i) if with_indices else function(row))
@@ -426,7 +445,7 @@ class _SmolTalkMock:
 def test_cli_output_message(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.merge_mixture._load_source",
-        lambda name, samples, offset=0: _make_dataset(name, samples),
+        lambda name, samples, offset=0, **kwargs: _make_dataset(name, samples),
     )
     outdir = tmp_path / "msg"
     cli_main([
@@ -466,7 +485,7 @@ def test_preprocessor_offset_selects_different_rows(monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i, row in enumerate(self._rows):
                 result_rows.append(function(row, i) if with_indices else function(row))
@@ -514,7 +533,7 @@ def test_offset_non_overlap_via_cli(tmp_path, monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i, row in enumerate(self._rows):
                 result_rows.append(function(row, i) if with_indices else function(row))
@@ -574,7 +593,19 @@ def _make_no_id_mock(rows: list[dict]):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, batched=False, remove_columns=None, batch_size=1000, **kwargs):
+            remove_set = set(remove_columns or [])
+            if batched:
+                batch = {col: [row.get(col) for row in self._rows] for col in self.column_names}
+                indices = list(range(len(self._rows)))
+                new_columns = function(batch, indices)
+                result_rows = []
+                for i in range(len(self._rows)):
+                    merged = {k: v for k, v in self._rows[i].items() if k not in remove_set}
+                    for key in new_columns:
+                        merged[key] = new_columns[key][i]
+                    result_rows.append(merged)
+                return Dataset.from_list(result_rows)
             result_rows = []
             for i, row in enumerate(self._rows):
                 result_rows.append(function(row, i) if with_indices else function(row))
@@ -594,10 +625,25 @@ def _no_id_rows_libri(n: int):
 
 
 def _no_id_rows_dense(n: int):
-    return [
-        {"image": Image.new("RGB", (8, 8)), "description": f"desc {i}"}
-        for i in range(n)
-    ]
+    import io
+    rows = []
+    for i in range(n):
+        buf = io.BytesIO()
+        Image.new("RGB", (8, 8)).save(buf, format="PNG")
+        rows.append({
+            "images": [{"bytes": buf.getvalue(), "path": None}],
+            "texts": [{"user": "What do you see?", "assistant": f"desc {i}"}],
+            "source": "densefusion_1m",
+            "relevance_ratings": [5],
+            "relevance_min": 5,
+            "image_correspondence_ratings": [2],
+            "image_correspondence_min": 2,
+            "formatting_ratings": [4],
+            "formatting_min": 4,
+            "visual_dependency_ratings": [5],
+            "visual_dependency_min": 5,
+        })
+    return rows
 
 
 def _no_id_rows_fineweb(n: int):
@@ -638,10 +684,6 @@ def test_densefusion_offset_no_id_non_overlap(monkeypatch):
         "data.preprocessing.densefusion.load_dataset",
         lambda *a, **kw: mock_ds,
     )
-    monkeypatch.setattr(
-        "data.preprocessing.densefusion._resolve_densefusion_image",
-        lambda *a, **kw: Image.new("RGB", (8, 8)),
-    )
     ds_a = preprocess_densefusion(max_samples=4, offset=0)
     ds_b = preprocess_densefusion(max_samples=4, offset=6)
     ids_a = {r["row_id"] for r in ds_a}
@@ -668,7 +710,7 @@ def test_fineweb_offset_no_id_non_overlap(monkeypatch):
         def column_names(self):
             return ["text"]
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i in range(self._num_rows):
                 row = {"text": f"content {i} " * 20}
@@ -745,7 +787,7 @@ def test_preprocessor_offset_preserves_existing_behavior(monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i, row in enumerate(self._rows):
                 result_rows.append(function(row, i) if with_indices else function(row))

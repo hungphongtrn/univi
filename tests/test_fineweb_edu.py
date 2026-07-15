@@ -35,7 +35,7 @@ class _MockFineWebEdu:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None):
+    def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         result_rows = []
         for i, row in enumerate(self._rows):
             if with_indices:
@@ -130,6 +130,9 @@ def test_render_config_is_valid_json_and_contains_expected_keys(monkeypatch):
     assert config["max_chars"] == 2000
     assert config["canvas_width"] == 1024
     assert config["font_size"] == 14
+    assert config["image_mode"] == "L"
+    assert config["png_compression_level"] == 1
+    assert dataset[0]["images"][0].mode == "L"
 
 
 def test_render_config_matches_renderer_kwargs(monkeypatch):
@@ -245,7 +248,7 @@ def test_row_id_falls_back_to_index_when_no_id_column(monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i, row in enumerate(self._rows):
                 if with_indices:
@@ -287,7 +290,7 @@ def test_text_truncation(monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i, row in enumerate(self._rows):
                 if with_indices:
@@ -309,6 +312,46 @@ def test_text_truncation(monkeypatch):
     dataset = preprocess_fineweb_edu(max_samples=1, max_chars=100)
     assistant_text = dataset[0]["messages"][1]["content"][0]["text"]
     assert len(assistant_text) == 100
+
+
+def test_original_token_length_fineweb(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        lambda *a, **kw: _MockFineWebEdu(2),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        _mock_renderer,
+    )
+
+    class _CharTok:
+        name_or_path = "char-tok"
+        def encode(self, text, add_special_tokens=False):
+            return [ord(c) for c in text]
+        def decode(self, tokens, skip_special_tokens=True):
+            return "".join(chr(t) for t in tokens)
+
+    dataset = preprocess_fineweb_edu(
+        max_samples=2, max_chars=2000, tokenizer=_CharTok()
+    )
+    for row in dataset:
+        assert "original_token_length" in row
+        assert isinstance(row["original_token_length"], int)
+        assert row["original_token_length"] > 0
+
+
+def test_original_token_length_minus_one_without_tokenizer(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.load_dataset",
+        lambda *a, **kw: _MockFineWebEdu(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.fineweb_edu.render_text_page",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_fineweb_edu(max_samples=1, max_chars=2000)
+    assert dataset[0]["original_token_length"] == -1
 
 
 def test_save_load_round_trip(monkeypatch):
@@ -464,10 +507,38 @@ def test_loads_sample_10bt_subset_with_split_slicing(monkeypatch):
     assert recorded_kwargs.get("split") == "train"
 
 
+def test_local_source_loads_only_parquet_files_needed_for_slice(tmp_path, monkeypatch):
+    config_dir = tmp_path / "sample" / "10BT"
+    config_dir.mkdir(parents=True)
+    Dataset.from_dict({"text": ["a", "b"], "id": ["0", "1"]}).to_parquet(
+        config_dir / "000.parquet"
+    )
+    Dataset.from_dict({"text": ["c", "d"], "id": ["2", "3"]}).to_parquet(
+        config_dir / "001.parquet"
+    )
+    captured = {}
+
+    def recording_load(*args, **kwargs):
+        captured["args"] = args
+        captured["data_files"] = kwargs["data_files"]
+        return _MockFineWebEdu(4)
+
+    monkeypatch.setattr("data.preprocessing.fineweb_edu.load_dataset", recording_load)
+    monkeypatch.setattr("data.preprocessing.fineweb_edu.render_text_page", _mock_renderer)
+
+    dataset = preprocess_fineweb_edu(
+        max_samples=3, max_chars=2000, source_path=str(tmp_path)
+    )
+
+    assert captured["args"] == ("parquet",)
+    assert len(captured["data_files"]) == 2
+    assert len(dataset) == 3
+
+
 def test_map_used_not_direct_iteration(monkeypatch):
     map_kwargs: dict = {}
 
-    def recording_map(self, function, *, with_indices=False, remove_columns=None):
+    def recording_map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         map_kwargs["with_indices"] = with_indices
         map_kwargs["remove_columns"] = remove_columns
         result_rows = []

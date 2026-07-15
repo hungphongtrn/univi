@@ -44,14 +44,26 @@ def _make_fineweb_raw(num_rows: int):
 
 
 def _make_densefusion_raw(num_rows: int):
-    return [
-        {
-            "image": Image.new("RGB", (32, 32)),
-            "description": f"a photo of sample {i}",
-            "id": f"test-{i}",
-        }
-        for i in range(num_rows)
-    ]
+    import io
+
+    rows = []
+    for i in range(num_rows):
+        buf = io.BytesIO()
+        Image.new("RGB", (32, 32)).save(buf, format="PNG")
+        rows.append({
+            "images": [{"bytes": buf.getvalue(), "path": None}],
+            "texts": [{"user": "What do you see?", "assistant": f"a photo of sample {i}"}],
+            "source": "densefusion_1m",
+            "relevance_ratings": [5],
+            "relevance_min": 5,
+            "image_correspondence_ratings": [2],
+            "image_correspondence_min": 2,
+            "formatting_ratings": [4],
+            "formatting_min": 4,
+            "visual_dependency_ratings": [5],
+            "visual_dependency_min": 5,
+        })
+    return rows
 
 
 def _make_librispeech_raw(num_rows: int):
@@ -83,11 +95,10 @@ class _MockIterable:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None, fn_kwargs=None):
-        kwargs = fn_kwargs or {}
+    def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         result_rows = []
         for i, row in enumerate(self._rows):
-            result_rows.append(function(row, i, **kwargs) if with_indices else function(row, **kwargs))
+            result_rows.append(function(row, i) if with_indices else function(row))
         return Dataset.from_list(result_rows)
 
 
@@ -150,7 +161,6 @@ def test_eval_smoltalk_schema(monkeypatch):
 
 
 def test_eval_densefusion_schema(monkeypatch):
-    mock_image = Image.new("RGB", (8, 8))
 
     class _DenseMock:
         def __init__(self, rows):
@@ -168,7 +178,19 @@ def test_eval_densefusion_schema(monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, batched=False, remove_columns=None, batch_size=1000, **kwargs):
+            remove_set = set(remove_columns or [])
+            if batched:
+                batch = {col: [row.get(col) for row in self._rows] for col in self.column_names}
+                indices = list(range(len(self._rows)))
+                new_columns = function(batch, indices)
+                result_rows = []
+                for i in range(len(self._rows)):
+                    merged = {k: v for k, v in self._rows[i].items() if k not in remove_set}
+                    for key in new_columns:
+                        merged[key] = new_columns[key][i]
+                    result_rows.append(merged)
+                return Dataset.from_list(result_rows)
             result_rows = []
             for i, row in enumerate(self._rows):
                 result_rows.append(function(row, i) if with_indices else function(row))
@@ -178,14 +200,6 @@ def test_eval_densefusion_schema(monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.densefusion.load_dataset",
         lambda *a, **kw: _DenseMock(raw),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.densefusion._resolve_image",
-        lambda *a, **kw: mock_image,
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.densefusion._find_key",
-        lambda row, candidates, purpose: "description",
     )
     ds = prepare_source_eval("densefusion", max_samples=3, offset=0)
     assert len(ds) == 3

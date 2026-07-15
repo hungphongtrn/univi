@@ -81,6 +81,80 @@ def render_text_page(
     return img
 
 
+def render_text_pages(
+    text: str,
+    canvas_width: int = 1024,
+    canvas_height: int = 1024,
+    font_size: int = 14,
+    font_path: str | None = None,
+    background_color: str = "white",
+    text_color: str = "black",
+) -> list[Image.Image]:
+    font_size = max(font_size, 14)
+    font_file = _find_font(font_path)
+    font = (
+        ImageFont.truetype(font_file, font_size)
+        if font_file is not None
+        else ImageFont.load_default()
+    )
+
+    try:
+        ascent, descent = font.getmetrics()
+        line_height = ascent + descent
+    except AttributeError:
+        line_height = font_size + 4
+
+    margin = 20
+    usable_width = canvas_width - 2 * margin
+    lines_per_page = max(1, (canvas_height - 2 * margin) // line_height)
+    wrapped_lines: list[str] = []
+
+    for paragraph in text.split("\n"):
+        words = paragraph.split(" ")
+        line = ""
+        for word in words:
+            candidate = f"{line} {word}".strip()
+            if font.getlength(candidate) <= usable_width:
+                line = candidate
+                continue
+            if line:
+                wrapped_lines.append(line)
+                line = ""
+            while font.getlength(word) > usable_width:
+                low, high = 1, len(word)
+                while low < high:
+                    middle = (low + high + 1) // 2
+                    if font.getlength(word[:middle]) <= usable_width:
+                        low = middle
+                    else:
+                        high = middle - 1
+                wrapped_lines.append(word[:low])
+                word = word[low:]
+            line = word
+        wrapped_lines.append(line)
+
+    if not wrapped_lines:
+        wrapped_lines = [""]
+
+    pages = []
+    for start in range(0, len(wrapped_lines), lines_per_page):
+        page = Image.new(
+            "RGB", (canvas_width, canvas_height), color=background_color
+        )
+        draw = ImageDraw.Draw(page)
+        for line_index, line in enumerate(
+            wrapped_lines[start : start + lines_per_page]
+        ):
+            draw.text(
+                (margin, margin + line_index * line_height),
+                line,
+                font=font,
+                fill=text_color,
+            )
+        pages.append(page)
+    return pages
+
+
 def render_log_mel_spectrogram(
     audio_path: str,
     sample_rate: int = 16000,
@@ -130,3 +204,23 @@ def render_log_mel_spectrogram(
     )
 
     return img.convert("RGB")
+
+
+def tile_spectrogram_image(
+    image: Image.Image,
+    tile_size: int | None = None,
+    pad_color: int = 255,
+) -> list[Image.Image]:
+    width, height = image.size
+    if tile_size is None:
+        tile_size = height
+    tiles = []
+    for x in range(0, width, tile_size):
+        right = min(x + tile_size, width)
+        tile = image.crop((x, 0, right, height))
+        if tile.width < tile_size:
+            padded = Image.new("RGB", (tile_size, tile_size), color=pad_color)
+            padded.paste(tile, (0, 0))
+            tile = padded
+        tiles.append(tile)
+    return tiles

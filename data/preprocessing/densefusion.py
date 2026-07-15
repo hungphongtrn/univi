@@ -1,189 +1,100 @@
 from __future__ import annotations
 
-import io
 import json
-import os
-import zipfile
-from pathlib import Path
 
 from datasets import Dataset, Image as HfImage, List, load_dataset
-from huggingface_hub import hf_hub_download
-from huggingface_hub.errors import EntryNotFoundError
-from PIL import Image
 
-_PREPROCESSING_VERSION = "0.1.0"
-_USER_INSTRUCTION = "Describe this image."
-_SOURCE_DATASET_ID = "BAAI/DenseFusion-1M"
+from data.preprocessing.text_token_utils import compute_token_length
 
-
-def _find_key(row: dict, candidates: list[str], purpose: str) -> str:
-    for key in candidates:
-        if key in row:
-            return key
-    raise KeyError(
-        f"None of {candidates} found in row for {purpose}. "
-        f"Available keys: {list(row.keys())}"
-    )
-
-
-def _download_densefusion_zip(
-    parts: list[str], force: bool = False
-) -> tuple[str, str]:
-    zip_path = f"images/{parts[0]}/{parts[1]}.zip"
-    try:
-        local = hf_hub_download(
-            repo_id=_SOURCE_DATASET_ID,
-            repo_type="dataset",
-            filename=zip_path,
-            force_download=force,
-        )
-        return local, zip_path
-    except EntryNotFoundError:
-        alt = f"images/DenseFusion-1M/{parts[1]}.zip"
-        local = hf_hub_download(
-            repo_id=_SOURCE_DATASET_ID,
-            repo_type="dataset",
-            filename=alt,
-            force_download=force,
-        )
-        return local, alt
-
-
-def _extract_image_from_zip(
-    local_zip: str, image_path: str, parts: list[str], zip_path: str
-) -> Image.Image:
-    with zipfile.ZipFile(local_zip) as zf:
-        candidates = list(
-            dict.fromkeys(
-                [
-                    image_path,
-                    "/".join(parts[1:]),
-                    parts[-1],
-                ]
-            )
-        )
-        names = set(zf.namelist())
-        for candidate in candidates:
-            if candidate in names:
-                with zf.open(candidate) as img_file:
-                    return Image.open(img_file).convert("RGB")
-        raise ValueError(
-            f"Could not find DenseFusion image {image_path!r} in {zip_path!r}; "
-            f"tried archive members {candidates!r}"
-        )
-
-
-def _resolve_densefusion_image(image_path: str) -> Image.Image:
-    parts = image_path.split("/")
-    if len(parts) < 3:
-        raise ValueError(
-            "DenseFusion image_path must have format "
-            f"'<subset>/<batch_id>/<filename>', got {image_path!r}"
-        )
-    local_zip, zip_path = _download_densefusion_zip(parts)
-    try:
-        return _extract_image_from_zip(local_zip, image_path, parts, zip_path)
-    except zipfile.BadZipFile:
-        # Corrupt cache — force re-download once
-        local_zip, zip_path = _download_densefusion_zip(parts, force=True)
-        return _extract_image_from_zip(local_zip, image_path, parts, zip_path)
-
-
-def _resolve_image(value: object) -> Image.Image:
-    if isinstance(value, Image.Image):
-        return value
-    if isinstance(value, str):
-        path = Path(value)
-        if path.is_file():
-            return Image.open(path).convert("RGB")
-        if value.startswith(("http://", "https://", "hf://")):
-            raise ValueError(
-                f"Image value is a URL which is not supported: {value!r}. "
-                "Use a local file path or HF dataset repo-relative path instead."
-            )
-        local_path = hf_hub_download(
-            repo_id=_SOURCE_DATASET_ID,
-            repo_type="dataset",
-            filename=value,
-        )
-        return Image.open(local_path).convert("RGB")
-    raise TypeError(
-        f"Expected PIL Image or file path string, got {type(value).__name__}: {value!r}"
-    )
+_PREPROCESSING_VERSION = "0.2.0"
+_SOURCE_DATASET_ID = "HuggingFaceM4/FineVision"
 
 
 def preprocess_densefusion(
-    subset: str = "DenseFusion-4V-100K",
+    subset: str = "densefusion_1m",
     split: str = "train",
     max_samples: int | None = None,
     offset: int = 0,
     include_native: bool = False,
+    tokenizer=None,
+    tokenizer_name: str = "unsloth/gemma-4-E2B-it",
+    num_proc: int = 4,
 ) -> Dataset:
-    load_kwargs = {"split": split}
+    load_kwargs = {"split": split, "num_proc": num_proc}
     if subset:
         load_kwargs["name"] = subset
-    source = load_dataset("BAAI/DenseFusion-1M", **load_kwargs)
+    source = load_dataset(_SOURCE_DATASET_ID, **load_kwargs)
     if max_samples is not None:
         source = source.select(range(offset, min(offset + max_samples, len(source))))
 
-    def _process_row(row, index: int):
-        image_key = _find_key(row, ["image_path", "image", "jpg", "png"], "image")
-        text_key = _find_key(
-            row, ["description", "caption", "text", "output"], "description"
-        )
+    def _process_batch(batch, indices):
+        num_rows = len(indices)
+        messages_list = []
+        source_dataset_ids = [_SOURCE_DATASET_ID] * num_rows
+        splits = [split] * num_rows
+        row_ids = [str(offset + idx) for idx in indices]
+        render_configs = [
+            json.dumps({"render_method": "preserve_source_image"}, sort_keys=True)
+        ] * num_rows
+        modality_labels = ["image-text"] * num_rows
+        preprocessing_versions = [_PREPROCESSING_VERSION] * num_rows
 
-        if image_key == "image_path":
-            image = _resolve_densefusion_image(row[image_key])
+        for i in range(num_rows):
+            texts = batch["texts"][i]
+            if not texts:
+                raise ValueError("Row has no texts")
+            user_text, assistant_text = texts[0]["user"], texts[0]["assistant"]
+
+            messages_list.append([
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image"},
+                        {"type": "text", "text": user_text},
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": assistant_text},
+                    ],
+                },
+            ])
+
+        if tokenizer is not None:
+            original_lengths = []
+            for i in range(num_rows):
+                raw = batch["texts"][i][0]["assistant"]
+                original_lengths.append(compute_token_length(raw, tokenizer))
         else:
-            image = _resolve_image(row[image_key])
-
-        buf = io.BytesIO()
-        image.save(buf, format="PNG")
-        image_bytes = buf.getvalue()
-
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image"},
-                    {"type": "text", "text": _USER_INSTRUCTION},
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {"type": "text", "text": row[text_key]},
-                ],
-            },
-        ]
-
-        source_id = row.get("id")
-        row_id = str(source_id) if source_id not in (None, "") else str(offset + index)
+            original_lengths = [-1] * num_rows
 
         result = {
-            "images": [image_bytes],
-            "messages": messages,
-            "source_dataset_id": _SOURCE_DATASET_ID,
-            "split": split,
-            "row_id": row_id,
-            "render_config": json.dumps(
-                {"render_method": "preserve_source_image"}, sort_keys=True
-            ),
-            "modality_label": "image-text",
-            "preprocessing_version": _PREPROCESSING_VERSION,
+            "messages": messages_list,
+            "source_dataset_id": source_dataset_ids,
+            "split": splits,
+            "row_id": row_ids,
+            "render_config": render_configs,
+            "modality_label": modality_labels,
+            "preprocessing_version": preprocessing_versions,
+            "original_token_length": original_lengths,
         }
         if include_native:
-            result["native_user_content"] = None
-            result["target_text"] = row[text_key]
-            result["native_available"] = True
-            result["native_equals_image_only"] = True
+            result["native_user_content"] = [None] * num_rows
+            result["target_text"] = []
+            for i in range(num_rows):
+                result["target_text"].append(batch["texts"][i][0]["assistant"])
+            result["native_available"] = [True] * num_rows
+            result["native_equals_image_only"] = [True] * num_rows
         return result
 
+    columns_to_drop = [c for c in source.column_names if c != "images"]
     ds = source.map(
-        _process_row,
+        _process_batch,
+        batched=True,
         with_indices=True,
-        remove_columns=source.column_names,
-        num_proc=4,
+        remove_columns=columns_to_drop,
+        num_proc=num_proc,
     )
     if len(ds) > 0:
         ds = ds.cast_column("images", List(HfImage()))

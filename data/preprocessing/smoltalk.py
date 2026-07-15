@@ -5,9 +5,10 @@ import json
 
 from datasets import Dataset, Image as HfImage, List, load_dataset
 
-from data.preprocessing.render_utils import render_text_page
+from data.preprocessing.render_utils import render_text_page, render_text_pages
+from data.preprocessing.text_token_utils import compute_token_length, truncate_to_token_limit
 
-_PREPROCESSING_VERSION = "0.1.0"
+_PREPROCESSING_VERSION = "0.3.0"
 _USER_INSTRUCTION = "Follow the instruction shown in the image."
 _SOURCE_DATASET_ID = "HuggingFaceTB/smoltalk"
 
@@ -113,12 +114,24 @@ def preprocess_smoltalk(
     split: str = "train",
     max_samples: int | None = None,
     offset: int = 0,
-    max_chars: int = 2000,
+    max_chars: int | None = 2000,
     canvas_width: int = 1024,
+    canvas_height: int | None = None,
     font_size: int = 14,
+    max_output_tokens: int | None = None,
+    tokenizer=None,
+    tokenizer_name: str = "unsloth/gemma-4-E2B-it",
     include_native: bool = False,
+    num_proc: int = 4,
+    source_path: str | None = None,
 ) -> Dataset:
-    source = load_dataset(_SOURCE_DATASET_ID, config, split=split)
+    if max_output_tokens is not None and tokenizer is None:
+        from transformers import AutoTokenizer
+
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+    source = load_dataset(
+        source_path or _SOURCE_DATASET_ID, config, split=split, num_proc=num_proc
+    )
     if max_samples is not None:
         source = source.select(range(offset, min(offset + max_samples, len(source))))
 
@@ -128,26 +141,42 @@ def preprocess_smoltalk(
         if max_chars is not None:
             instruction = instruction[:max_chars]
 
-        image = render_text_page(
-            instruction, canvas_width=canvas_width, font_size=font_size
+        images = (
+            render_text_pages(
+                instruction,
+                canvas_width=canvas_width,
+                canvas_height=canvas_height,
+                font_size=font_size,
+            )
+            if canvas_height is not None
+            else [
+                render_text_page(
+                    instruction, canvas_width=canvas_width, font_size=font_size
+                )
+            ]
         )
+        image_bytes_list = []
+        for image in images:
+            buf = io.BytesIO()
+            image.convert("L").save(buf, format="PNG", compress_level=1)
+            image_bytes_list.append(buf.getvalue())
 
-        buf = io.BytesIO()
-        image.save(buf, format="PNG")
-        image_bytes = buf.getvalue()
+        target_text = truncate_to_token_limit(
+            response, tokenizer, max_output_tokens
+        )
 
         messages = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "image"},
+                    *[{"type": "image"} for _ in image_bytes_list],
                     {"type": "text", "text": _USER_INSTRUCTION},
                 ],
             },
             {
                 "role": "assistant",
                 "content": [
-                    {"type": "text", "text": response},
+                    {"type": "text", "text": target_text},
                 ],
             },
         ]
@@ -155,8 +184,13 @@ def preprocess_smoltalk(
         source_id = row.get("id")
         row_id = str(source_id) if source_id not in (None, "") else str(offset + index)
 
+        if tokenizer is not None:
+            original_len = compute_token_length(response, tokenizer)
+        else:
+            original_len = -1
+
         result = {
-            "images": [image_bytes],
+            "images": image_bytes_list,
             "messages": messages,
             "source_dataset_id": _SOURCE_DATASET_ID,
             "split": split,
@@ -167,16 +201,22 @@ def preprocess_smoltalk(
                     "config": config,
                     "max_chars": max_chars,
                     "canvas_width": canvas_width,
+                    "canvas_height": canvas_height,
                     "font_size": font_size,
+                    "image_mode": "L",
+                    "png_compression_level": 1,
+                    "max_output_tokens": max_output_tokens,
+                    "tokenizer_name": tokenizer_name if max_output_tokens else None,
                 },
                 sort_keys=True,
             ),
             "modality_label": "text",
             "preprocessing_version": _PREPROCESSING_VERSION,
+            "original_token_length": original_len,
         }
         if include_native:
             result["native_user_content"] = instruction
-            result["target_text"] = response
+            result["target_text"] = target_text
             result["native_available"] = True
             result["native_equals_image_only"] = False
         return result
@@ -185,7 +225,7 @@ def preprocess_smoltalk(
         _process_row,
         with_indices=True,
         remove_columns=source.column_names,
-        num_proc=4,
+        num_proc=num_proc,
     )
     if len(ds) > 0:
         ds = ds.cast_column("images", List(HfImage()))

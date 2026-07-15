@@ -44,7 +44,7 @@ class _MockSmolTalk:
         ds._rows = [self._rows[i] for i in indices]
         return ds
 
-    def map(self, function, *, with_indices=False, remove_columns=None):
+    def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         result_rows = []
         for i, row in enumerate(self._rows):
             if with_indices:
@@ -269,6 +269,9 @@ def test_render_config_is_valid_json_and_contains_expected_keys(monkeypatch):
     assert config["max_chars"] == 2000
     assert config["canvas_width"] == 1024
     assert config["font_size"] == 14
+    assert config["image_mode"] == "L"
+    assert config["png_compression_level"] == 1
+    assert dataset[0]["images"][0].mode == "L"
 
 
 def test_render_config_matches_renderer_kwargs(monkeypatch):
@@ -398,7 +401,7 @@ def test_row_id_falls_back_to_index_when_no_id_column(monkeypatch):
             ds._rows = [self._rows[i] for i in indices]
             return ds
 
-        def map(self, function, *, with_indices=False, remove_columns=None):
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
             result_rows = []
             for i, row in enumerate(self._rows):
                 if with_indices:
@@ -419,6 +422,44 @@ def test_row_id_falls_back_to_index_when_no_id_column(monkeypatch):
 
     dataset = preprocess_smoltalk(max_samples=1)
     assert dataset[0]["row_id"] == "0"
+
+
+def test_original_token_length_smoltalk(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _MockSmolTalk(2),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        _mock_renderer,
+    )
+
+    class _CharTok:
+        name_or_path = "char-tok"
+        def encode(self, text, add_special_tokens=False):
+            return [ord(c) for c in text]
+        def decode(self, tokens, skip_special_tokens=True):
+            return "".join(chr(t) for t in tokens)
+
+    dataset = preprocess_smoltalk(max_samples=2, tokenizer=_CharTok())
+    for row in dataset:
+        assert "original_token_length" in row
+        assert isinstance(row["original_token_length"], int)
+        assert row["original_token_length"] > 0
+
+
+def test_original_token_length_minus_one_without_tokenizer(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.load_dataset",
+        lambda *a, **kw: _MockSmolTalk(1),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.smoltalk.render_text_page",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_smoltalk(max_samples=1)
+    assert dataset[0]["original_token_length"] == -1
 
 
 def test_save_load_round_trip(monkeypatch):
@@ -457,7 +498,7 @@ def test_save_load_round_trip(monkeypatch):
 def test_map_used_not_direct_iteration(monkeypatch):
     map_kwargs: dict = {}
 
-    def recording_map(self, function, *, with_indices=False, remove_columns=None):
+    def recording_map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
         map_kwargs["with_indices"] = with_indices
         map_kwargs["remove_columns"] = remove_columns
         result_rows = []
@@ -508,6 +549,21 @@ def test_load_dataset_called_with_config_and_split(monkeypatch):
     assert captured[0][0] == "HuggingFaceTB/smoltalk"
     assert captured[0][1] == "all"
     assert captured[1].get("split") == "train"
+
+
+def test_local_source_path_replaces_hub_id(monkeypatch):
+    captured = []
+
+    def recording_load(*args, **kwargs):
+        captured.append(args)
+        return _MockSmolTalk(1)
+
+    monkeypatch.setattr("data.preprocessing.smoltalk.load_dataset", recording_load)
+    monkeypatch.setattr("data.preprocessing.smoltalk.render_text_page", _mock_renderer)
+
+    preprocess_smoltalk(max_samples=1, source_path="/cached/smoltalk")
+
+    assert captured[0][:2] == ("/cached/smoltalk", "all")
 
 
 def test_default_config_is_all(monkeypatch):

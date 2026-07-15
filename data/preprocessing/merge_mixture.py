@@ -14,24 +14,24 @@ def merge_and_shuffle(sources: dict[str, Dataset], seed: int = 42) -> Dataset:
     return shuffled
 
 
-def _load_source(source_name: str, samples: int, offset: int = 0) -> Dataset:
+def _load_source(source_name: str, samples: int, offset: int = 0, num_proc: int = 4) -> Dataset:
     kw_samples = None if samples == -1 else samples
     if source_name == "librispeech":
         from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
 
-        return preprocess_librispeech_asr(max_samples=kw_samples, offset=offset)
+        return preprocess_librispeech_asr(max_samples=kw_samples, offset=offset, num_proc=num_proc)
     if source_name == "densefusion":
         from data.preprocessing.densefusion import preprocess_densefusion
 
-        return preprocess_densefusion(max_samples=kw_samples, offset=offset)
+        return preprocess_densefusion(max_samples=kw_samples, offset=offset, num_proc=num_proc)
     if source_name == "fineweb":
         from data.preprocessing.fineweb_edu import preprocess_fineweb_edu
 
-        return preprocess_fineweb_edu(max_samples=kw_samples, offset=offset)
+        return preprocess_fineweb_edu(max_samples=kw_samples, offset=offset, num_proc=num_proc)
     if source_name == "smoltalk":
         from data.preprocessing.smoltalk import preprocess_smoltalk
 
-        return preprocess_smoltalk(max_samples=kw_samples, offset=offset)
+        return preprocess_smoltalk(max_samples=kw_samples, offset=offset, num_proc=num_proc)
     msg = f"Unknown source: {source_name}"
     raise ValueError(msg)
 
@@ -100,6 +100,12 @@ def main(argv: list[str] | None = None) -> None:
         default=42,
         help="Random seed for shuffling (default: 42).",
     )
+    parser.add_argument(
+        "--num-proc",
+        type=int,
+        default=4,
+        help="Number of parallel processes for dataset loading and .map() (default: 4).",
+    )
 
     args = parser.parse_args(argv)
 
@@ -116,10 +122,15 @@ def main(argv: list[str] | None = None) -> None:
         "smoltalk": args.smoltalk_offset,
     }
 
+    configs_to_load = [
+        (name, samples, source_offsets[name])
+        for name, samples in source_configs.items()
+        if samples != 0
+    ]
+
     sources: dict[str, Dataset] = {}
-    for name, samples in source_configs.items():
-        if samples != 0:
-            sources[name] = _load_source(name, samples, offset=source_offsets[name])
+    for name, samples, offset in configs_to_load:
+        sources[name] = _load_source(name, samples, offset, num_proc=args.num_proc)
 
     merged = merge_and_shuffle(sources, seed=args.seed)
     merged.save_to_disk(args.output)
