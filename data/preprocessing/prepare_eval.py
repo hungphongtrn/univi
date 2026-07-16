@@ -15,11 +15,16 @@ def prepare_source_eval(
     if source_name == "librispeech":
         from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
 
+        kwargs = {
+            "subset": "clean",
+            "split": "validation",
+            **preprocessor_kwargs,
+        }
         return preprocess_librispeech_asr(
             max_samples=max_samples,
             offset=offset,
             include_native=True,
-            **preprocessor_kwargs,
+            **kwargs,
         )
     if source_name == "densefusion":
         from data.preprocessing.densefusion import preprocess_densefusion

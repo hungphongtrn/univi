@@ -19,7 +19,13 @@ def _load_source(source_name: str, samples: int, offset: int = 0, num_proc: int 
     if source_name == "librispeech":
         from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
 
-        return preprocess_librispeech_asr(max_samples=kw_samples, offset=offset, num_proc=num_proc)
+        return preprocess_librispeech_asr(
+            subset="clean",
+            split="train.360",
+            max_samples=kw_samples,
+            offset=offset,
+            num_proc=num_proc,
+        )
     if source_name == "densefusion":
         from data.preprocessing.densefusion import preprocess_densefusion
 

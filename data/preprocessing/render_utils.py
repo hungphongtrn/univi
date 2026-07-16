@@ -155,55 +155,167 @@ def render_text_pages(
     return pages
 
 
-def render_log_mel_spectrogram(
-    audio_path: str,
-    sample_rate: int = 16000,
-    n_mels: int = 80,
-    n_fft: int = 400,
-    hop_length: int = 160,
-    window: str = "hann",
-    central_duration: float = 10.0,
-    power: float = 2.0,
-) -> Image.Image:
-    y, sr = librosa.load(audio_path, sr=sample_rate, mono=True)
+def _load_audio_samples(
+    audio_source: str | np.ndarray,
+    *,
+    sample_rate: int,
+    source_sample_rate: int | None,
+) -> np.ndarray:
+    if isinstance(audio_source, str):
+        samples, _ = librosa.load(audio_source, sr=sample_rate, mono=True)
+        return np.asarray(samples, dtype=np.float32)
 
-    total_samples = len(y)
-    target_samples = int(central_duration * sr)
+    samples = np.asarray(audio_source, dtype=np.float32)
+    if samples.ndim == 2:
+        if samples.shape[0] <= 8:
+            samples = samples.mean(axis=0)
+        elif samples.shape[1] <= 8:
+            samples = samples.mean(axis=1)
+        else:
+            raise ValueError(f"Cannot infer channel axis from audio shape {samples.shape}")
+    elif samples.ndim != 1:
+        raise ValueError(f"Expected mono or multi-channel audio, got shape {samples.shape}")
 
-    if total_samples > target_samples:
-        start = (total_samples - target_samples) // 2
-        y = y[start : start + target_samples]
-    elif total_samples < target_samples:
-        pad = target_samples - total_samples
-        y = np.pad(y, (pad // 2, pad - pad // 2), mode="constant")
+    if source_sample_rate is None:
+        raise ValueError("source_sample_rate is required when rendering an audio array")
+    if source_sample_rate != sample_rate:
+        samples = librosa.resample(
+            samples,
+            orig_sr=source_sample_rate,
+            target_sr=sample_rate,
+        )
+    return np.asarray(samples, dtype=np.float32)
 
-    S = librosa.feature.melspectrogram(
-        y=y,
-        sr=sr,
+
+def _whisper_log_mel(
+    samples: np.ndarray,
+    *,
+    sample_rate: int,
+    n_mels: int,
+    n_fft: int,
+    hop_length: int,
+    window: str,
+    power: float,
+) -> np.ndarray:
+    spectrogram = librosa.feature.melspectrogram(
+        y=samples,
+        sr=sample_rate,
         n_mels=n_mels,
         n_fft=n_fft,
         hop_length=hop_length,
         window=window,
         power=power,
     )
-    log_S = librosa.power_to_db(S, ref=np.max)
+    expected_frames = max(1, len(samples) // hop_length)
+    spectrogram = spectrogram[:, :expected_frames]
+    log_mel = np.log10(np.maximum(spectrogram, 1e-10))
+    log_mel = np.maximum(log_mel, log_mel.max() - 8.0)
+    whisper_values = (log_mel + 4.0) / 4.0
+    return np.clip((whisper_values + 1.0) / 2.0, 0.0, 1.0)
 
-    log_min = log_S.min()
-    log_max = log_S.max()
-    if log_max - log_min > 0:
-        normalized = (log_S - log_min) / (log_max - log_min)
-    else:
-        normalized = np.zeros_like(log_S)
 
-    normalized = (_PIXEL_MAX * (1.0 - normalized)).astype(np.uint8)
+def _render_log_mel_image(
+    log_mel: np.ndarray,
+    *,
+    output_width: int,
+    output_height: int,
+) -> Image.Image:
+    pixels = np.rint(_PIXEL_MAX * (1.0 - log_mel)).astype(np.uint8)
+    image = Image.fromarray(pixels, mode="L")
+    image = image.resize((output_width, output_height), Image.LANCZOS)
+    return image.convert("RGB")
 
-    height, width = normalized.shape
-    img = Image.fromarray(normalized, mode="L").resize(
-        (width * _SPECTROGRAM_UPSCALE, height * _SPECTROGRAM_UPSCALE),
-        Image.LANCZOS,
+
+def render_log_mel_spectrogram(
+    audio_source: str | np.ndarray,
+    sample_rate: int = 16000,
+    n_mels: int = 80,
+    n_fft: int = 400,
+    hop_length: int = 160,
+    window: str = "hann",
+    output_size: int = 512,
+    power: float = 2.0,
+    *,
+    source_sample_rate: int | None = None,
+    central_duration: float | None = None,
+    page_duration_sec: float | None = None,
+    max_pages: int | None = None,
+    output_width: int | None = None,
+    output_height: int | None = None,
+    normalization: str = "whisper_log_mel",
+) -> Image.Image | list[Image.Image]:
+    if normalization != "whisper_log_mel":
+        raise ValueError(f"Unsupported log-mel normalization: {normalization}")
+
+    samples = _load_audio_samples(
+        audio_source,
+        sample_rate=sample_rate,
+        source_sample_rate=source_sample_rate,
     )
+    if samples.size == 0:
+        raise ValueError("Cannot render empty audio")
 
-    return img.convert("RGB")
+    if central_duration is not None:
+        if central_duration <= 0:
+            raise ValueError("central_duration must be positive")
+        if page_duration_sec is not None:
+            raise ValueError(
+                "central_duration and page_duration_sec are mutually exclusive"
+            )
+        target_samples = int(round(central_duration * sample_rate))
+        if len(samples) > target_samples:
+            start = (len(samples) - target_samples) // 2
+            samples = samples[start : start + target_samples]
+        elif len(samples) < target_samples:
+            padding = target_samples - len(samples)
+            samples = np.pad(samples, (padding // 2, padding - padding // 2))
+
+    width = output_width or output_size
+    height = output_height or output_size
+    if page_duration_sec is None:
+        log_mel = _whisper_log_mel(
+            samples,
+            sample_rate=sample_rate,
+            n_mels=n_mels,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            window=window,
+            power=power,
+        )
+        return _render_log_mel_image(
+            log_mel,
+            output_width=width,
+            output_height=height,
+        )
+
+    if page_duration_sec <= 0:
+        raise ValueError("page_duration_sec must be positive")
+    page_samples = int(round(page_duration_sec * sample_rate))
+    page_count = max(1, int(np.ceil(len(samples) / page_samples)))
+    if max_pages is not None and page_count > max_pages:
+        raise ValueError(
+            f"Audio requires {page_count} pages, exceeding max_pages={max_pages}"
+        )
+
+    padded_samples = np.pad(samples, (0, page_count * page_samples - len(samples)))
+    log_mel = _whisper_log_mel(
+        padded_samples,
+        sample_rate=sample_rate,
+        n_mels=n_mels,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        window=window,
+        power=power,
+    )
+    page_frames = page_samples // hop_length
+    return [
+        _render_log_mel_image(
+            log_mel[:, page_index * page_frames : (page_index + 1) * page_frames],
+            output_width=width,
+            output_height=height,
+        )
+        for page_index in range(page_count)
+    ]
 
 
 def tile_spectrogram_image(

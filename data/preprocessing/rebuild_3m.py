@@ -1,20 +1,16 @@
 from __future__ import annotations
 
 import argparse
-import copy
-import io
 import json
 import shutil
 from pathlib import Path
 
 from datasets import Dataset, load_from_disk
-from PIL import Image
 from transformers import AutoTokenizer
 
 from data.preprocessing.densefusion import preprocess_densefusion
 from data.preprocessing.fineweb_edu import preprocess_fineweb_edu
 from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
-from data.preprocessing.render_utils import tile_spectrogram_image
 from data.preprocessing.smoltalk import preprocess_smoltalk
 from data.preprocessing.text_token_utils import compute_token_length
 
@@ -58,58 +54,6 @@ def _check_row_images(row: dict) -> None:
         )
 
 
-def _tile_old_spectrogram_bytes(old_image_bytes: bytes) -> list[bytes]:
-    img = Image.open(io.BytesIO(old_image_bytes))
-    tiles = tile_spectrogram_image(img)
-    tile_bytes = []
-    for tile in tiles:
-        buf = io.BytesIO()
-        tile.save(buf, format="PNG")
-        tile_bytes.append(buf.getvalue())
-    return tile_bytes
-
-
-def _convert_old_librispeech_row_to_tiles(row: dict) -> dict:
-    """Convert a full-v0 librispeech row (single rectangular spectrogram) to tiled format."""
-    old_images = row.get("images", [])
-    if not old_images:
-        raise ValueError(f"Row {row.get('row_id', '?')} has no images to tile")
-
-    old_img_data = old_images[0]
-    if isinstance(old_img_data, Image.Image):
-        buf = io.BytesIO()
-        old_img_data.save(buf, format="PNG")
-        old_img_data = buf.getvalue()
-    elif isinstance(old_img_data, dict):
-        old_img_data = old_img_data.get("bytes", old_img_data.get("path", b""))
-        if isinstance(old_img_data, str):
-            old_img_data = Path(old_img_data).read_bytes()
-
-    tile_bytes = _tile_old_spectrogram_bytes(old_img_data)
-
-    messages = copy.deepcopy(row["messages"])
-    for msg in messages:
-        if msg.get("role") == "user":
-            content_no_imgs = [item for item in msg.get("content", []) if item.get("type") != "image"]
-            msg["content"] = [{"type": "image"} for _ in tile_bytes] + content_no_imgs
-
-    old_config = {}
-    rc = row.get("render_config", "{}")
-    if isinstance(rc, str):
-        old_config = json.loads(rc)
-
-    old_config.update({
-        "render_method": "chronological_square_tiles",
-        "tile_size": Image.open(io.BytesIO(tile_bytes[0])).height if tile_bytes else 64,
-        "tile_pad_color": 255,
-    })
-
-    result = dict(row)
-    result["images"] = tile_bytes
-    result["messages"] = messages
-    result["render_config"] = json.dumps(old_config, sort_keys=True)
-    result["preprocessing_version"] = "0.3.0"
-    return result
 
 
 def _add_token_length(row: dict, tokenizer, text_key: str = "target_text") -> dict:
@@ -167,15 +111,19 @@ def _save_split(
     config_name: str,
     split_name: str,
     expected_source: str,
+    force: bool = False,
 ) -> dict:
     _check_row_images(dataset[0])
 
     subset_path = output_root / config_name / split_name
     if subset_path.exists():
-        raise FileExistsError(
-            f"Refusing to replace existing subset: {subset_path}. "
-            f"Remove manually if you want to rebuild."
-        )
+        if force:
+            shutil.rmtree(subset_path)
+        else:
+            raise FileExistsError(
+                f"Refusing to replace existing subset: {subset_path}. "
+                f"Pass --force to overwrite."
+            )
     subset_path.parent.mkdir(parents=True, exist_ok=True)
     staging_path = subset_path.parent / f".{split_name}.incomplete"
     if staging_path.exists():
@@ -265,60 +213,67 @@ def _build_librispeech(
     config_name = "librispeech"
     expected_source = _SOURCE_IDS["librispeech"]
 
-    reused_train = _reuse_split(output_root, config_name, "train", expected_source)
-    if reused_train is not None:
-        ds, entry = reused_train
-        entries.append(entry)
+    # Train: load fresh from the selected LibriSpeech clean 360-hour split.
+    force = getattr(args, "force", False) or getattr(
+        args, "force_librispeech", False
+    )
+    reuse_train = _reuse_split(output_root, config_name, "train", expected_source)
+    if reuse_train is not None and not force:
+        entries.append(reuse_train[1])
     else:
-        if original is None:
-            raise ValueError("--input (full-v0) is required to build librispeech train")
-        print("  Reusing librispeech train rows from full-v0, tiling old spectrograms...")
-        ds = _select_source_from_fullv0(original, expected_source, args.num_proc)
-        ds = ds.map(
-            lambda row: _convert_old_librispeech_row_to_tiles(row),
-            num_proc=args.num_proc,
-            desc="Tiling librispeech spectrograms",
-        )
-        ds = ds.map(
-            lambda row: _add_token_length(row, tokenizer, "target_text"),
-            num_proc=args.num_proc,
-            desc="Adding token length to librispeech train",
-        )
-        ds = _set_target_split(ds, "train", args.num_proc)
-        entry = _save_split(
-            ds, output_root, config_name, "train", expected_source
-        )
-        entries.append(entry)
-
-    # validation: load fresh from source (unavoidable because full-v0 has no validation rows)
-    reused_val = _reuse_split(output_root, config_name, "validation", expected_source)
-    if reused_val is not None:
-        ds, entry = reused_val
-        entries.append(entry)
-    else:
-        print(
-            "  FRESH LOAD (unavoidable): librispeech validation rows are NOT in full-v0.\n"
-            "  Loading from openslr/librispeech_asr source, computing log-mel spectrograms.\n"
-            "  This is the only path that recomputes log-mel; training rows use tiled reuse."
-        )
-        val_ds_list = []
-        for val_split in ("validation.clean", "validation.other"):
-            val_part = preprocess_librispeech_asr(
-                subset="all",
-                split=val_split,
-                max_samples=args.librispeech_val_samples,
-                tokenizer=tokenizer,
-                tokenizer_name=args.tokenizer,
-                num_proc=args.num_proc,
+        if reuse_train is not None and force:
+            print(
+                "  Rebuilding LibriSpeech train from "
+                "openslr/librispeech_asr clean/train.360"
             )
-            val_ds_list.append(val_part)
+        else:
+            print(
+                "  Loading LibriSpeech train from "
+                "openslr/librispeech_asr clean/train.360 ..."
+            )
+        train_ds = preprocess_librispeech_asr(
+            subset="clean",
+            split="train.360",
+            max_samples=getattr(args, "librispeech_train_samples", None),
+            tokenizer=tokenizer,
+            tokenizer_name=args.tokenizer,
+            num_proc=args.num_proc,
+        )
+        train_ds = _set_target_split(train_ds, "train", args.num_proc)
+        entry = _save_split(
+            train_ds, output_root, config_name, "train", expected_source,
+            force=force,
+        )
+        entries.append(entry)
 
-        from datasets import concatenate_datasets
-        val_ds = concatenate_datasets(val_ds_list)
+    # Validation: use the selected 2,703-row clean validation split.
+    reuse_val = _reuse_split(output_root, config_name, "validation", expected_source)
+    if reuse_val is not None and not force:
+        entries.append(reuse_val[1])
+    else:
+        if reuse_val is not None and force:
+            print(
+                "  Rebuilding LibriSpeech validation from "
+                "openslr/librispeech_asr clean/validation"
+            )
+        else:
+            print(
+                "  Loading LibriSpeech validation from "
+                "openslr/librispeech_asr clean/validation ..."
+            )
+        val_ds = preprocess_librispeech_asr(
+            subset="clean",
+            split="validation",
+            max_samples=args.librispeech_val_samples,
+            tokenizer=tokenizer,
+            tokenizer_name=args.tokenizer,
+            num_proc=args.num_proc,
+        )
         val_ds = _set_target_split(val_ds, "validation", args.num_proc)
 
         entry = _save_split(
-            val_ds, output_root, config_name, "validation", expected_source
+            val_ds, output_root, config_name, "validation", expected_source,
+            force=force,
         )
         entries.append(entry)
 
@@ -513,12 +468,25 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Rebuild univi-3M-v0 as four configs (librispeech, densefusion, fineweb-edu, smoltalk) with train/validation splits."
     )
-    parser.add_argument("--input", help="Existing full-v0 path (required for librispeech/densefusion reuse).")
+    parser.add_argument("--input", help="Existing full-v0 path (required for densefusion reuse).")
     parser.add_argument("--output", required=True, help="New artifact root path.")
     parser.add_argument("--text-samples", type=int, default=1_000_000, help="FineWeb-Edu and SmolTalk training sample count.")
     parser.add_argument(
+        "--force", action="store_true",
+        help="Overwrite existing LibriSpeech (and other) splits instead of reusing them.",
+    )
+    parser.add_argument(
+        "--force-librispeech",
+        action="store_true",
+        help="Rebuild only LibriSpeech splits while reusing other configurations.",
+    )
+    parser.add_argument(
+        "--librispeech-train-samples", type=int, default=None,
+        help="Cap for LibriSpeech training split (applied to clean/train.360).",
+    )
+    parser.add_argument(
         "--librispeech-val-samples", type=int, default=None,
-        help="Cap for each LibriSpeech validation split (applied per split).",
+        help="Cap for the clean LibriSpeech validation split.",
     )
     parser.add_argument(
         "--densefusion-val-samples", type=int, default=None,
@@ -571,13 +539,9 @@ def main(argv: list[str] | None = None) -> None:
     original = None
     if args.input:
         original = load_from_disk(args.input)
-    elif _reuse_split(output_root, "librispeech", "train", _SOURCE_IDS["librispeech"]) is None:
-        raise ValueError(
-            "No existing build found and --input (full-v0 path) not provided. "
-            "--input is required for initial librispeech/densefusion reuse."
-        )
-    if original is not None:
         manifest["input_artifact"] = args.input
+    # librispeech no longer requires --input; it loads from source.
+    # Densefusion still needs original for initial build (handled in _build_densefusion).
 
     # 1. librispeech
     print("Building librispeech...")
