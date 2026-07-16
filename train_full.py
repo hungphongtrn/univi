@@ -1,27 +1,22 @@
 """
-Full training entry point for Gemma 4 E2B Phase 0 visual-unification mixture.
+Full training entry point for Gemma 4 E2B visual-unification mixture.
+Delegates to univi.cli.main for all mode dispatch.
 
 Usage:
     uv run python train_full.py --config configs/full.yaml
+    uv run python train_full.py --config configs/full.yaml --dry-run
+    uv run python train_full.py --help
 """
 
 from __future__ import annotations
 
-import argparse
-
-from univi.trainer import load_config, train
+import sys
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/full.yaml")
-    args = parser.parse_args()
-    config = load_config(args.config)
-    trainer = train(config)
-    log = trainer.state.log_history
-    if log:
-        print(f"Training complete. Log history: {log[-1]}")
-    print(f"Checkpoint saved to {config['training']['output_dir']}")
+    from univi.cli import main as cli_main
+
+    sys.exit(cli_main(sys.argv[1:]))
 
 
 if __name__ == "__main__":
