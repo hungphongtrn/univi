@@ -149,12 +149,36 @@ A page-like text rendering policy that uses dense but readable optical compressi
 _Avoid_: chat screenshot, tiny unreadable text, native text tokens
 
 **Whisper-Style Log-Mel Rendering**:
-An audio rendering policy for speech transcription using mono 16 kHz audio, 25 ms window, 10 ms hop, and 80 log-mel bins before rendering as an image.
+An audio rendering policy for speech transcription using mono 16 kHz audio, a 25 ms Hann window, a 10 ms hop, 80 log-mel bins, and Whisper's 80 dB (`max - 8` in log10 power) dynamic-range clipping before image rendering.
 _Avoid_: waveform image, arbitrary spectrogram settings for the first ASR run
+
+**Fixed Audio Page**:
+A ten-second, 1000 × 160 rectangular log-mel image that preserves a fixed horizontal time scale; one LibriSpeech example contains one to four chronological pages, with only the final page right-padded.
+_Avoid_: square spectrogram, duration-dependent stretching, central crop, more than 40 seconds
 
 **Concatenate-And-Shuffle Mixture**:
 The first Phase 0 mixing rule: concatenate all selected source train examples and shuffle, without hand-tuned modality ratios beyond the selected per-source subsets.
 _Avoid_: balanced sampler, learned curriculum unless later results justify it
+
+**Assistant Output Cap**:
+The maximum number of assistant target tokens retained for training or requested during generation; it is distinct from the total multimodal sequence budget.
+
+**Multimodal Sequence Budget**:
+The total tokenized length available to image tokens, native task instruction, and assistant target tokens in one training example.
+
+**Vision Length Bucketing**:
+A batching strategy that groups examples with similar post-processor multimodal lengths to reduce padding; it does not concatenate independent visual conversations.
+
+**Vision Packing**:
+Concatenating multiple visual conversations into one fixed-length training sequence; disabled for the first Gemma 4 run until the Unsloth vision collator proves image-placeholder and loss-mask correctness.
+
+**Visual Decodability Gate**:
+A small held-out experiment that tests whether the image-only lane recovers task-relevant information from a rendered modality above non-informative controls before scaling that modality's data or making competitive-performance claims.
+_Avoid_: vibe check, full-scale benchmark, competitive retention when only partial signal recovery is required
+
+**Modality-Permutation Control**:
+A held-out evaluation condition that deterministically reassigns rendered inputs across examples while leaving targets and non-answer-bearing instructions fixed, testing whether predictions depend on the presented modality content.
+_Avoid_: shuffled training, random split, synthetic dataset when only the input-target alignment is changed
 
 ## Relationships
 
@@ -189,6 +213,10 @@ _Avoid_: balanced sampler, learned curriculum unless later results justify it
 - The first **Phase 0 Training Mixture** uses a **Concatenate-And-Shuffle Mixture**.
 - Text rendering uses **DeepSeek-OCR-Style Text Packing** for both raw text and rendered instruction following.
 - Audio rendering uses **Whisper-Style Log-Mel Rendering** for speech transcription and Valor32k spectrograms.
+- LibriSpeech **Audio Transcription Image** training uses `clean/train.360`; held-out evaluation uses `clean/validation`.
+- LibriSpeech audio uses one to four **Fixed Audio Pages**, filters source audio longer than 40 seconds, and admits up to four training images under the 2,048-token **Multimodal Sequence Budget**.
+- Each rendered modality must pass a **Visual Decodability Gate** before its dataset is scaled or its performance is framed as competitive with a native pathway.
+- A **Visual Decodability Gate** compares correctly aligned held-out inputs against a **Modality-Permutation Control** and reports whether performance depends on the rendered content.
 
 ## Example Dialogue
 
@@ -218,3 +246,5 @@ _Avoid_: balanced sampler, learned curriculum unless later results justify it
 - "Mixture rule" resolved: concatenate and shuffle selected Phase 0 train examples without hand-tuned modality ratios in the first run.
 - "Text render policy" resolved: use **DeepSeek-OCR-Style Text Packing** with conservative compression for Gemma E2B.
 - "Audio render policy" resolved: use **Whisper-Style Log-Mel Rendering** as the first ASR spectrogram convention.
+- "LibriSpeech splits" resolved: use `clean/train.360` for training and the 2,703-row `clean/validation` split for held-out evaluation.
+- "LibriSpeech page policy" resolved: preserve complete audio in up to four chronological ten-second **Fixed Audio Pages** and filter clips longer than 40 seconds.
