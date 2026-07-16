@@ -21,14 +21,18 @@ lora:
     - "down_proj"
   finetune_vision_layers: true
   finetune_language_layers: true
-  finetune_attention_layers: true
-  finetune_mlp_layers: true
+  finetune_attention_modules: true
+  finetune_mlp_modules: true
+  use_rslora: false
   finetune_audio_layers: false
 
 training:
   per_device_train_batch_size: 1
   gradient_accumulation_steps: 4
-  max_steps: 500
+  # max_steps removed — using num_train_epochs=1 (SFTConfig default) for a full pass
+  # WARNING: 1 epoch = ~732,893 steps × ~25s/step ≈ 212 days on this hardware.
+  # Consider a GPU upgrade or subsampling before attempting this.
+  # max_steps: 500  # old cap that truncated to 2k samples
   max_length: 2048
   learning_rate: 2.0e-4
   warmup_ratio: 0.03
@@ -41,6 +45,9 @@ training:
   save_steps: 100
   eval_strategy: "steps"
   eval_steps: 100
+  eval_on_start: true
+  max_eval_samples_per_subset: 64
+  prediction_loss_only: true
   output_dir: "data/checkpoints/3060-full-v0"
   report_to: ["wandb"]
   remove_unused_columns: false
@@ -87,9 +94,10 @@ dataset:
     smoltalk: ["validation"]
   shuffle_seed: 42
 
+# W&B — credentials auto-detected (wandb login, WANDB_API_KEY, WANDB_API_KEY_FILE).
+# Falls to disabled mode (no-op) when no credentials are available.
 wandb:
   project: "univi-gemma4"
-  entity: null
   run_name_template: "3060-full-v0_{config_hash_short}"
 
 smoke:

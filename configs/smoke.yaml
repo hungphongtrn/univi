@@ -21,8 +21,9 @@ lora:
     - "down_proj"
   finetune_vision_layers: true
   finetune_language_layers: true
-  finetune_attention_layers: true
-  finetune_mlp_layers: true
+  finetune_attention_modules: true
+  finetune_mlp_modules: true
+  use_rslora: false
   finetune_audio_layers: false
 
 training:

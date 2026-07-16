@@ -242,12 +242,15 @@ def apply_lora(model: Any, lora_cfg: dict) -> Any:
         model,
         r=lora_cfg.get("r", 8),
         lora_alpha=lora_cfg.get("alpha", 16),
+        lora_dropout=lora_cfg.get("dropout", 0.0),
+        bias=lora_cfg.get("bias", "none"),
         target_modules=lora_cfg.get("target_modules", EXPECTED_TARGET_MODULES),
         use_gradient_checkpointing=lora_cfg.get("use_gradient_checkpointing", "unsloth"),
         finetune_vision_layers=lora_cfg.get("finetune_vision_layers", True),
         finetune_language_layers=lora_cfg.get("finetune_language_layers", True),
-        finetune_attention_layers=lora_cfg.get("finetune_attention_layers", True),
-        finetune_mlp_layers=lora_cfg.get("finetune_mlp_layers", True),
+        finetune_attention_modules=lora_cfg.get("finetune_attention_modules", True),
+        finetune_mlp_modules=lora_cfg.get("finetune_mlp_modules", True),
+        use_rslora=lora_cfg.get("use_rslora", False),
         finetune_audio_layers=False,
     )
     logger.info("LoRA applied")
@@ -367,6 +370,8 @@ def make_training_args(cfg: dict) -> SFTConfig:
     args = SFTConfig(
         per_device_train_batch_size=tc.get("per_device_train_batch_size", 1),
         gradient_accumulation_steps=tc.get("gradient_accumulation_steps", 4),
+        per_device_eval_batch_size=tc.get("per_device_eval_batch_size", 1),
+        eval_accumulation_steps=tc.get("eval_accumulation_steps", 1),
         max_length=tc["max_length"],  # NOT max_seq_length
         num_train_epochs=tc.get("num_train_epochs", 1),
         learning_rate=tc.get("learning_rate", 2e-4),
@@ -380,6 +385,8 @@ def make_training_args(cfg: dict) -> SFTConfig:
         save_steps=tc.get("save_steps", 1000),
         eval_strategy=tc.get("eval_strategy", "steps"),
         eval_steps=tc.get("eval_steps", 1000),
+        eval_on_start=tc.get("eval_on_start", False),
+        prediction_loss_only=tc.get("prediction_loss_only", False),
         output_dir=tc["output_dir"],
         report_to=tc.get("report_to", ["wandb"]),
         remove_unused_columns=False,
@@ -590,6 +597,15 @@ def _load_hub(dcfg: dict, subsets: list[str]):
     return concatenate_datasets(datasets).shuffle(seed=seed)
     
     
+def _cap_eval_dataset(dataset: Any, max_samples: int | None, seed: int) -> Any:
+    """Return a deterministic bounded sample for recurring held-out evaluation."""
+    if max_samples is None or len(dataset) <= max_samples:
+        return dataset
+    if max_samples <= 0:
+        raise ValueError("max_eval_samples_per_subset must be positive")
+    return dataset.shuffle(seed=seed).select(range(max_samples))
+
+
 def _load_eval_datasets(config: dict) -> dict[str, Any]:
     """Load per-subset validation datasets from the configured source.
     
@@ -616,6 +632,8 @@ def _load_eval_datasets(config: dict) -> dict[str, Any]:
     
     split_map = dcfg.get("validation_splits", {})
     revision = dcfg.get("revision", None)
+    max_samples = tc.get("max_eval_samples_per_subset")
+    eval_seed = tc.get("data_seed", 42)
     eval_datasets = {}
     
     for name in subsets:
@@ -632,7 +650,10 @@ def _load_eval_datasets(config: dict) -> dict[str, Any]:
                 ds_parts.append(part)
         if ds_parts:
             from datasets import concatenate_datasets
-            eval_datasets[name] = concatenate_datasets(ds_parts)
+            dataset = concatenate_datasets(ds_parts)
+            eval_datasets[name] = _cap_eval_dataset(
+                dataset, max_samples=max_samples, seed=eval_seed,
+            )
     logger.info("Eval datasets loaded: %d subsets", len(eval_datasets))
     return eval_datasets
     
