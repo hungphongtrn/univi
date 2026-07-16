@@ -5,3 +5,8 @@ __pycache__/
 data/materialized/
 data/checkpoints/
 unsloth_compiled_cache/
+wandb/
+logs/
+.omp/
+data/smoke/
+data/validation/
