@@ -109,6 +109,33 @@ def test_uni_vi_sft_trainer_wandb_key_derived():
     assert wandb_metrics["eval/mean_total_loss"] == 3.0
 
 
+def test_prediction_loss_only_avoids_unsloth_logits_path():
+    """Loss-only evaluation computes only loss instead of full-vocabulary logits."""
+    from contextlib import nullcontext
+
+    import torch
+
+    from univi.evaluation import UniViSFTTrainer
+
+    trainer = object.__new__(UniViSFTTrainer)
+    trainer._prepare_inputs = lambda inputs: inputs
+    trainer.compute_loss_context_manager = nullcontext
+    calls = []
+
+    def compute_loss(model, inputs, return_outputs=False):
+        calls.append(return_outputs)
+        return torch.tensor(2.5)
+
+    trainer.compute_loss = compute_loss
+    loss, logits, labels = trainer.prediction_step(
+        object(), {"labels": torch.tensor([[1]])}, True,
+    )
+    assert loss.item() == 2.5
+    assert logits is None
+    assert labels is None
+    assert calls == [False]
+
+
 def test_build_eval_mapping():
     """build_eval_mapping creates dict of named eval datasets."""
     from univi.evaluation import build_eval_mapping

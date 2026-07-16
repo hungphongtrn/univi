@@ -73,6 +73,40 @@ def test_trainer_include_num_input_tokens_seen():
     assert args.include_num_input_tokens_seen == "non_padding"
 
 
+def test_make_training_args_preserves_eval_memory_controls():
+    """Configured eval batch controls reach SFTConfig instead of unsafe defaults."""
+    from univi.trainer import make_training_args
+
+    cfg = {
+        "training": {
+            "max_length": 2048,
+            "output_dir": "/tmp/test",
+            "per_device_eval_batch_size": 1,
+            "eval_accumulation_steps": 1,
+            "prediction_loss_only": True,
+        }
+    }
+    args = make_training_args(cfg)
+    assert args.per_device_eval_batch_size == 1
+    assert args.eval_accumulation_steps == 1
+    assert args.prediction_loss_only is True
+
+
+def test_make_training_args_enables_step_zero_eval_when_configured():
+    """SFTConfig schedules held-out base-performance evaluation at step zero."""
+    from univi.trainer import make_training_args
+
+    cfg = {
+        "training": {
+            "max_length": 2048,
+            "output_dir": "/tmp/test",
+            "eval_on_start": True,
+        }
+    }
+    args = make_training_args(cfg)
+    assert args.eval_on_start is True
+
+
 def test_trainer_resolve_model_config():
     """resolve_model_config returns model config with pinned revision."""
     from univi.trainer import resolve_model_config
@@ -170,11 +204,36 @@ def test_apply_lora_cpu_validate():
         "finetune_audio_layers": False,
         "finetune_vision_layers": True,
         "finetune_language_layers": True,
-        "finetune_attention_layers": True,
-        "finetune_mlp_layers": True,
+        "finetune_attention_modules": True,
+        "finetune_mlp_modules": True,
         "_cpu_validate": True,
     })
     assert result is None
+
+
+def test_apply_lora_uses_current_unsloth_option_names(monkeypatch):
+    """LoRA scope and rank-stabilization options reach Unsloth unchanged."""
+    from univi.trainer import FastVisionModel, apply_lora
+
+    captured = {}
+
+    def fake_get_peft_model(model, **kwargs):
+        captured.update(kwargs)
+        return model
+
+    monkeypatch.setattr(FastVisionModel, "get_peft_model", fake_get_peft_model)
+    model = object()
+    assert apply_lora(model, {
+        "finetune_attention_modules": False,
+        "finetune_mlp_modules": False,
+        "use_rslora": True,
+        "dropout": 0.1,
+        "bias": "none",
+    }) is model
+    assert captured["finetune_attention_modules"] is False
+    assert captured["finetune_mlp_modules"] is False
+    assert captured["use_rslora"] is True
+    assert captured["lora_dropout"] == 0.1
 
 
 def test_apply_lora_audio_layers_false():
@@ -356,6 +415,18 @@ def test_load_eval_datasets_local_with_manifest(synthetic_dataset):
     # Without validation_splits entries in manifest, result may be partial;
     # the function should not raise and should only include found subsets.
     assert isinstance(result, dict)
+
+
+def test_cap_eval_dataset_limits_each_subset_deterministically():
+    """Evaluation uses a bounded, deterministic held-out sample per subset."""
+    from datasets import Dataset
+    from univi.trainer import _cap_eval_dataset
+
+    dataset = Dataset.from_dict({"row_id": [f"row-{i}" for i in range(10)]})
+    first = _cap_eval_dataset(dataset, max_samples=3, seed=42)
+    second = _cap_eval_dataset(dataset, max_samples=3, seed=42)
+    assert len(first) == 3
+    assert first["row_id"] == second["row_id"]
 
 
 # ---------------------------------------------------------------------------
