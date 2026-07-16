@@ -1,3 +1,5 @@
+import numpy as np
+
 from PIL import Image
 from data.preprocessing.render_utils import (
     render_text_page,
@@ -48,21 +50,76 @@ def test_render_log_mel_spectrogram_creates_image():
     img = render_log_mel_spectrogram("tests/fixtures/test_tone.wav")
     assert isinstance(img, Image.Image)
     assert img.mode == "RGB"
-    assert img.width > 0 and img.height > 0
+    assert img.size == (512, 512), f"Expected 512x512, got {img.size}"
 
 
-def test_render_log_mel_spectrogram_central_window():
+def test_render_log_mel_spectrogram_uses_complete_audio():
+    """5s and 15s clips both produce 512x512 images (no central cropping/padding)."""
     img_5s = render_log_mel_spectrogram("tests/fixtures/test_tone.wav")
     img_15s = render_log_mel_spectrogram("tests/fixtures/test_15s_tone.wav")
     assert isinstance(img_5s, Image.Image)
     assert isinstance(img_15s, Image.Image)
-    assert (
-        img_5s.width,
-        img_5s.height,
-    ) == (
-        img_15s.width,
-        img_15s.height,
-    ), "5s and 15s clips should produce same spectrogram dimensions under 10s central window"
+    # Both are resized to 512x512 regardless of audio duration
+    assert img_5s.size == (512, 512)
+    assert img_15s.size == (512, 512)
+    # Content differs (different audio lengths produce different spectrograms)
+    assert img_5s.tobytes() != img_15s.tobytes(), (
+        "5s and 15s clips should produce different pixel content"
+    )
+
+
+def test_render_log_mel_spectrogram_creates_fixed_rectangular_pages():
+    audio = np.zeros(15 * 16000, dtype=np.float32)
+    pages = render_log_mel_spectrogram(
+        audio,
+        source_sample_rate=16000,
+        page_duration_sec=10.0,
+        max_pages=4,
+        output_width=1000,
+        output_height=160,
+    )
+    assert isinstance(pages, list)
+    assert len(pages) == 2
+    assert all(page.size == (1000, 160) for page in pages)
+    assert all(page.mode == "RGB" for page in pages)
+
+def test_render_log_mel_spectrogram_can_select_central_window():
+    sample_rate = 16000
+    core = np.sin(
+        2 * np.pi * 440 * np.arange(sample_rate, dtype=np.float32) / sample_rate
+    )
+    quiet_edges = np.concatenate([np.zeros(sample_rate), core, np.zeros(sample_rate)])
+    loud_edges = np.concatenate([np.ones(sample_rate), core, np.ones(sample_rate)])
+
+    quiet_image = render_log_mel_spectrogram(
+        quiet_edges,
+        source_sample_rate=sample_rate,
+        central_duration=1.0,
+    )
+    loud_image = render_log_mel_spectrogram(
+        loud_edges,
+        source_sample_rate=sample_rate,
+        central_duration=1.0,
+    )
+
+    assert quiet_image.tobytes() == loud_image.tobytes()
+
+
+def test_whisper_dynamic_range_maps_to_full_grayscale(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.render_utils.librosa.feature.melspectrogram",
+        lambda **kwargs: np.array([[1.0, 1e-4, 1e-8]], dtype=np.float32),
+    )
+    image = render_log_mel_spectrogram(
+        np.ones(480, dtype=np.float32),
+        source_sample_rate=16000,
+        n_mels=1,
+        hop_length=160,
+        output_width=3,
+        output_height=1,
+    )
+    assert [image.getpixel((x, 0))[0] for x in range(3)] == [0, 128, 255]
+
 
 
 def test_tile_spectrogram_square_image_returns_one_tile():

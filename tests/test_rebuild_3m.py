@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import io
+from types import SimpleNamespace
+
 
 from datasets import Dataset
 from PIL import Image
+
+import data.preprocessing.rebuild_3m as rebuild_3m
 
 from data.preprocessing.rebuild_3m import (
     TRAINING_SPLITS,
@@ -13,7 +17,6 @@ from data.preprocessing.rebuild_3m import (
     _deterministic_split,
     _select_source_from_fullv0,
     _check_row_images,
-    _convert_old_librispeech_row_to_tiles,
     _add_token_length,
     _reject_legacy_output,
     _SOURCE_IDS,
@@ -101,13 +104,9 @@ def test_deterministic_split_80_20():
     assert len(val) == 10
 
 
-def test_save_subset_uses_config_and_exact_split(tmp_path, monkeypatch):
-    dataset = Dataset.from_list([_row("openslr/librispeech_asr", image_count=2)])
-    pushed = []
-    monkeypatch.setattr(
-        Dataset,
-        "push_to_hub",
-        lambda self, repo, **kwargs: pushed.append((repo, kwargs)),
+def test_save_subset_uses_config_and_exact_split(tmp_path):
+    dataset = Dataset.from_list(
+        [_row("openslr/librispeech_asr", image_count=2)]
     )
 
     entry = _save_split(
@@ -116,28 +115,17 @@ def test_save_subset_uses_config_and_exact_split(tmp_path, monkeypatch):
         "librispeech",
         "train",
         "openslr/librispeech_asr",
-        "hungphongtrn/univi-3M-v0",
     )
 
     assert (tmp_path / "librispeech" / "train").is_dir()
     assert entry["path"] == "librispeech/train"
     assert entry["split"] == "train"
     assert entry["is_training_split"] is True
-    assert pushed == [
-        (
-            "hungphongtrn/univi-3M-v0",
-            {"config_name": "librispeech", "split": "train"},
-        )
-    ]
 
 
-def test_save_subset_densefusion_validation(tmp_path, monkeypatch):
-    dataset = Dataset.from_list([_row("HuggingFaceM4/FineVision", image_count=1)])
-    pushed = []
-    monkeypatch.setattr(
-        Dataset,
-        "push_to_hub",
-        lambda self, repo, **kwargs: pushed.append((repo, kwargs)),
+def test_save_subset_densefusion_validation(tmp_path):
+    dataset = Dataset.from_list(
+        [_row("HuggingFaceM4/FineVision", image_count=1)]
     )
 
     entry = _save_split(
@@ -146,7 +134,6 @@ def test_save_subset_densefusion_validation(tmp_path, monkeypatch):
         "densefusion",
         "validation",
         "HuggingFaceM4/FineVision",
-        "hungphongtrn/univi-3M-v0",
     )
 
     assert (tmp_path / "densefusion" / "validation").is_dir()
@@ -192,82 +179,6 @@ def test_add_token_length_skips_if_already_set():
     assert result["original_token_length"] == 42
 
 
-def test_convert_old_librispeech_row_to_tiles():
-    old_img = _make_img_bytes((192, 64))
-    row = {
-        "images": [old_img],
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image"},
-                    {"type": "text", "text": "Transcribe the speech."},
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [{"type": "text", "text": "transcript"}],
-            },
-        ],
-        "source_dataset_id": "openslr/librispeech_asr",
-        "split": "train",
-        "row_id": "test-0",
-        "render_config": json.dumps({"sample_rate": 16000}),
-        "modality_label": "audio",
-        "preprocessing_version": "0.1.0",
-    }
-    result = _convert_old_librispeech_row_to_tiles(row)
-    assert len(result["images"]) == 3
-    assert len(result["messages"][0]["content"]) == 4
-    assert sum(c["type"] == "image" for c in result["messages"][0]["content"]) == 3
-    assert result["messages"][0]["content"][-1]["type"] == "text"
-    assert all(c["type"] != "image" for c in result["messages"][1]["content"])
-    _check_row_images(result)
-    for img_bytes in result["images"]:
-        img = Image.open(io.BytesIO(img_bytes))
-        assert img.width == img.height
-    rc = json.loads(result["render_config"])
-    assert rc["render_method"] == "chronological_square_tiles"
-
-
-def test_convert_old_librispeech_pads_final_tile():
-    old_img = _make_img_bytes((100, 64))
-    row = {
-        "images": [old_img],
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image"},
-                    {"type": "text", "text": "Transcribe."},
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [{"type": "text", "text": "transcript"}],
-            },
-        ],
-        "source_dataset_id": "openslr/librispeech_asr",
-        "split": "train",
-        "row_id": "test-1",
-        "render_config": json.dumps({"sample_rate": 16000}),
-        "modality_label": "audio",
-        "preprocessing_version": "0.1.0",
-    }
-    result = _convert_old_librispeech_row_to_tiles(row)
-    assert len(result["images"]) == 2
-    for img_bytes in result["images"]:
-        img = Image.open(io.BytesIO(img_bytes))
-        assert img.size == (64, 64)
-
-
-def test_convert_raises_on_no_images():
-    row = _row("test", image_count=0)
-    try:
-        _convert_old_librispeech_row_to_tiles(row)
-        assert False, "Expected ValueError"
-    except ValueError:
-        pass
 
 
 def test_reject_legacy_flat_output(tmp_path):
@@ -285,3 +196,60 @@ def test_reject_legacy_flat_output(tmp_path):
 def test_accept_new_split_layout(tmp_path):
     (tmp_path / "densefusion" / "train").mkdir(parents=True)
     _reject_legacy_output(tmp_path)
+
+def test_build_librispeech_uses_selected_clean_splits(monkeypatch, tmp_path):
+    calls = []
+    dataset = Dataset.from_list([_row("openslr/librispeech_asr")])
+
+    monkeypatch.setattr(
+        rebuild_3m,
+        "_reuse_split",
+        lambda *args, **kwargs: (
+            dataset,
+            {"config_name": "librispeech", "split": args[2]},
+        ),
+    )
+
+    def fake_preprocess(**kwargs):
+        calls.append(kwargs)
+        return dataset
+
+    monkeypatch.setattr(
+        rebuild_3m,
+        "preprocess_librispeech_asr",
+        fake_preprocess,
+    )
+    monkeypatch.setattr(
+        rebuild_3m,
+        "_set_target_split",
+        lambda value, *args, **kwargs: value,
+    )
+    monkeypatch.setattr(
+        rebuild_3m,
+        "_save_split",
+        lambda value, root, config, split, source, force=False: {
+            "config_name": config,
+            "split": split,
+        },
+    )
+
+    args = SimpleNamespace(
+        force=False,
+        force_librispeech=True,
+        librispeech_train_samples=None,
+        librispeech_val_samples=None,
+        tokenizer="test-tokenizer",
+        num_proc=1,
+    )
+    entries = rebuild_3m._build_librispeech(
+        original=None,
+        output_root=tmp_path,
+        tokenizer=None,
+        args=args,
+    )
+
+    assert [(call["subset"], call["split"]) for call in calls] == [
+        ("clean", "train.360"),
+        ("clean", "validation"),
+    ]
+    assert [entry["split"] for entry in entries] == ["train", "validation"]

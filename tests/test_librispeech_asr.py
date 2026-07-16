@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import tempfile
 
@@ -11,11 +12,11 @@ from data.preprocessing.librispeech_asr import preprocess_librispeech_asr
 
 
 class _MockLibriSpeech:
-    def __init__(self, num_rows: int = 2):
+    def __init__(self, num_rows: int = 2, duration_sec: float = 5.0):
         self._rows = [
             {
                 "audio": {
-                    "array": np.zeros(16000 * 5, dtype=np.float32),
+                    "array": np.zeros(int(16000 * duration_sec), dtype=np.float32),
                     "sampling_rate": 16000,
                 },
                 "text": f"transcript number {i}",
@@ -45,9 +46,20 @@ class _MockLibriSpeech:
             result_rows.append(function(row, i) if with_indices else function(row))
         return Dataset.from_list(result_rows)
 
+    def filter(self, function, **kwargs):
+        kept = [row for row in self._rows if function(row)]
+        ds = _MockLibriSpeech.__new__(_MockLibriSpeech)
+        ds._rows = kept
+        return ds
 
-def _mock_renderer(*args, **kwargs):
-    return Image.new("RGB", (64, 64))
+
+def _mock_renderer(audio, **kwargs):
+    duration_sec = np.asarray(audio).shape[-1] / kwargs["source_sample_rate"]
+    n_pages = max(1, int(np.ceil(duration_sec / kwargs["page_duration_sec"])))
+    return [
+        Image.new("RGB", (kwargs["output_width"], kwargs["output_height"]))
+        for _ in range(n_pages)
+    ]
 
 
 def test_librispeech_asr_preprocess_generates_messages(monkeypatch):
@@ -133,6 +145,12 @@ def test_row_id_is_string_with_numeric_source_id(monkeypatch):
                 result_rows.append(new_row)
             return Dataset.from_list(result_rows)
 
+        def filter(self, function, **kwargs):
+            kept = [row for row in self._rows if function(row)]
+            ds = _NumericIdMock.__new__(_NumericIdMock)
+            ds._rows = kept
+            return ds
+
     monkeypatch.setattr(
         "data.preprocessing.librispeech_asr.load_dataset",
         lambda *a, **kw: _NumericIdMock(),
@@ -173,7 +191,6 @@ def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
         def select(self, indices):
             ds = _NullIdMock.__new__(_NullIdMock)
             ds._rows = [self._rows[i] for i in indices]
-
             return ds
 
         def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
@@ -185,6 +202,12 @@ def test_row_id_falls_back_to_index_when_id_is_none(monkeypatch):
                     new_row = function(row)
                 result_rows.append(new_row)
             return Dataset.from_list(result_rows)
+
+        def filter(self, function, **kwargs):
+            kept = [row for row in self._rows if function(row)]
+            ds = _NullIdMock.__new__(_NullIdMock)
+            ds._rows = kept
+            return ds
 
     monkeypatch.setattr(
         "data.preprocessing.librispeech_asr.load_dataset",
@@ -226,7 +249,6 @@ def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
         def select(self, indices):
             ds = _EmptyIdMock.__new__(_EmptyIdMock)
             ds._rows = [self._rows[i] for i in indices]
-
             return ds
 
         def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
@@ -238,6 +260,12 @@ def test_row_id_falls_back_to_index_when_id_is_empty(monkeypatch):
                     new_row = function(row)
                 result_rows.append(new_row)
             return Dataset.from_list(result_rows)
+
+        def filter(self, function, **kwargs):
+            kept = [row for row in self._rows if function(row)]
+            ds = _EmptyIdMock.__new__(_EmptyIdMock)
+            ds._rows = kept
+            return ds
 
     monkeypatch.setattr(
         "data.preprocessing.librispeech_asr.load_dataset",
@@ -293,7 +321,7 @@ def test_render_config_matches_renderer_kwargs(monkeypatch):
     def recording_renderer(*args, **kwargs):
         recorded_kwargs.clear()
         recorded_kwargs.update(kwargs)
-        return Image.new("RGB", (64, 64))
+        return _mock_renderer(*args, **kwargs)
 
     monkeypatch.setattr(
         "data.preprocessing.librispeech_asr.load_dataset",
@@ -350,128 +378,7 @@ def test_save_load_round_trip(monkeypatch):
     assert "preprocessing_version" in row
 
 
-def _check_loaded_tile_images(row):
-    user_content = row["messages"][0]["content"]
-    image_placeholders = [c for c in user_content if c["type"] == "image"]
-    tile_images = list(row["images"])
-    return image_placeholders, tile_images
-
-
-def test_tiling_multiple_images_emitted(monkeypatch):
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.load_dataset",
-        lambda *a, **kw: _MockLibriSpeech(1),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
-        lambda *a, **kw: Image.new("RGB", (192, 64)),
-    )
-
-    dataset = preprocess_librispeech_asr(max_samples=1)
-    row = dataset[0]
-    placeholders, tiles = _check_loaded_tile_images(row)
-    assert len(placeholders) == 3
-    assert len(tiles) == 3
-    assert len(row["images"]) == 3
-
-
-def test_tiling_tiles_are_square(monkeypatch):
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.load_dataset",
-        lambda *a, **kw: _MockLibriSpeech(1),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
-        lambda *a, **kw: Image.new("RGB", (192, 64)),
-    )
-
-    dataset = preprocess_librispeech_asr(max_samples=1)
-    row = dataset[0]
-    _, tiles = _check_loaded_tile_images(row)
-    for tile in tiles:
-        assert tile.width == tile.height
-
-
-def test_tiling_final_tile_padded(monkeypatch):
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.load_dataset",
-        lambda *a, **kw: _MockLibriSpeech(1),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
-        lambda *a, **kw: Image.new("RGB", (100, 64)),
-    )
-
-    dataset = preprocess_librispeech_asr(max_samples=1)
-    row = dataset[0]
-    _, tiles = _check_loaded_tile_images(row)
-    assert len(tiles) == 2
-    assert tiles[0].size == (64, 64)
-    assert tiles[1].size == (64, 64)
-
-
-def test_tiling_image_count_matches_placeholders(monkeypatch):
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.load_dataset",
-        lambda *a, **kw: _MockLibriSpeech(1),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
-        lambda *a, **kw: Image.new("RGB", (256, 64)),
-    )
-
-    dataset = preprocess_librispeech_asr(max_samples=1)
-    row = dataset[0]
-    placeholders, tiles = _check_loaded_tile_images(row)
-    assert len(row["images"]) == len(placeholders)
-    assert len(tiles) == len(placeholders)
-    # text placeholder is last
-    assert row["messages"][0]["content"][-1]["type"] == "text"
-
-
-def test_tiling_chronological_order(monkeypatch):
-    width, height = 128, 64
-    red_stripe = Image.new("RGB", (width, height), color=0)
-    for y in range(height):
-        red_stripe.putpixel((1, y), (255, 0, 0))
-
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.load_dataset",
-        lambda *a, **kw: _MockLibriSpeech(1),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
-        lambda *a, **kw: red_stripe,
-    )
-
-    dataset = preprocess_librispeech_asr(max_samples=1)
-    row = dataset[0]
-    _, tiles = _check_loaded_tile_images(row)
-    assert len(tiles) == 2
-    assert tiles[0].getpixel((1, 0)) == (255, 0, 0)
-    assert tiles[1].getpixel((0, 0)) == (0, 0, 0)
-
-
-def test_tiling_config_in_render_config(monkeypatch):
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.load_dataset",
-        lambda *a, **kw: _MockLibriSpeech(1),
-    )
-    monkeypatch.setattr(
-        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
-        lambda *a, **kw: Image.new("RGB", (64, 64)),
-    )
-
-    dataset = preprocess_librispeech_asr(max_samples=1)
-    row = dataset[0]
-    config = json.loads(row["render_config"])
-    assert "tile_size" in config
-    assert "tile_pad_color" in config
-    assert config["tile_pad_color"] == 255
-    assert config["tile_size"] == 64
-
-
-def test_tiling_preprocessing_version_bumped(monkeypatch):
+def test_preprocessing_version_updated(monkeypatch):
     monkeypatch.setattr(
         "data.preprocessing.librispeech_asr.load_dataset",
         lambda *a, **kw: _MockLibriSpeech(1),
@@ -483,7 +390,7 @@ def test_tiling_preprocessing_version_bumped(monkeypatch):
 
     dataset = preprocess_librispeech_asr(max_samples=1)
     row = dataset[0]
-    assert row["preprocessing_version"] == "0.3.0"
+    assert row["preprocessing_version"] == "0.5.0"
 
 
 def test_original_token_length_present(monkeypatch):
@@ -522,3 +429,191 @@ def test_original_token_length_minus_one_without_tokenizer(monkeypatch):
 
     dataset = preprocess_librispeech_asr(max_samples=1)
     assert dataset[0]["original_token_length"] == -1
+
+
+# --- Gemma 4 fixed-page LibriSpeech materialization ---
+
+
+def test_short_audio_produces_one_image_and_placeholder(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(3),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(max_samples=3)
+    for row in dataset:
+        assert len(row["images"]) == 1
+        placeholders = sum(
+            item["type"] == "image"
+            for message in row["messages"]
+            if message["role"] == "user"
+            for item in message["content"]
+        )
+        assert placeholders == 1
+        assert len(row["messages"][0]["content"]) == 2
+
+
+def test_output_images_are_1000x160_rgb(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1, duration_sec=15.0),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    row = preprocess_librispeech_asr(max_samples=1)[0]
+    assert len(row["images"]) == 2
+    for image in row["images"]:
+        if isinstance(image, (bytes, bytearray)):
+            image = Image.open(io.BytesIO(image))
+        assert image.size == (1000, 160)
+        assert image.mode == "RGB"
+
+
+def test_short_audio_uses_fixed_ten_second_scale(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1, duration_sec=3.0),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    config = json.loads(preprocess_librispeech_asr(max_samples=1)[0]["render_config"])
+    assert config["source_duration_ms"] == 3000.0
+    assert config["page_duration_sec"] == 10.0
+    assert config["ms_per_horizontal_pixel"] == 10.0
+    assert config["right_padded_final_page"] is True
+
+
+def test_renderer_receives_audio_array_without_temporary_wav(monkeypatch):
+    recorded: dict = {}
+
+    def recording_renderer(audio, **kwargs):
+        recorded["audio"] = audio
+        recorded["kwargs"] = kwargs
+        return _mock_renderer(audio, **kwargs)
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1, duration_sec=7.0),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        recording_renderer,
+    )
+
+    row = preprocess_librispeech_asr(max_samples=1)[0]
+    assert isinstance(recorded["audio"], np.ndarray)
+    assert recorded["audio"].shape == (7 * 16000,)
+    assert recorded["kwargs"]["source_sample_rate"] == 16000
+    config = json.loads(row["render_config"])
+    assert config["render_method"] == "fixed_10s_rectangular_pages"
+
+
+def test_excludes_utterances_over_40_seconds(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(num_rows=2, duration_sec=40.01),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(max_samples=2)
+    assert len(dataset) == 0
+
+
+def test_mixed_duration_filtering_retains_up_to_40_seconds(monkeypatch):
+    class _MixedDurationMock:
+        def __init__(self):
+            self._rows = [
+                {
+                    "audio": {
+                        "array": np.zeros(int(16000 * duration), dtype=np.float32),
+                        "sampling_rate": 16000,
+                    },
+                    "text": f"{row_id} transcript",
+                    "id": row_id,
+                }
+                for row_id, duration in (
+                    ("short-1", 5),
+                    ("four-pages-1", 35),
+                    ("boundary-1", 40),
+                    ("toolong-1", 40.01),
+                )
+            ]
+
+        def __len__(self):
+            return len(self._rows)
+
+        @property
+        def column_names(self):
+            return list(self._rows[0]) if self._rows else []
+
+        def select(self, indices):
+            dataset = _MixedDurationMock.__new__(_MixedDurationMock)
+            dataset._rows = [self._rows[i] for i in indices]
+            return dataset
+
+        def map(self, function, *, with_indices=False, remove_columns=None, **kwargs):
+            rows = [
+                function(row, index) if with_indices else function(row)
+                for index, row in enumerate(self._rows)
+            ]
+            return Dataset.from_list(rows)
+
+        def filter(self, function, **kwargs):
+            dataset = _MixedDurationMock.__new__(_MixedDurationMock)
+            dataset._rows = [row for row in self._rows if function(row)]
+            return dataset
+
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MixedDurationMock(),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    dataset = preprocess_librispeech_asr(max_samples=4)
+    assert {row["row_id"] for row in dataset} == {
+        "short-1",
+        "four-pages-1",
+        "boundary-1",
+    }
+    image_counts = {row["row_id"]: len(row["images"]) for row in dataset}
+    assert image_counts == {
+        "short-1": 1,
+        "four-pages-1": 4,
+        "boundary-1": 4,
+    }
+
+
+def test_render_config_records_fixed_page_policy(monkeypatch):
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.load_dataset",
+        lambda *a, **kw: _MockLibriSpeech(1, duration_sec=25.0),
+    )
+    monkeypatch.setattr(
+        "data.preprocessing.librispeech_asr.render_log_mel_spectrogram",
+        _mock_renderer,
+    )
+
+    config = json.loads(preprocess_librispeech_asr(max_samples=1)[0]["render_config"])
+    assert config["image_width"] == 1000
+    assert config["image_height"] == 160
+    assert config["render_method"] == "fixed_10s_rectangular_pages"
+    assert config["n_pages"] == 3
+    assert config["page_duration_sec"] == 10.0
+    assert config["max_pages"] == 4
+    assert config["normalization"] == "whisper_log_mel"

@@ -332,6 +332,11 @@ class _LibriMock:
             result_rows.append(function(row, i) if with_indices else function(row))
         return Dataset.from_list(result_rows)
 
+    def filter(self, function, **kwargs):
+        dataset = _LibriMock.__new__(_LibriMock)
+        dataset._rows = [row for row in self._rows if function(row)]
+        return dataset
+
 
 class _DenseMock:
     def __init__(self, num_rows):
@@ -610,6 +615,11 @@ def _make_no_id_mock(rows: list[dict]):
             for i, row in enumerate(self._rows):
                 result_rows.append(function(row, i) if with_indices else function(row))
             return Dataset.from_list(result_rows)
+
+        def filter(self, function, **kwargs):
+            dataset = _MockNoId.__new__(_MockNoId)
+            dataset._rows = [row for row in self._rows if function(row)]
+            return dataset
 
     return _MockNoId(rows)
 

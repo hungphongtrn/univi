@@ -101,6 +101,11 @@ class _MockIterable:
             result_rows.append(function(row, i) if with_indices else function(row))
         return Dataset.from_list(result_rows)
 
+    def filter(self, function, **kwargs):
+        dataset = _MockIterable.__new__(_MockIterable)
+        dataset._rows = [row for row in self._rows if function(row)]
+        return dataset
+
 
 def _mock_fineweb_load(rows):
     def _load(*args, **kwargs):

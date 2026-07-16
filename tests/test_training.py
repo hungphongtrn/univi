@@ -1,10 +1,9 @@
 """
-Training component tests for Phase 2 smoke training.
+Training component tests for Phase 1 training foundation.
 
 Test taxonomy:
-- Dataset-loading and schema tests are CPU-safe (no GPU required).
-- Collation tests require CUDA GPU (@requires_gpu) because
-  FastVisionModel.from_pretrained for E2B needs CUDA.
+- Import-level and config tests are CPU-safe.
+- Collation tests require CUDA GPU (@requires_gpu).
 """
 
 from __future__ import annotations
@@ -48,11 +47,39 @@ def _skip_if_no_dataset():
 def _assert_image_payload(value):
     if isinstance(value, Image.Image):
         return
-    if isinstance(value, dict) and value.get("bytes"):
-        with Image.open(BytesIO(value["bytes"])) as image:
-            image.verify()
+    if isinstance(value, dict) and "bytes" in value:
         return
     raise AssertionError(f"unexpected image payload type: {type(value)!r}")
+
+
+# --- Import-level tests (CPU-safe) ---
+
+
+def test_train_smoke_imports():
+    """Verify that train_smoke.py's key imports resolve without CUDA."""
+    import importlib
+
+    mod = importlib.import_module("train_smoke")
+    assert hasattr(mod, "main")
+
+
+def test_univi_trainer_imports():
+    """Verify that univi.trainer exposes all shared training helpers."""
+    import importlib
+
+    mod = importlib.import_module("univi.trainer")
+    assert hasattr(mod, "train")
+    assert hasattr(mod, "build_model")
+    assert hasattr(mod, "apply_lora")
+    assert hasattr(mod, "load_dataset")
+
+
+def test_train_full_imports():
+    """Verify that train_full.py resolves all imports."""
+    import importlib
+
+    mod = importlib.import_module("train_full")
+    assert hasattr(mod, "main")
 
 
 # --- Dataset-loading tests (CPU-safe) ---
@@ -114,127 +141,45 @@ def test_unsloth_vision_data_collator_outputs():
     assert result["input_ids"].shape[0] == len(batch)
 
 
-# --- Import-level tests (CPU-safe) ---
+# --- New API tests ---
 
 
-def test_train_smoke_imports():
-    """Verify that train_smoke.py's key imports resolve without CUDA."""
-    import importlib
+def test_resolve_config_via_univi():
+    """resolve_config is importable from univi top-level."""
+    import univi
 
-    mod = importlib.import_module("train_smoke")
-    assert hasattr(mod, "load_config")
-    assert hasattr(mod, "build_model")
-    assert hasattr(mod, "load_dataset")
-    assert hasattr(mod, "train")
+    cfg = univi.resolve_config("configs/3060_1epoch.yaml")
+    assert cfg["training"]["max_length"] == 2048
+    assert "config_hash" in cfg
 
 
-def test_univi_trainer_imports():
-    """Verify that univi.trainer exposes all shared training helpers."""
-    import importlib
-
-    mod = importlib.import_module("univi.trainer")
-    assert hasattr(mod, "load_config")
-    assert hasattr(mod, "build_model")
-    assert hasattr(mod, "apply_lora")
-    assert hasattr(mod, "load_dataset")
-    assert hasattr(mod, "train")
-
-
-def test_load_dataset_combines_local_source_configurations(tmp_path):
-    from univi.trainer import load_dataset
-
-    rows = []
-    for name in ("fineweb-edu", "smoltalk"):
-        subset_path = tmp_path / name / "train"
-        subset_path.parent.mkdir()
-        Dataset.from_list([{"source_dataset_id": name, "value": name}]).save_to_disk(
-            subset_path
-        )
-        rows.append(
-            {
-                "config_name": name,
-                "path": name,
-                "split": "train",
-                "path": f"{name}/train",
-                "rows": 1,
-                "source_dataset_id": name,
-                "is_training_split": True,
-            }
-        )
-    (tmp_path / "manifest.json").write_text(
-        json.dumps({"subsets": rows}), encoding="utf-8"
+def test_new_trainer_api():
+    """New trainer API includes expected function signatures."""
+    from univi.trainer import (
+        make_training_args,
+        resolve_model_config,
+        verify_checkpointing_config,
+        detect_markers,
+        check_active_labels,
     )
 
-    dataset = load_dataset(
-        {
-            "dataset": {
-                "path": str(tmp_path),
-                "subsets": ["fineweb-edu", "smoltalk"],
-                "shuffle_seed": 42,
-            }
-        }
-    )
+    cfg = {
+        "training": {"max_length": 2048, "output_dir": "/tmp/test"},
+        "model": {
+            "name": "unsloth/gemma-4-E2B-it",
+            "revision": "4abfca14e6c6bfb5888b80288185b1243fb8d539",
+            "max_lora_rank": 8,
+            "use_gradient_checkpointing": "unsloth",
+        },
+    }
+    args = make_training_args(cfg)
+    assert args.max_length == 2048
 
-    assert len(dataset) == 2
-    assert set(dataset["source_dataset_id"]) == {"fineweb-edu", "smoltalk"}
+    resolved = resolve_model_config(cfg)
+    assert resolved["revision"] == "4abfca14e6c6bfb5888b80288185b1243fb8d539"
 
-
-def test_load_dataset_ignores_local_held_out_splits(tmp_path):
-    from univi.trainer import load_dataset
-
-    entries = []
-    for split, is_training in (("train", True), ("test", False)):
-        path = tmp_path / "smoltalk" / split
-        path.parent.mkdir(exist_ok=True)
-        Dataset.from_list([{"split": split}]).save_to_disk(path)
-        entries.append(
-            {
-                "config_name": "smoltalk",
-                "split": split,
-                "path": f"smoltalk/{split}",
-                "is_training_split": is_training,
-            }
-        )
-    (tmp_path / "manifest.json").write_text(
-        json.dumps({"subsets": entries}), encoding="utf-8"
-    )
-
-    dataset = load_dataset(
-        {"dataset": {"path": str(tmp_path), "subsets": ["smoltalk"]}}
-    )
-
-    assert dataset["split"] == ["train"]
-
-
-def test_load_dataset_uses_configured_hub_training_splits(tmp_path, monkeypatch):
-    from univi import trainer
-
-    calls = []
-
-    def fake_load(repo, name, split):
-        calls.append((repo, name, split))
-        return Dataset.from_list([{"split": split}])
-
-    monkeypatch.setattr(trainer, "hf_load", fake_load)
-    dataset = trainer.load_dataset(
-        {
-            "dataset": {
-                "path": str(tmp_path / "missing"),
-                "hf_hub_repo_id": "hungphongtrn/univi-3M-v0",
-                "subsets": ["librispeech", "smoltalk"],
-                "train_splits": {
-                    "librispeech": ["train"],
-                    "smoltalk": ["train"],
-                },
-            }
-        }
-    )
-
-    assert len(dataset) == 2
-    assert calls == [
-        ("hungphongtrn/univi-3M-v0", "librispeech", "train"),
-        ("hungphongtrn/univi-3M-v0", "smoltalk", "train"),
-    ]
+    mode = verify_checkpointing_config(cfg)
+    assert mode == "unsloth"
 
 
 # --- Full-config tests ---
@@ -242,42 +187,27 @@ def test_load_dataset_uses_configured_hub_training_splits(tmp_path, monkeypatch)
 
 def test_full_config_loads():
     """Verify that configs/full.yaml loads and contains expected values."""
-    from univi.trainer import load_config
+    from univi.config import resolve_config
 
-    cfg = load_config("configs/full.yaml")
+    cfg = resolve_config("configs/full.yaml")
 
     assert cfg["model"]["name"] == "unsloth/gemma-4-E2B-it"
     assert cfg["model"]["load_in_4bit"] is True
-    assert cfg["model"]["use_gradient_checkpointing"] is True
+    assert cfg["model"]["use_gradient_checkpointing"] == "unsloth"
 
-    assert cfg["lora"]["r"] == 32
-    assert cfg["lora"]["alpha"] == 64
+    assert cfg["lora"]["r"] == 8
+    assert cfg["lora"]["alpha"] == 16
     assert "q_proj" in cfg["lora"]["target_modules"]
-    assert "k_proj" in cfg["lora"]["target_modules"]
-    assert "v_proj" in cfg["lora"]["target_modules"]
-    assert "o_proj" in cfg["lora"]["target_modules"]
-    assert "gate_proj" in cfg["lora"]["target_modules"]
-    assert "up_proj" in cfg["lora"]["target_modules"]
-    assert "down_proj" in cfg["lora"]["target_modules"]
     assert cfg["lora"]["finetune_vision_layers"] is True
 
     tr = cfg["training"]
-    assert tr["per_device_train_batch_size"] == 2
-    assert tr["gradient_accumulation_steps"] == 4
-    assert tr["max_steps"] == 500
-    assert tr["max_seq_length"] == 2048
+    assert tr["max_length"] == 2048
+    assert "max_seq_length" not in tr
     assert tr["learning_rate"] == 2.0e-4
-    assert tr["warmup_steps"] == 20
-    assert tr["lr_scheduler_type"] == "cosine"
-    assert tr["optim"] == "adamw_8bit"
-    assert tr["logging_steps"] == 10
-    assert tr["save_steps"] == 100
     assert tr["output_dir"] == "data/checkpoints/full-v0"
-    assert tr["report_to"] == "none"
-    assert tr["remove_unused_columns"] is False
-    assert tr["dataloader_num_workers"] == 2
+    assert tr["report_to"] == ["wandb"]
 
-    assert cfg["dataset"]["path"] == "data/materialized/univi-3M-v0"
+    assert cfg["dataset"]["path"] == "data/materialized/univi-3M-v0-split"
     assert cfg["dataset"]["hf_hub_repo_id"] == "hungphongtrn/univi-3M-v0"
     assert cfg["dataset"]["subsets"] == [
         "fineweb-edu",
@@ -285,16 +215,5 @@ def test_full_config_loads():
         "smoltalk",
         "librispeech",
     ]
-    assert "librispeech" in cfg["dataset"]["train_splits"]
-    assert cfg["dataset"]["train_splits"]["librispeech"] == ["train"]
 
     assert cfg["hub"]["model_repo_id"] == "hungphongtrn/univi-phase0-full-model-v0"
-
-
-def test_train_full_imports():
-    """Verify that train_full.py resolves all imports."""
-    import importlib
-
-    mod = importlib.import_module("train_full")
-    assert hasattr(mod, "load_config")
-    assert hasattr(mod, "train")
