@@ -2,7 +2,7 @@
 name = "univi"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = ">=3.12.0"
+requires-python = ">=3.12.0, <3.14.0"
 dependencies = [
     "datasets>=2.14.0",
     "librosa>=0.10.0",
@@ -27,6 +27,7 @@ dependencies = [
     "unsloth-zoo>=2026.7.2",
     "wandb>=0.28.0",
     "flash-linear-attention[cuda]>=0.5.1",
+    "flash-attn",
 ]
 
 [dependency-groups]
@@ -37,6 +38,7 @@ dev = [
 [tool.uv.sources]
 torch = { index = "pytorch-cu130" }
 torchvision = { index = "pytorch-cu130" }
+flash-attn = { url = "https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.9.0/flash_attn-2.8.3+cu130torch2.10-cp312-cp312-linux_x86_64.whl" }
 
 [[tool.uv.index]]
 name = "pytorch-cu130"
