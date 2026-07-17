@@ -149,7 +149,7 @@ def test_resolve_config_via_univi():
     import univi
 
     cfg = univi.resolve_config("configs/3060_1epoch.yaml")
-    assert cfg["training"]["max_length"] == 2048
+    assert cfg["training"]["max_length"] == 8192
     assert "config_hash" in cfg
 
 
@@ -164,7 +164,7 @@ def test_new_trainer_api():
     )
 
     cfg = {
-        "training": {"max_length": 2048, "output_dir": "/tmp/test"},
+        "training": {"max_length": 8192, "output_dir": "/tmp/test"},
         "model": {
             "name": "unsloth/gemma-4-E2B-it",
             "revision": "4abfca14e6c6bfb5888b80288185b1243fb8d539",
@@ -173,7 +173,7 @@ def test_new_trainer_api():
         },
     }
     args = make_training_args(cfg)
-    assert args.max_length == 2048
+    assert args.max_length == 8192
 
     resolved = resolve_model_config(cfg)
     assert resolved["revision"] == "4abfca14e6c6bfb5888b80288185b1243fb8d539"
@@ -201,7 +201,7 @@ def test_full_config_loads():
     assert cfg["lora"]["finetune_vision_layers"] is True
 
     tr = cfg["training"]
-    assert tr["max_length"] == 2048
+    assert tr["max_length"] == 8192
     assert "max_seq_length" not in tr
     assert tr["learning_rate"] == 2.0e-4
     assert tr["output_dir"] == "data/checkpoints/full-v0"

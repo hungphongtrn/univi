@@ -636,7 +636,7 @@ def run_smoke(config: dict) -> dict:
             processor,
             dataset,
             subsets,
-            max_seq_length=tc.get("collator_max_length", 4096),
+            max_seq_length=tc.get("max_length", 8192),
             resize=tc.get("collator_resize", "max"),
         )
         report["collation"] = collation_results

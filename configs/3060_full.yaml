@@ -33,7 +33,7 @@ training:
   # WARNING: 1 epoch = ~732,893 steps × ~25s/step ≈ 212 days on this hardware.
   # Consider a GPU upgrade or subsampling before attempting this.
   # max_steps: 500  # old cap that truncated to 2k samples
-  max_length: 2048
+  max_length: 8192
   learning_rate: 2.0e-4
   warmup_ratio: 0.03
   warmup_steps: 0

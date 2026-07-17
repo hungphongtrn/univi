@@ -454,6 +454,8 @@ def apply_response_masking(trainer: SFTTrainer, tokenizer: Any, num_proc: int | 
 def load_dataset(config: dict, source: str = "auto"):
     """Load a dataset from local path or Hugging Face Hub with pinned revisions."""
     dcfg = config["dataset"]
+    tcfg = config.get("training", {})
+    max_length = tcfg.get("max_length")
     subsets = dcfg.get("subsets", list(VALID_SUBSETS))
 
     unknown = set(subsets) - VALID_SUBSETS
@@ -467,9 +469,9 @@ def load_dataset(config: dict, source: str = "auto"):
     logger.info("Loading dataset: source=%s, subsets=%s", source, subsets)
 
     if source == "local":
-        return _load_local(dcfg, subsets, local_path)
+        return _load_local(dcfg, subsets, local_path, max_length)
     elif source == "hub":
-        return _load_hub(dcfg, subsets)
+        return _load_hub(dcfg, subsets, max_length)
     else:
         raise ValueError(f"Invalid dataset source: {source}")
 
@@ -524,7 +526,76 @@ def _filter_training_images(dataset, subset: str, max_images: int | None, num_pr
     return filtered.with_format(None)
 
 
-def _load_local(dcfg: dict, subsets: list[str], local_path: Path):
+# Conservative per-image token budget: 280 soft tokens (Gemma4
+# max_soft_tokens) + 2 delimiter tokens (<image> and <image|>).
+_IMAGE_TOKEN_BUDGET = 282
+# Chat-template structure + user instruction overhead.
+_TEMPLATE_TOKEN_OVERHEAD = 256
+
+
+def _filter_training_tokens(
+    dataset, subset: str, max_length: int | None, num_proc: int | None = None
+):
+    """Drop training rows whose *expanded* token length exceeds ``max_length``.
+
+    The Gemma4 processor expands each ``<|image|>`` placeholder into
+    ``boi + N*image_token + eoi`` (N ≤ 280 soft tokens) before tokenising.
+    If the resulting sequence is longer than the collator's truncation
+    budget, the tokenizer clips image sub-tokens and
+    ``_check_special_mm_tokens`` raises a count-mismatch error.
+
+    We estimate the expanded length from the precomputed
+    ``original_token_length`` column (assistant target tokens) plus a
+    per-image budget and a fixed template overhead, then drop rows that
+    would overflow.  Rows with ``original_token_length <= 0`` (unknown)
+    are retained — they are rare and cannot be estimated cheaply.
+    """
+    if max_length is None:
+        return dataset
+    if "original_token_length" not in dataset.column_names:
+        logger.warning(
+            "Token-length filter skipped for %r: no 'original_token_length' "
+            "column. Examples may overflow the collator budget.",
+            subset,
+        )
+        return dataset
+    if "images" not in dataset.column_names:
+        return dataset
+
+    def _token_filter(otl, images):
+        img_lens = pc.list_value_length(images)
+        # Retain rows with unknown length (otl <= 0); for the rest, check
+        # that the estimated expanded length fits within max_length.
+        unknown = pc.less_equal(otl, 0)
+        estimated = pc.add(
+            pc.add(otl, pc.multiply(img_lens, _IMAGE_TOKEN_BUDGET)),
+            _TEMPLATE_TOKEN_OVERHEAD,
+        )
+        fits = pc.less_equal(estimated, max_length)
+        return pc.or_(unknown, fits)
+
+    total = len(dataset)
+    filtered = dataset.with_format("arrow").filter(
+        _token_filter,
+        batched=True,
+        batch_size=10_000,
+        input_columns=["original_token_length", "images"],
+        desc=f"Filtering {subset} rows exceeding {max_length} expanded tokens",
+        num_proc=num_proc,
+    )
+    filtered = filtered.with_format(None)
+    retained = len(filtered)
+    excluded = total - retained
+    logger.info(
+        "Training token filter: subset=%s, max_length=%d, "
+        "retained=%d, excluded=%d (%.2f%%)",
+        subset, max_length, retained, excluded,
+        100.0 * excluded / total if total else 0.0,
+    )
+    return filtered
+
+
+def _load_local(dcfg: dict, subsets: list[str], local_path: Path, max_length: int | None = None):
     """Load dataset from local disk with manifest support."""
     logger.info("Loading local dataset: path=%s, subsets=%s", local_path, subsets)
 
@@ -548,10 +619,15 @@ def _load_local(dcfg: dict, subsets: list[str], local_path: Path):
             and (not subsets or item["config_name"] in subsets)
         ]
         datasets = [
-            _filter_training_images(
-                load_from_disk(local_path / item["path"]),
+            _filter_training_tokens(
+                _filter_training_images(
+                    load_from_disk(local_path / item["path"]),
+                    item["config_name"],
+                    dcfg.get("max_train_images"),
+                    num_proc=dcfg.get("num_proc"),
+                ),
                 item["config_name"],
-                dcfg.get("max_train_images"),
+                max_length,
                 num_proc=dcfg.get("num_proc"),
             )
             for item in entries
@@ -562,13 +638,17 @@ def _load_local(dcfg: dict, subsets: list[str], local_path: Path):
     dataset = load_from_disk(str(local_path))
     logger.info("Local dataset loaded (no manifest): path=%s, subsets=%s, rows=%d",
                 local_path, subsets, len(dataset))
-    return _filter_training_images(
-        dataset, "local", dcfg.get("max_train_images"),
+    return _filter_training_tokens(
+        _filter_training_images(
+            dataset, "local", dcfg.get("max_train_images"),
+            num_proc=dcfg.get("num_proc"),
+        ),
+        "local", max_length,
         num_proc=dcfg.get("num_proc"),
     )
 
 
-def _load_hub(dcfg: dict, subsets: list[str]):
+def _load_hub(dcfg: dict, subsets: list[str], max_length: int | None = None):
     """Load dataset from Hugging Face Hub with pinned revision and splits."""
     hub_repo = dcfg.get("hf_hub_repo_id")
     logger.info("Loading hub dataset: repo=%s, subsets=%s", hub_repo, subsets)
@@ -588,8 +668,12 @@ def _load_hub(dcfg: dict, subsets: list[str]):
                 num_proc=dcfg.get("num_proc"),
             )
             datasets.append(
-                _filter_training_images(
-                    dataset, name, dcfg.get("max_train_images"),
+                _filter_training_tokens(
+                    _filter_training_images(
+                        dataset, name, dcfg.get("max_train_images"),
+                        num_proc=dcfg.get("num_proc"),
+                    ),
+                    name, max_length,
                     num_proc=dcfg.get("num_proc"),
                 )
             )
@@ -634,6 +718,9 @@ def _load_eval_datasets(config: dict) -> dict[str, Any]:
     revision = dcfg.get("revision", None)
     max_samples = tc.get("max_eval_samples_per_subset")
     eval_seed = tc.get("data_seed", 42)
+    max_length = tc.get("max_length")
+    max_images = dcfg.get("max_train_images")
+    num_proc = dcfg.get("num_proc")
     eval_datasets = {}
     
     for name in subsets:
@@ -651,6 +738,11 @@ def _load_eval_datasets(config: dict) -> dict[str, Any]:
         if ds_parts:
             from datasets import concatenate_datasets
             dataset = concatenate_datasets(ds_parts)
+            # Apply the same image and token filters as training so the
+            # processor contract is identical and no eval row triggers
+            # the _check_special_mm_tokens mismatch.
+            dataset = _filter_training_images(dataset, name, max_images, num_proc=num_proc)
+            dataset = _filter_training_tokens(dataset, name, max_length, num_proc=num_proc)
             eval_datasets[name] = _cap_eval_dataset(
                 dataset, max_samples=max_samples, seed=eval_seed,
             )
@@ -918,22 +1010,25 @@ def train(config: dict, args: Any = None) -> SFTTrainer:
 
     try:
         # The vision collator needs the processor wrapper's image_processor,
-        # not only its inner tokenizer. Keep a separate visual budget and
-        # preserve pre-rendered tile sizes: upscaling 320px spectrogram tiles
-        # to Gemma's 512px fallback creates avoidable image-token overflow.
+        # not only its inner tokenizer. The collator's max_seq_length matches
+        # SFTConfig.max_length so that the pre-collator token filter
+        # (_filter_training_tokens) and the collator's own truncation budget
+        # agree: examples that would overflow after image-token expansion are
+        # dropped before they reach the collator, preventing the Gemma4
+        # processor's _check_special_mm_tokens count-mismatch error.
         training_cfg = config.get("training", {})
-        collator_max_length = training_cfg.get("collator_max_length", 4096)
+        max_length = training_cfg["max_length"]
         collator_resize = training_cfg.get("collator_resize", "max")
         if loss_masking == "response_only":
             data_collator = CheckedUnslothCollator(
                 model, processor,
-                max_seq_length=collator_max_length,
+                max_seq_length=max_length,
                 resize=collator_resize,
             )
         else:
             data_collator = UnslothVisionDataCollator(
                 model, processor,
-                max_seq_length=collator_max_length,
+                max_seq_length=max_length,
                 resize=collator_resize,
             )
 

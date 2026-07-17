@@ -214,7 +214,7 @@ _Avoid_: shuffled training, random split, synthetic dataset when only the input-
 - Text rendering uses **DeepSeek-OCR-Style Text Packing** for both raw text and rendered instruction following.
 - Audio rendering uses **Whisper-Style Log-Mel Rendering** for speech transcription and Valor32k spectrograms.
 - LibriSpeech **Audio Transcription Image** training uses `clean/train.360`; held-out evaluation uses `clean/validation`.
-- LibriSpeech audio uses one to four **Fixed Audio Pages**, filters source audio longer than 40 seconds, and admits up to four training images under the 2,048-token **Multimodal Sequence Budget**.
+:- LibriSpeech audio uses one to four **Fixed Audio Pages**, filters source audio longer than 40 seconds, and admits up to four training images under the 8,192-token **Multimodal Sequence Budget** (raised from 2,048 after the Gemma4 image-token expansion fix).
 - Each rendered modality must pass a **Visual Decodability Gate** before its dataset is scaled or its performance is framed as competitive with a native pathway.
 - A **Visual Decodability Gate** compares correctly aligned held-out inputs against a **Modality-Permutation Control** and reports whether performance depends on the rendered content.
 

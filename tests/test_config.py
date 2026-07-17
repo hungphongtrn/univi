@@ -12,7 +12,7 @@ def test_config_defaults():
     from univi.config import resolve_config
 
     cfg = resolve_config("configs/3060_1epoch.yaml")
-    assert cfg["training"]["max_length"] == 2048
+    assert cfg["training"]["max_length"] == 8192
     assert "config_hash" in cfg
     assert isinstance(cfg["config_hash"], str)
     assert len(cfg["config_hash"]) == 64  # sha256 hex
@@ -82,7 +82,7 @@ def test_config_all_training_configs_load():
     for name in ["smoke", "3060_full", "3060_1epoch", "full"]:
         cfg = resolve_config(f"configs/{name}.yaml")
         assert "config_hash" in cfg
-        assert cfg["training"]["max_length"] == 2048
+        assert cfg["training"]["max_length"] == 8192
         assert cfg["dataset"]["max_train_images"] == 4
         assert "max_seq_length" not in cfg["training"]
 

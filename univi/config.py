@@ -77,7 +77,7 @@ def resolve_config(yaml_path: str, overrides: dict | None = None) -> dict:
     training.setdefault("packing", False)
     training.setdefault("eval_packing", False)
     training.setdefault("report_to", ["wandb"])
-    training.setdefault("max_length", 2048)
+    training.setdefault("max_length", 8192)
 
     # ---- Validate required keys ----
     missing = [k for k in REQUIRED_KEYS if _deep_get(cfg, k) is None]

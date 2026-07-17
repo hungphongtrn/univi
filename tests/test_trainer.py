@@ -1438,3 +1438,69 @@ def test_check_gpu_gate_cpu_safe():
     else:
         meta = check_gpu_gate()
         assert meta["cuda_available"] is True
+
+
+def test_filter_training_tokens_drops_overlength():
+    """_filter_training_tokens drops rows whose expanded length exceeds max_length.
+
+    Each image expands to ~282 tokens (280 soft + 2 delimiters) in the Gemma4
+    processor.  The filter must drop rows where
+    ``original_token_length + num_images * 282 + 256 > max_length`` while
+    retaining rows that fit.
+    """
+    from datasets import Dataset
+    from univi.trainer import _filter_training_tokens, _IMAGE_TOKEN_BUDGET, _TEMPLATE_TOKEN_OVERHEAD
+
+    # Construct a tiny dataset with known token lengths and image counts.
+    # Row 0: 100 tokens, 1 image  -> 100 + 282 + 256 = 638  (fits 8192)
+    # Row 1: 8000 tokens, 1 image -> 8000 + 282 + 256 = 8538 (overflows 8192)
+    # Row 2: 7000 tokens, 4 images -> 7000 + 1128 + 256 = 8384 (overflows 8192)
+    # Row 3: 100 tokens, 0 images -> 100 + 0 + 256 = 356    (fits)
+    # Row 4: -1 (unknown), 10 images -> retained (unknown length)
+    data = {
+        "original_token_length": [100, 8000, 7000, 100, -1],
+        "images": [
+            [b"\x89PNG fake"],
+            [b"\x89PNG fake"],
+            [b"\x89PNG fake"] * 4,
+            [],
+            [b"\x89PNG fake"] * 10,
+        ],
+        "messages": [[]] * 5,
+    }
+    ds = Dataset.from_dict(data)
+
+    filtered = _filter_training_tokens(ds, "test", 8192)
+
+    # Rows 0, 3, 4 should be retained; rows 1, 2 should be dropped.
+    assert len(filtered) == 3
+    assert filtered["original_token_length"] == [100, 100, -1]
+
+
+def test_filter_training_tokens_none_disables():
+    """When max_length is None, no filtering occurs."""
+    from datasets import Dataset
+    from univi.trainer import _filter_training_tokens
+
+    data = {
+        "original_token_length": [100, 99999],
+        "images": [[b"x"], [b"y"] * 100],
+        "messages": [[], []],
+    }
+    ds = Dataset.from_dict(data)
+    filtered = _filter_training_tokens(ds, "test", None)
+    assert len(filtered) == 2
+
+
+def test_filter_training_tokens_no_column_skips():
+    """When original_token_length column is missing, the filter is a no-op."""
+    from datasets import Dataset
+    from univi.trainer import _filter_training_tokens
+
+    data = {
+        "images": [[b"x"]],
+        "messages": [[]],
+    }
+    ds = Dataset.from_dict(data)
+    filtered = _filter_training_tokens(ds, "test", 8192)
+    assert len(filtered) == 1
