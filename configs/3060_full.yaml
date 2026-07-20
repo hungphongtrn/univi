@@ -7,8 +7,8 @@ model:
   max_lora_rank: 8
 
 lora:
-  r: 8
-  alpha: 16
+  r: 32
+  alpha: 64
   dropout: 0.0
   bias: "none"
   target_modules:
@@ -23,15 +23,14 @@ lora:
   finetune_language_layers: true
   finetune_attention_modules: true
   finetune_mlp_modules: true
-  use_rslora: false
+  use_rslora: true
   finetune_audio_layers: false
 
 training:
-  per_device_train_batch_size: 1
+  per_device_train_batch_size: 4
   gradient_accumulation_steps: 4
   # max_steps removed — using num_train_epochs=1 (SFTConfig default) for a full pass
-  # WARNING: 1 epoch = ~732,893 steps × ~25s/step ≈ 212 days on this hardware.
-  # Consider a GPU upgrade or subsampling before attempting this.
+  # WARNING: 1 epoch = ~183,224 steps on this config (batch_size=4, grad_accum=4).
   # max_steps: 500  # old cap that truncated to 2k samples
   max_length: 8192
   learning_rate: 2.0e-4
@@ -42,13 +41,14 @@ training:
   max_grad_norm: 1.0
   optim: "adamw_8bit"
   logging_steps: 10
-  save_steps: 100
+  save_steps: 200
   eval_strategy: "steps"
-  eval_steps: 100
+  eval_steps: 200
   eval_on_start: true
-  max_eval_samples_per_subset: 64
+  max_eval_samples_per_subset: 160
+  # max_eval_samples_per_subset removed — run full evaluation
   prediction_loss_only: true
-  output_dir: "data/checkpoints/3060-full-v0"
+  output_dir: "data/checkpoints/full-v0"
   report_to: ["wandb"]
   remove_unused_columns: false
   dataloader_num_workers: 0
@@ -63,7 +63,7 @@ training:
   load_best_model_at_end: true
   seed: 3407
   data_seed: 42
-  per_device_eval_batch_size: 1
+  per_device_eval_batch_size: 16
   eval_accumulation_steps: 1
   validation_subsets:
     - "fineweb-edu"
@@ -98,13 +98,13 @@ dataset:
 # Falls to disabled mode (no-op) when no credentials are available.
 wandb:
   project: "univi-gemma4"
-  run_name_template: "3060-full-v0_{config_hash_short}"
+  run_name_template: "full-v0_{config_hash_short}"
 
 smoke:
   max_steps: 10
   dataset_path: "data/materialized/smoke-v1"
-  output_dir: "data/checkpoints/3060-full-smoke-v0"
-  run_name_template: "3060-full-smoke-v0_{config_hash_short}"
+  output_dir: "data/checkpoints/full-smoke-v0"
+  run_name_template: "full-smoke-v0_{config_hash_short}"
 
 hub:
-  model_repo_id: "hungphongtrn/univi-phase0-3060-full-model-v0"
+  model_repo_id: "hungphongtrn/univi-phase0-full-model-v0"
