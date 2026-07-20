@@ -1,0 +1,16 @@
+# configs/val_ablation.yaml — visual-grounding ablation against the existing
+# per-subset validation splits in data/materialized/univi-3M-v0-split (no
+# separate eval-v0 materialization needed). Used by eval_ablation.py.
+base_model: "unsloth/gemma-4-E2B-it"
+checkpoint_path: "data/checkpoints/full-v0/checkpoint-2800"  # protected best-model checkpoint
+eval_datasets:
+  librispeech: "data/materialized/univi-3M-v0-split/librispeech/validation"
+  densefusion: "data/materialized/univi-3M-v0-split/densefusion/validation"
+  fineweb: "data/materialized/univi-3M-v0-split/fineweb-edu/validation"
+  smoltalk: "data/materialized/univi-3M-v0-split/smoltalk/validation"
+output: "data/eval/val-ablation/results.json"
+# generation block is ignored by eval_ablation (loss-only), kept for eval_lane compatibility.
+generation:
+  max_new_tokens: 256
+  temperature: 0.0
+  do_sample: false

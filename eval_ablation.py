@@ -113,31 +113,39 @@ def evaluate_model_source(
     import torch
 
     per_row: list[dict] = []
+    skipped = 0
     with torch.no_grad():
         for i, row in enumerate(rows):
             base_messages = row["messages"]
             entry: dict[str, float] = {}
-
-            # aligned is always computed — it is the baseline for every delta
-            entry["aligned"] = compute_loss(
-                model, tokenizer, _merge_images(base_messages, row.get("images", []))
-            )
-
-            if "permuted" in lanes and permuted_images[i] is not None:
-                entry["permuted"] = compute_loss(
-                    model, tokenizer, _merge_images(base_messages, permuted_images[i])
+            # All lanes for a row are computed together; if any lane errors
+            # (e.g. an oversized multi-image row that exceeds context), the whole
+            # row is dropped so the paired deltas stay consistent.
+            try:
+                # aligned is always computed — it is the baseline for every delta
+                entry["aligned"] = compute_loss(
+                    model, tokenizer, _merge_images(base_messages, row.get("images", []))
                 )
 
-            if "blank" in lanes:
-                entry["blank"] = compute_loss(
-                    model, tokenizer, _merge_images(base_messages, blank_images[i])
-                )
+                if "permuted" in lanes and permuted_images[i] is not None:
+                    entry["permuted"] = compute_loss(
+                        model, tokenizer, _merge_images(base_messages, permuted_images[i])
+                    )
+
+                if "blank" in lanes:
+                    entry["blank"] = compute_loss(
+                        model, tokenizer, _merge_images(base_messages, blank_images[i])
+                    )
+            except Exception:
+                skipped += 1
+                continue
 
             per_row.append(entry)
 
     aligned = [r["aligned"] for r in per_row]
     result = {
         "n": len(per_row),
+        "skipped": skipped,
         "aligned": _mean(aligned),
     }
 
@@ -191,6 +199,7 @@ def run_ablation(
     sources: list[str],
     lanes: list[str],
     include_base: bool,
+    seed: int | None = 3407,
 ) -> dict:
     paths = _source_paths(config, sources)
 
@@ -199,7 +208,17 @@ def run_ablation(
     prepared: dict[str, dict] = {}
     for name, path in paths.items():
         try:
-            rows = list(load_source_dataset(path))[:max_samples]
+            ds = load_source_dataset(path)
+            # Sample BEFORE materializing — these validation splits hold 100k+
+            # rows and list(ds) would decode every image. Shuffle (seeded) so a
+            # bounded sample is representative rather than a biased head slice.
+            if seed is not None and hasattr(ds, "shuffle"):
+                ds = ds.shuffle(seed=seed)
+            if hasattr(ds, "select"):
+                ds = ds.select(range(min(max_samples, len(ds))))
+                rows = list(ds)
+            else:  # already a plain list (tests / custom loaders)
+                rows = list(ds)[:max_samples]
         except Exception as exc:  # missing/unreadable dataset → skip, don't abort
             print(f"[skip] {name}: could not load {path} ({exc})", flush=True)
             continue
@@ -281,10 +300,12 @@ def print_report(results: dict) -> None:
             m = models.get(mk)
             if not m:
                 continue
+            skip = m.get("skipped") or 0
+            note = f"   (n={m.get('n')}, skipped {skip})" if skip else f"   (n={m.get('n')})"
             print(
                 f"    {mk:8} {_fmt(m.get('aligned')):>9} {_fmt(m.get('permuted')):>9} "
                 f"{_fmt(m.get('delta_permuted')):>8} {_fmt(m.get('rel_permuted')):>7} "
-                f"{_fmt(m.get('blank')):>9} {_fmt(m.get('delta_blank')):>8}"
+                f"{_fmt(m.get('blank')):>9} {_fmt(m.get('delta_blank')):>8}{note}"
             )
         te = models.get("training_effect_permuted")
         if te is not None:
@@ -308,6 +329,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--sources", default=None, help="Comma list subset of: " + ",".join(_SOURCES))
     parser.add_argument("--lanes", default="permuted,blank", help="Corruption lanes to run (aligned is always the baseline).")
     parser.add_argument("--no-base", action="store_true", help="Skip the base model (trained checkpoint only).")
+    parser.add_argument("--seed", type=int, default=3407, help="Shuffle seed for row sampling; pass -1 to take the first-N rows unshuffled.")
     parser.add_argument("--output", default=None, help="Override output JSON path.")
     args = parser.parse_args(argv)
 
@@ -324,6 +346,7 @@ def main(argv: list[str] | None = None) -> None:
         sources=sources,
         lanes=lanes,
         include_base=not args.no_base,
+        seed=None if args.seed < 0 else args.seed,
     )
 
     print_report(results)
