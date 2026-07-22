@@ -1,0 +1,17 @@
+SWEEP_RUN base unsloth/gemma-4-E2B-it
+[base] [data] 24 clips; durations 2.2-9.6s
+[base]   deep band (L28-34): aligned=0.610 permuted=0.608 Δ=0.003
+[base]   best Δ layer = 4  (Δ=0.145, aligned=0.549)
+SWEEP_RUN 200 data/checkpoints/audio-only-v0/checkpoint-200
+[200] [data] 24 clips; durations 2.2-9.6s
+[200]   deep band (L28-34): aligned=-0.148 permuted=-0.153 Δ=0.004
+[200]   best Δ layer = 4  (Δ=0.127, aligned=-0.064)
+SWEEP_RUN 400 data/checkpoints/audio-only-v0/checkpoint-400
+[400] [data] 24 clips; durations 2.2-9.6s
+[400]   deep band (L28-34): aligned=0.060 permuted=-0.038 Δ=0.098
+[400]   best Δ layer = 30  (Δ=0.221, aligned=0.250)
+SWEEP_RUN 600 data/checkpoints/audio-only-v0/checkpoint-600
+[600] [data] 24 clips; durations 2.2-9.6s
+[600]   deep band (L28-34): aligned=0.151 permuted=0.078 Δ=0.072
+[600]   best Δ layer = 3  (Δ=0.190, aligned=0.046)
+SWEEP_DONE

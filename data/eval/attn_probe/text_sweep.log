@@ -1,0 +1,11 @@
+TEXTSWEEP base unsloth/gemma-4-E2B-it
+[base] [data] 24 single-image fineweb rows (<= 1400 chars)
+[base]   deep band L28-34: aligned=0.191 permuted=0.215 Δ=-0.024
+[base]   all layers        : aligned=0.061 permuted=0.047 Δ=0.014
+[base]   best Δ layer = 4 (Δ=0.459, aligned=0.601)
+TEXTSWEEP 2800 data/checkpoints/full-v0/checkpoint-2800
+[2800] [data] 24 single-image fineweb rows (<= 1400 chars)
+[2800]   deep band L28-34: aligned=0.328 permuted=0.103 Δ=0.225
+[2800]   all layers        : aligned=0.318 permuted=0.031 Δ=0.286
+[2800]   best Δ layer = 18 (Δ=0.677, aligned=0.415)
+TEXTSWEEP_DONE
