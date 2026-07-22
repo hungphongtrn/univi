@@ -1,0 +1,96 @@
+{
+  "test_type": "visual_decodability_gate_comprehensive",
+  "render_method": "librispeech_production_params",
+  "inversion_method": "lanczos_resize_griffin_lim",
+  "num_tests": 3,
+  "render_params": {
+    "output_width": 1000,
+    "output_height": 160,
+    "n_mels": 80,
+    "n_fft": 400,
+    "hop_length": 160,
+    "window": "hann",
+    "power": 2.0
+  },
+  "aggregate_metrics": {
+    "mean_mel_correlation": 0.8097154053755844,
+    "min_mel_correlation": 0.573154412004246,
+    "mean_audio_snr_db": -0.8987641781568527,
+    "min_audio_snr_db": -2.2216272354125977,
+    "mean_spectral_centroid_error_hz": 142.18338695197883
+  },
+  "test_results": [
+    {
+      "test_id": "chirp_200_4000hz",
+      "duration_sec": 10.0,
+      "sample_rate": 16000,
+      "mel_original_shape": [
+        80,
+        1000
+      ],
+      "mel_recovered_shape": [
+        80,
+        1000
+      ],
+      "mel_mse": 8.181352615356445,
+      "mel_mae": 2.4585821628570557,
+      "mel_correlation": 0.8918683316844235,
+      "audio_mse": 0.1342768371105194,
+      "audio_correlation": -0.00908046611630084,
+      "audio_snr_db": -0.31093811988830566,
+      "spectral_centroid_ref": 2097.4717018891392,
+      "spectral_centroid_recovered": 2201.2179176892087,
+      "spectral_centroid_error": 103.74621580006942
+    },
+    {
+      "test_id": "formant_sweep",
+      "duration_sec": 10.0,
+      "sample_rate": 16000,
+      "mel_original_shape": [
+        80,
+        1000
+      ],
+      "mel_recovered_shape": [
+        80,
+        1000
+      ],
+      "mel_mse": 3.5551836490631104,
+      "mel_mae": 1.3251540660858154,
+      "mel_correlation": 0.9641234724380835,
+      "audio_mse": 0.07172879576683044,
+      "audio_correlation": -0.011851076209315978,
+      "audio_snr_db": -2.2216272354125977,
+      "spectral_centroid_ref": 639.5837290495083,
+      "spectral_centroid_recovered": 913.6158474469739,
+      "spectral_centroid_error": 274.03211839746564
+    },
+    {
+      "test_id": "chirp_100_1000hz",
+      "duration_sec": 5.0,
+      "sample_rate": 16000,
+      "mel_original_shape": [
+        80,
+        500
+      ],
+      "mel_recovered_shape": [
+        80,
+        1000
+      ],
+      "mel_mse": 10.422115325927734,
+      "mel_mae": 2.872572183609009,
+      "mel_correlation": 0.573154412004246,
+      "audio_mse": 0.12980075180530548,
+      "audio_correlation": 0.0006700877591093478,
+      "audio_snr_db": -0.16372717916965485,
+      "spectral_centroid_ref": 551.4776146510011,
+      "spectral_centroid_recovered": 502.70578799259965,
+      "spectral_centroid_error": 48.77182665840144
+    }
+  ],
+  "verdict": {
+    "mel_preservation": "POOR",
+    "audio_reconstruction": "POOR",
+    "overall": "FAIL",
+    "description": "Mel signal preservation is POOR (corr=0.8097). Audio reconstruction is POOR (SNR=-0.9dB)."
+  }
+}

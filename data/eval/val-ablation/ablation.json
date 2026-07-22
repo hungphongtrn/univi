@@ -1,0 +1,131 @@
+{
+  "checkpoint": "data/checkpoints/full-v0/checkpoint-2800",
+  "base_model": "unsloth/gemma-4-E2B-it",
+  "max_samples": 120,
+  "lanes": [
+    "permuted",
+    "blank"
+  ],
+  "per_source": {
+    "librispeech": {
+      "base": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 6.229694267114003,
+        "permuted": 6.236872184176405,
+        "delta_permuted": -0.004173206681964778,
+        "rel_permuted": -0.0006686710992484564,
+        "n_permuted": 119,
+        "blank": 6.123456684748332,
+        "delta_blank": -0.1062375823656718,
+        "rel_blank": -0.017053418323671268,
+        "n_blank": 120
+      },
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 4.498723117510478,
+        "permuted": 4.512951510293143,
+        "delta_permuted": 0.007249142943310137,
+        "rel_permuted": 0.0016088818906105293,
+        "n_permuted": 119,
+        "blank": 4.393161058425903,
+        "delta_blank": -0.10556205908457438,
+        "rel_blank": -0.023464893554727313,
+        "n_blank": 120
+      },
+      "training_effect_permuted": 0.011422349625274913,
+      "flag": "IGNORES IMAGE"
+    },
+    "densefusion": {
+      "base": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 2.9616898079713185,
+        "permuted": 3.550908448298772,
+        "delta_permuted": 0.5892186403274536,
+        "rel_permuted": 0.19894677651305195,
+        "n_permuted": 120,
+        "blank": 3.4184474110603333,
+        "delta_blank": 0.4567576030890147,
+        "rel_blank": 0.1542219586466018,
+        "n_blank": 120
+      },
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 1.3263652791579565,
+        "permuted": 2.1622064620256425,
+        "delta_permuted": 0.8358411828676859,
+        "rel_permuted": 0.6301742031413247,
+        "n_permuted": 120,
+        "blank": 2.0297663778066637,
+        "delta_blank": 0.703401098648707,
+        "rel_blank": 0.5303223099260118,
+        "n_blank": 120
+      },
+      "training_effect_permuted": 0.2466225425402323,
+      "flag": "uses image"
+    },
+    "fineweb": {
+      "base": {
+        "n": 116,
+        "skipped": 4,
+        "aligned": 0.9048691006570027,
+        "permuted": 3.9734021363587213,
+        "delta_permuted": 3.068533035701719,
+        "rel_permuted": 3.391134732607992,
+        "n_permuted": 116,
+        "blank": 3.729083616158058,
+        "delta_blank": 2.824214515501055,
+        "rel_blank": 3.121130463456498,
+        "n_blank": 116
+      },
+      "trained": {
+        "n": 116,
+        "skipped": 4,
+        "aligned": 0.45723050267531956,
+        "permuted": 3.084652596506579,
+        "delta_permuted": 2.62742209383126,
+        "rel_permuted": 5.746384107048515,
+        "n_permuted": 116,
+        "blank": 2.881695336308973,
+        "delta_blank": 2.424464833633653,
+        "rel_blank": 5.302500203831045,
+        "n_blank": 116
+      },
+      "training_effect_permuted": -0.4411109418704591,
+      "flag": "uses image"
+    },
+    "smoltalk": {
+      "base": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 2.810551912585894,
+        "permuted": 3.1331335216009317,
+        "delta_permuted": 0.33525208765719117,
+        "rel_permuted": 0.11982355063010594,
+        "n_permuted": 119,
+        "blank": 3.0990120162566503,
+        "delta_blank": 0.28846010367075603,
+        "rel_blank": 0.10263468266820007,
+        "n_blank": 120
+      },
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 1.5723180800676346,
+        "permuted": 2.166562464557776,
+        "delta_permuted": 0.6023800778789681,
+        "rel_permuted": 0.385108592839987,
+        "n_permuted": 119,
+        "blank": 1.9895941247542699,
+        "delta_blank": 0.4172760446866353,
+        "rel_blank": 0.26538907742426127,
+        "n_blank": 120
+      },
+      "training_effect_permuted": 0.2671279902217769,
+      "flag": "uses image"
+    }
+  }
+}

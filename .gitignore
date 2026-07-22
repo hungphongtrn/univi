@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+data/materialized/
+data/checkpoints/
+unsloth_compiled_cache/
+wandb/
+logs/
+.omp/
+data/smoke/
+data/validation/
+
+# Downloaded eval artifacts (curled locally, not source)
+data/eval/decodability/LibriSpeech/
+data/eval/decodability/test-clean.tar.gz
+data/eval/decodability/whisper-tiny.en/

@@ -1,0 +1,75 @@
+{
+  "checkpoint": "data/checkpoints/full-v0/checkpoint-19600",
+  "base_model": "unsloth/gemma-4-E2B-it",
+  "max_samples": 120,
+  "lanes": [
+    "permuted",
+    "blank"
+  ],
+  "per_source": {
+    "librispeech": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 5.088387699921926,
+        "permuted": 5.099199178839932,
+        "delta_permuted": 0.0033281871250697543,
+        "rel_permuted": 0.00065311447846323,
+        "n_permuted": 119,
+        "blank": 5.001749924818674,
+        "delta_blank": -0.08663777510325114,
+        "rel_blank": -0.017026567198207103,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "densefusion": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 1.5328106880187988,
+        "permuted": 2.196653751532237,
+        "delta_permuted": 0.6638430635134379,
+        "rel_permuted": 0.4330887491210502,
+        "n_permuted": 120,
+        "blank": 2.0316068649291994,
+        "delta_blank": 0.4987961769104004,
+        "rel_blank": 0.3254127732858573,
+        "n_blank": 120
+      },
+      "flag": "uses image"
+    },
+    "fineweb": {
+      "trained": {
+        "n": 116,
+        "skipped": 4,
+        "aligned": 0.39859276110755987,
+        "permuted": 3.5678441216205727,
+        "delta_permuted": 3.169251360513013,
+        "rel_permuted": 7.951101148216271,
+        "n_permuted": 116,
+        "blank": 3.4000343330975236,
+        "delta_blank": 3.0014415719899636,
+        "rel_blank": 7.530095538237905,
+        "n_blank": 116
+      },
+      "flag": "uses image"
+    },
+    "smoltalk": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 1.8526375869909921,
+        "permuted": 2.4686305392690064,
+        "delta_permuted": 0.6254410633519918,
+        "rel_permuted": 0.3393254310118201,
+        "n_permuted": 119,
+        "blank": 2.087971174220244,
+        "delta_blank": 0.23533358722925185,
+        "rel_blank": 0.12702624025429324,
+        "n_blank": 120
+      },
+      "flag": "uses image"
+    }
+  }
+}

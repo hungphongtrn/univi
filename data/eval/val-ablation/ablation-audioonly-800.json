@@ -1,0 +1,75 @@
+{
+  "checkpoint": "data/checkpoints/audio-only-v0/checkpoint-800",
+  "base_model": "unsloth/gemma-4-E2B-it",
+  "max_samples": 120,
+  "lanes": [
+    "permuted",
+    "blank"
+  ],
+  "per_source": {
+    "librispeech": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 5.440803114573161,
+        "permuted": 5.522453668738613,
+        "delta_permuted": 0.06950881100502335,
+        "rel_permuted": 0.012747022538920983,
+        "n_permuted": 119,
+        "blank": 5.6226135472456615,
+        "delta_blank": 0.1818104326725006,
+        "rel_blank": 0.03341610215328733,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "densefusion": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 2.8173718551794686,
+        "permuted": 2.8178417722384137,
+        "delta_permuted": 0.0004699170589447021,
+        "rel_permuted": 0.0001667927001119162,
+        "n_permuted": 120,
+        "blank": 2.804343756039937,
+        "delta_blank": -0.013028099139531454,
+        "rel_blank": -0.004624202912931263,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "fineweb": {
+      "trained": {
+        "n": 116,
+        "skipped": 4,
+        "aligned": 3.6475939627351432,
+        "permuted": 3.6455317345158806,
+        "delta_permuted": -0.002062228219262485,
+        "rel_permuted": -0.0005653667157942454,
+        "n_permuted": 116,
+        "blank": 3.583179769844844,
+        "delta_blank": -0.06441419289029877,
+        "rel_blank": -0.01765936492613281,
+        "n_blank": 116
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "smoltalk": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 2.8238389949003855,
+        "permuted": 2.814654585694065,
+        "delta_permuted": 0.0014058692114693777,
+        "rel_permuted": 0.0004997315748275311,
+        "n_permuted": 119,
+        "blank": 2.738572825988134,
+        "delta_blank": -0.08526616891225179,
+        "rel_blank": -0.030195124108079563,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    }
+  }
+}

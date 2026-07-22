@@ -1,0 +1,216 @@
+================================================================================
+VISUAL DECODABILITY GATE - METRICS SUMMARY
+================================================================================
+
+COMPREHENSIVE TEST RESULTS (synthetic signals)
+Created: 2026-07-21
+
+================================================================================
+MEL SPECTROGRAM PRESERVATION
+================================================================================
+
+Metric                              Value        Assessment
+────────────────────────────────────────────────────────────────────────────
+Log-mel correlation (mean)          0.8097       ACCEPTABLE
+Log-mel correlation (min)           0.5732       POOR (5s clip)
+Log-mel correlation (max)           0.9641       EXCELLENT (10s clip)
+
+Log-mel MSE (mean)                  7.5862       Moderate distortion
+Log-mel MAE (mean)                  2.1870 dB    ~2.2 dB average error
+
+Pixel quantization fidelity         0.994        EXCELLENT (no resize)
+Time-axis mismatch penalty          -0.35        Severe for <10s clips
+
+================================================================================
+AUDIO RECONSTRUCTION (Griffin-Lim)
+================================================================================
+
+Metric                              Value        Assessment
+────────────────────────────────────────────────────────────────────────────
+Signal-to-Noise Ratio (mean)       -0.90 dB     FAILURE
+Signal-to-Noise Ratio (min)        -2.22 dB     FAILURE
+Signal-to-Noise Ratio (max)        -0.16 dB     FAILURE
+
+Audio correlation (mean)            -0.006       NO SIGNAL
+Audio MSE (mean)                    0.1138       Reconstructed ≠ original
+
+Spectral centroid error (mean)      142.2 Hz     Significant
+Spectral centroid error (max)       274.0 Hz     Very large distortion
+
+================================================================================
+TEST-BY-TEST BREAKDOWN
+================================================================================
+
+[TEST 1] Chirp 200-4000 Hz (10.0s) - MATCHES PRODUCTION DURATION
+  Duration:                 10.00 s
+  Mel shape (original):     (80, 1000)
+  Mel shape (recovered):    (80, 1000) ✓ MATCH
+  ──────────────────────────────────────────────
+  Mel correlation:          0.8919   (GOOD)
+  Mel MSE:                  8.1814   (Moderate)
+  Mel MAE:                  2.4586 dB
+  Audio SNR:               -0.31 dB  (FAIL)
+  Audio correlation:       -0.0091   (Noise)
+  Spectral error:          103.7 Hz
+
+[TEST 2] Formant Sweep (10.0s) - MATCHES PRODUCTION DURATION
+  Duration:                 10.00 s
+  Mel shape (original):     (80, 1000)
+  Mel shape (recovered):    (80, 1000) ✓ MATCH
+  ──────────────────────────────────────────────
+  Mel correlation:          0.9641   (EXCELLENT)
+  Mel MSE:                  3.5552   (Good)
+  Mel MAE:                  1.3252 dB
+  Audio SNR:               -2.22 dB  (FAIL)
+  Audio correlation:       -0.0119   (Noise)
+  Spectral error:          274.0 Hz
+
+[TEST 3] Chirp 100-1000 Hz (5.0s) - VARIABLE DURATION
+  Duration:                 5.00 s
+  Mel shape (original):     (80, 500)
+  Mel shape (recovered):    (80, 1000) ✗ MISMATCH (2× stretch!)
+  ──────────────────────────────────────────────
+  Mel correlation:          0.5732   (POOR - time-axis error)
+  Mel MSE:                  10.4221  (High)
+  Mel MAE:                  2.8726 dB
+  Audio SNR:               -0.16 dB  (FAIL)
+  Audio correlation:        0.0007   (Noise)
+  Spectral error:          48.8 Hz
+
+================================================================================
+ARCHITECTURAL ISSUES IDENTIFIED
+================================================================================
+
+Issue 1: FIXED OUTPUT DIMENSIONS
+  Problem: output_width=1000, output_height=160 assumed for 10s clips
+  Impact:  5s clips get time-axis stretched 2×, causing poor recovery
+  Severity: HIGH
+  Fix: Use dynamic output_width = round(clip_duration / 10.0 * 1000)
+
+Issue 2: FREQUENCY STRETCHING
+  Problem: output_height=160 stretches frequency from 80 → 160
+  Impact: Double interpolation (up then down) introduces artifacts
+  Severity: MEDIUM
+  Fix: Use output_height=80 to preserve frequency resolution
+
+Issue 3: GRIFFIN-LIM PHASE RECOVERY
+  Problem: Griffin-Lim fails to recover phase from distorted mel
+  Impact: Reconstructed waveform is noise (SNR < 0 dB)
+  Severity: CRITICAL
+  Fix: Use mel-direct route (mel → Whisper decoder) or better vocoder
+
+================================================================================
+COMPARISON: EXPECTED vs ACTUAL
+================================================================================
+
+For 10s clips (matching production duration):
+                          Expected    Actual    Gap
+────────────────────────────────────────────────────
+Mel correlation          > 0.90      0.89-0.96  ✓ MET
+Audio reconstruction     viable      FAILED     ✗ NOT MET
+Spectral fidelity        good        ±100-270Hz ✗ NOT MET
+
+For 5s clips (variable duration):
+                          Expected    Actual    Gap
+────────────────────────────────────────────────────
+Mel correlation          > 0.90      0.57       ✗ NOT MET (time-axis)
+Audio reconstruction     viable      FAILED     ✗ NOT MET
+Spectral fidelity        good        ±50Hz      ? DEPENDENT
+
+================================================================================
+ROOT CAUSE ANALYSIS
+================================================================================
+
+GATE VERDICT: FAIL
+
+WHY IT FAILS:
+  1. Griffin-Lim cannot recover phase from distorted mels (PRIMARY)
+  2. Time-axis mismatch for non-10s clips (SECONDARY)
+  3. Frequency interpolation artifacts (MINOR)
+
+WHY MEL IS GOOD:
+  • PNG encoding: 0.994 correlation (excellent)
+  • Pixel quantization: Acceptable at log-scale
+  • Resize before Griffin-Lim: 0.89-0.96 correlation (good)
+
+THE BOTTLENECK:
+  Phase reconstruction via Griffin-Lim
+  → Cannot recover meaningful phase from distorted magnitude spectrum
+  → Results in noise instead of signal
+
+================================================================================
+DECISION FOR TRAINING
+================================================================================
+
+QUESTION: Is rendering preventing audio training from succeeding?
+
+EVIDENCE:
+  ✓ Mel preservation is GOOD (0.89-0.96 correlation)
+  ✓ Pixel encoding is EXCELLENT (0.994 correlation)
+  ✗ Audio reconstruction is FAILED (SNR < 0 dB)
+
+INTERPRETATION:
+  Rendering itself is NOT the bottleneck IF:
+  • E2B model is trained on mel-scale features (not audio waveforms)
+  • Whisper-like models work with mel input directly
+
+  Rendering COULD be the bottleneck IF:
+  • E2B model requires high-fidelity audio reconstruction
+  • Current pipeline implies Griffin-Lim reconstruction for Whisper
+
+RECOMMENDATION:
+  Test mel-direct route (mel → Whisper decoder) to definitively answer
+  whether rendering is the limiting factor.
+
+================================================================================
+NEXT MEASUREMENT POINTS
+================================================================================
+
+Critical unknown: WER on actual LibriSpeech after render-recover
+
+Need to measure:
+  1. Ceiling WER: Whisper on raw audio
+  2. Gate WER: Whisper on rendered+recovered audio
+  3. Gap = Gate WER - Ceiling WER
+
+To get answer:
+  • Run: uv run python data/eval/decodability/run_gate_test.py --max-clips 30
+  • Requires: LibriSpeech dataset (will auto-download)
+  • Requires: Whisper model (will auto-download)
+  • Expected runtime: 30-60 minutes on A100
+  • Expected WER gap: TBD (this test is pending)
+
+================================================================================
+REFERENCES
+================================================================================
+
+Production rendering:
+  data/preprocessing/render_utils.py      (pixel encoding)
+  data/preprocessing/librispeech_asr.py   (production params)
+
+Evaluation framework:
+  eval_lane.py                            (image vs native comparison)
+  eval_ablation.py                        (grounding ablation)
+  univi/evaluation.py                     (eval metrics)
+
+This test:
+  data/eval/decodability/final_gate_test.py
+  data/eval/decodability/comprehensive_gate_results.json
+
+Documentation:
+  data/eval/decodability/EXECUTIVE_SUMMARY.txt
+  data/eval/decodability/RESULTS.md
+  data/eval/decodability/README.md
+
+================================================================================
+STATUS: EXPERIMENT COMPLETE
+================================================================================
+
+Test suite: PASSED (synthetic signals)
+Results: NEGATIVE (Griffin-Lim fails)
+Impact: MEL PRESERVATION IS GOOD, PHASE RECOVERY IS BAD
+Recommendation: PURSUE MEL-DIRECT ROUTE
+
+Next step: Test Whisper mel decoder directly, avoid Griffin-Lim
+
+================================================================================

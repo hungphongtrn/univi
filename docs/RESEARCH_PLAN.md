@@ -98,7 +98,7 @@ Training follows the Unsloth Gemma 4 multimodal fine-tuning guide at `https://un
 - Phase 0 training uses ASR, text-image description, text-compressed raw text, text-compressed instruction following, and Valor32k.
 - ASR source: `openslr/librispeech_asr`, rendered as log-mel spectrogram images.
 - Text-image description source: `BAAI/DenseFusion-1M` subset.
-- Text-compressed raw text source: `HuggingFaceFW/fineweb-edu` packed into images with raw text as the target.
+- Text-compressed raw text source: `HuggingFaceFW/fineweb-edu` config `sample-10BT` packed into images with raw text as the target.
 - Text-compressed instruction-following source: `HuggingFaceTB/smoltalk` rendered instruction images with response text as the target.
 - Valor32k-AVQA v2.0 remains the tri-modal QA source because it has video, audio, text QA, and per-question modality labels; use train for training only and reserve validation/test for evaluation.
 - Current fallback: JointAVBench because it has released clips, Apache 2.0 repository license, and questions designed to require joint audio-visual reasoning.

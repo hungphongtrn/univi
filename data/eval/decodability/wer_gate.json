@@ -1,0 +1,22 @@
+{
+  "model": "/workspace/univi/data/eval/decodability/whisper-tiny.en",
+  "n_clips": 30,
+  "max_dur_s": 10.0,
+  "render": {
+    "output_width": 1000,
+    "output_height": 160,
+    "page_duration_sec": 10.0
+  },
+  "mean_dur_s": 4.92,
+  "wer": {
+    "native": 0.0375,
+    "control": 0.0375,
+    "gate": 0.0375
+  },
+  "ref_words": {
+    "native": 373,
+    "control": 373,
+    "gate": 373
+  },
+  "verdict": "LEARNABILITY-LIMITED: render preserves phonetics (gate ~= control); failure is training-side."
+}

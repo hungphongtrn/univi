@@ -1,0 +1,93 @@
+# configs/smoke.yaml — RTX 3060 smoke run.
+model:
+  name: "unsloth/gemma-4-E2B-it"
+  revision: "4abfca14e6c6bfb5888b80288185b1243fb8d539"
+  load_in_4bit: true
+  use_gradient_checkpointing: "unsloth"
+  max_lora_rank: 8
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.0
+  bias: "none"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  finetune_vision_layers: true
+  finetune_language_layers: true
+  finetune_attention_modules: true
+  finetune_mlp_modules: true
+  use_rslora: false
+  finetune_audio_layers: false
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4
+  max_steps: 10
+  max_length: 8192
+  learning_rate: 2.0e-4
+  warmup_ratio: 0.03
+  warmup_steps: 0
+  lr_scheduler_type: "cosine"
+  optim: "adamw_8bit"
+  weight_decay: 0.001
+  max_grad_norm: 1.0
+  logging_steps: 5
+  save_steps: 10
+  eval_strategy: "steps"
+  eval_steps: 10
+  output_dir: "data/checkpoints/smoke-v0"
+  report_to: ["wandb"]
+  remove_unused_columns: false
+  dataloader_num_workers: 0
+  packing: false
+  eval_packing: false
+  loss_masking: "response_only"
+  gradient_checkpointing: true
+  include_num_input_tokens_seen: "non_padding"
+  save_total_limit: 3
+  seed: 3407
+  data_seed: 42
+  per_device_eval_batch_size: 1
+  eval_accumulation_steps: 1
+  validation_subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+
+dataset:
+  path: "data/materialized/smoke-v0"
+  max_train_images: 4
+  revision: "5e05ffab5742acce5cb9a1c0e9ba2fc2cb35c375"
+  hf_hub_repo_id: "hungphongtrn/univi-phase0-dataset-smoke-v0"
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+  validation_splits:
+    fineweb-edu: ["validation"]
+    librispeech: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+  shuffle_seed: 42
+
+wandb:
+  project: "univi-gemma4"
+  entity: null
+  run_name_template: "smoke-v0_{config_hash_short}"
+
+hub:
+  model_repo_id: "hungphongtrn/univi-phase0-smoke-model-v0"

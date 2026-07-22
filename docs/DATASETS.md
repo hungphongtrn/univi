@@ -8,17 +8,17 @@ Phase 0 fine-tunes Gemma 4 on the datasets below. All answer-bearing inputs are 
 
 ### 1. ASR: LibriSpeech As Log-Mel Images
 
-- Source: `openslr/librispeech_asr`.
-- Preprocessing: convert audio to log-mel spectrogram images.
-- Task: present a spectrogram image; output the spoken transcript.
-- Input: spectrogram image first, then a short instruction such as `Transcribe the speech represented by this spectrogram image.`
-- Target: transcript text.
-- Initial size: TBD.
+- Source: `openslr/librispeech_asr`, config `clean`; use `train.360` for training and `validation` for held-out evaluation.
+- Preprocessing: convert complete clips of at most 40 seconds into one to four chronological ten-second 1000 × 160 log-mel images.
+- Task: present the ordered spectrogram images and output the spoken transcript.
+- Input: all spectrogram pages first, then `Transcribe the speech represented by this spectrogram image.`
+- Target: complete transcript text.
+- Selected size: up to 104,014 source training rows and 2,703 validation rows before the 40-second duration filter.
 - Failure criterion: held-out spectrogram-to-transcript examples do not improve over the base model.
 
 ### 2. Text-Image Description
 
-- Source: `BAAI/DenseFusion-1M` subset.
+- Source: `HuggingFaceM4/FineVision`, config `densefusion_1m`.
 - Task: present an image with text or visually grounded content; output the paired description.
 - Input: image first, then a short instruction such as `Describe this image.`
 - Target: description/caption text.
@@ -27,7 +27,7 @@ Phase 0 fine-tunes Gemma 4 on the datasets below. All answer-bearing inputs are 
 
 ### 3. Text-Compressed Raw Text
 
-- Source: `HuggingFaceFW/fineweb-edu`.
+- Source: `HuggingFaceFW/fineweb-edu`, config `sample-10BT`.
 - Preprocessing: pack raw text into rendered images.
 - Task: present rendered raw text; output the same raw text.
 - Input: rendered text image first, then a short instruction such as `Transcribe the text shown in the image.`
@@ -204,23 +204,26 @@ All Phase 0 sources are converted into the same Gemma 4 multimodal `messages` fo
 
 ### Audio To Images
 
-- Source: `openslr/librispeech_asr`.
-- Select the source split according to train/validation/test usage.
-- Load each audio clip and transcript.
-- Convert the clip to a log-mel spectrogram image using the speech-ASR convention: mono 16 kHz audio, 25 ms Hann STFT window, 10 ms hop, 80 mel bins, power spectrogram, log scaling, and fixed dynamic-range clipping.
-- Store the spectrogram as a materialized HF image.
-- User content: spectrogram image first, then a short instruction such as `Transcribe the speech represented by this spectrogram image.`
-- Assistant content: transcript text.
-- Metadata: source dataset ID, source split, source row ID, audio duration, sample rate, mel bins, hop length, window length, spectrogram color map, render config ID, preprocessing version.
+- Source: `openslr/librispeech_asr`, config `clean`.
+- Training split: `train.360`; held-out evaluation split: `validation` (2,703 rows).
+- Filter source clips longer than 40 seconds.
+- Resample each retained clip to mono 16 kHz and compute one 80-bin power log-mel matrix using a 25 ms Hann window and 10 ms hop.
+- Apply Whisper normalization: clamp log10 power to `max - 8`, apply `(x + 4) / 4`, then linearly map the resulting `[-1, 1]` range onto `[0, 255]` grayscale without discarding the lower half.
+- Split the matrix into chronological ten-second pages. Render each page at 1000 × 160, right-padding only the final page; retain one to four images per example.
+- Store every page as a materialized HF image in chronological order.
+- User content: all spectrogram pages first, then `Transcribe the speech represented by this spectrogram image.`
+- Assistant content: the complete transcript.
+- Metadata: source dataset ID and split, source row ID, source duration, sample rates, mel bins, hop/window lengths, page dimensions and count, fixed time scale, normalization, render version, and preprocessing version.
 
 ### Raw Text To Images
 
-- Source: `HuggingFaceFW/fineweb-edu`.
+- Source: `HuggingFaceFW/fineweb-edu`, config `sample-10BT`.
 - Select raw text rows from the source split.
 - Pack bounded text chunks into rendered text images using DeepSeek-OCR-style optical compression practice: fixed page-like canvases, dense readable text, no chat chrome, and compression kept conservative enough to stay below the failure-prone high-compression regime.
-- Store each rendered page as a materialized HF image.
+- Render the complete selected source text across ordered fixed 1024 x 1024 pages at 14 px; do not shrink the font or truncate the visual input to fit one image.
+- Store every rendered page as a materialized HF image.
 - User content: rendered text image first, then `Transcribe the text shown in the image.`
-- Assistant content: the exact raw text represented in the image.
+- Assistant content: the source-text prefix capped at 1,024 `unsloth/gemma-4-E2B-it` tokenizer tokens.
 - Metadata: source dataset ID, source split, source row ID, text byte/character count, token estimate, font, font size, canvas width/height, render config ID, preprocessing version.
 
 ### Instruction Following To Images
@@ -228,9 +231,10 @@ All Phase 0 sources are converted into the same Gemma 4 multimodal `messages` fo
 - Source: `HuggingFaceTB/smoltalk`.
 - Extract instruction/user content and target assistant response from the source conversation format.
 - Pack the instruction-bearing user content into rendered text images using the same DeepSeek-OCR-style optical page packing as raw text.
+- Keep the complete instruction across ordered fixed 1024 x 1024 pages.
 - Store rendered instruction images as materialized HF images.
 - User content: rendered instruction image first, then `Follow the instruction shown in the image.`
-- Assistant content: response text.
+- Assistant content: response text capped at 1,024 `unsloth/gemma-4-E2B-it` tokenizer tokens.
 - Metadata: source dataset ID, source split, source row ID, original subset/config when available, image count, render config ID, preprocessing version.
 
 ### Text-Image Description
@@ -252,21 +256,52 @@ All Phase 0 sources are converted into the same Gemma 4 multimodal `messages` fo
 - Assistant content: correct answer letter.
 - Metadata: source split, video ID, question ID, modality label, category, frame timestamps, audio window, render config IDs, preprocessing version.
 
-### Mixture Rule
+### 3M Artifact Configurations
 
-- Build one materialized train split by concatenating all selected source train examples and shuffling.
-- Build held-out validation/test splits from each source's dedicated validation/test split where available.
-- Do not apply hand-tuned modality ratios in the first run beyond the selected per-source subsets.
+- Publish `librispeech`, `densefusion`, `fineweb-edu`, and `smoltalk` as separate Hugging Face configurations in `hungphongtrn/univi-3M-v0`.
+- Every configuration exposes exactly `train` and `validation`:
+  - `librispeech`: freshly render source `clean/train.360` as `train` and source `clean/validation` as `validation`; filter clips over 40 seconds and retain one to four fixed ten-second rectangular pages.
+  - `densefusion`: preserve source images and deterministically partition retained rows 90/10.
+  - `fineweb-edu`: render ordered 1024 x 1024 pages, then deterministically partition the selected source rows 90/10.
+  - `smoltalk`: map source `train` to `train` and source `test` to `validation`.
+- Record `original_token_length` from each untruncated assistant target. This supports later filtering to targets of at most 1,024 tokens without losing the original length during preprocessing.
+- Training consumes only `train`; `validation` must not be concatenated into training.
+- Rebuild exactly 1,000,000 FineWeb-Edu and 1,000,000 SmolTalk rows.
+- Rebuild LibriSpeech from the selected source splits; do not reuse or retile the obsolete square/strip artifact.
+- Concatenate and deterministically shuffle all four configurations at training load time rather than storing a duplicate merged copy.
+- Build validation from a dedicated source split where available; otherwise use the documented deterministic 90/10 partition.
+- Do not apply hand-tuned modality ratios beyond these selected source configurations.
+
+Build locally first. The command is resumable at completed configuration boundaries:
+
+```bash
+uv run python -m data.preprocessing.rebuild_3m \
+  --input data/materialized/full-v0 \
+  --output data/materialized/univi-3M-v0 \
+  --text-samples 1000000 \
+  --max-output-tokens 1024 \
+  --num-proc 8
+```
+
+To replace only LibriSpeech in an existing four-configuration artifact while reusing the other configurations:
+
+```bash
+uv run python -m data.preprocessing.rebuild_3m \
+  --output data/materialized/univi-3M-v0-split \
+  --force-librispeech \
+  --num-proc 8
+```
+
+After validating the local artifact, rerun with `--push-repo hungphongtrn/univi-3M-v0`. Existing local configurations are reused and pushed without rerendering.
 
 ### Render Policy
 
 - Text render policy: follow DeepSeek-OCR's lesson that optical compression works best below roughly 10x text-token-to-vision-token compression; start with page-like 1024px canvases and avoid tiny/high-density modes for the first Gemma E2B run.
-- Audio render policy: follow the speech-ASR log-mel convention popularized by Whisper-style pipelines for transcription: 16 kHz mono, 25 ms window, 10 ms hop, 80 mel bins. Use 128 mel bins only as a later ablation or for non-speech audio-event tasks.
+- Audio render policy: use mono 16 kHz audio, a 25 ms Hann window, a 10 ms hop, 80 mel bins, Whisper log-mel normalization, and one to four chronological 1000 × 160 pages at a fixed ten-second scale. Gemma's aspect-ratio-preserving processor maps this geometry to about 246 visual tokens per page.
 
 ## Open Decisions
 
 - Exact `BAAI/DenseFusion-1M` subset.
 - Exact subset sizes for the first training run.
-- Log-mel spectrogram hop length and color mapping.
 - LoRA hyperparameters.
 - Whether OmniInteract is the Phase 4 dataset after Valor32k results are available.
