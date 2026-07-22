@@ -1,0 +1,25 @@
+{
+  "test_type": "render_invert_cycle",
+  "test_signal": "chirp_200_2000Hz",
+  "duration_sec": 5.0,
+  "audio_shape": [
+    80000
+  ],
+  "png_size": [
+    1000,
+    160
+  ],
+  "mel_shape": [
+    80,
+    1000
+  ],
+  "reconstructed_shape": [
+    80000
+  ],
+  "spectral_metrics": {
+    "log_mel_mse": 12.64927506919797,
+    "log_mel_mae": 3.2203907499193414,
+    "log_mel_correlation": 0.6444890378452854
+  },
+  "status": "FAIL"
+}

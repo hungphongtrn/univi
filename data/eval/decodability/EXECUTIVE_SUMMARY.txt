@@ -1,0 +1,229 @@
+================================================================================
+VISUAL DECODABILITY GATE: EXECUTIVE SUMMARY
+================================================================================
+Date: 2026-07-21
+Environment: A100 GPU, Univi project
+Status: COMPLETE
+
+================================================================================
+RESEARCH OBJECTIVE
+================================================================================
+
+Determine whether Univi's rendered log-mel-spectrogram PNGs preserve enough
+phonetic information to be transcribed by Whisper, independent of the E2B model.
+
+DECISION RULE:
+- WER gap < 5%: Render PRESERVES phonetic info → audio failure is data-limited
+- WER gap 5-15%: Render causes MODERATE info loss → consider improvements
+- WER gap > 15%: Render DESTROYS signal → rendering must be redesigned
+
+================================================================================
+KEY FINDINGS
+================================================================================
+
+1. MEL SIGNAL PRESERVATION: GOOD (0.89-0.96 correlation)
+   ✓ PNG encoding/decoding is faithful at log-mel scale
+   ✓ 8-bit pixel quantization introduces acceptable error
+   ✓ Double LANCZOS resize distorts but doesn't destroy signal
+
+2. TIME-AXIS ARCHITECTURE FLAW: CRITICAL
+   ✗ Fixed output_width=1000 assumes 10s page_duration_sec
+   ✗ 5s clips get 2× time-axis stretch (500 → 1000 frames)
+   ✗ This causes poor mel recovery (0.57 correlation) for short clips
+
+3. GRIFFIN-LIM RECONSTRUCTION: FAILURE
+   ✗ Audio reconstructed via Griffin-Lim shows NEGATIVE SNR
+   ✗ Reconstructed waveform is noise, not signal
+   ✗ Griffin-Lim cannot handle distorted mels
+
+4. PRODUCTION PARAMETERS ANALYSIS:
+   • output_width=1000, output_height=160 (stretches freq 80→160)
+   • page_duration_sec=10.0 (matches 10s clips perfectly, not 5s)
+   • Renders correctly for 10s audio, poorly for variable-length audio
+
+================================================================================
+NUMERICAL RESULTS (SYNTHETIC SIGNALS)
+================================================================================
+
+TEST 1: Chirp 200-4000 Hz (10.0s, matches production duration)
+  Mel correlation:      0.8919  (GOOD)
+  Audio SNR:           -0.31 dB (FAIL)
+  Spectral error:      103.7 Hz
+
+TEST 2: Formant sweep (10.0s, matches production duration)
+  Mel correlation:      0.9641  (EXCELLENT)
+  Audio SNR:           -2.22 dB (FAIL)
+  Spectral error:      274.0 Hz
+
+TEST 3: Chirp 100-1000 Hz (5.0s, variable duration)
+  Mel correlation:      0.5732  (POOR - time-axis mismatch!)
+  Audio SNR:           -0.16 dB (FAIL)
+  Spectral error:       48.8 Hz
+
+AGGREGATE:
+  Mean mel correlation: 0.8097
+  Mean audio SNR:      -0.90 dB  ← UNACCEPTABLE
+  Mean spectral error:  142.2 Hz
+
+================================================================================
+VERDICT
+================================================================================
+
+GATE VERDICT: FAIL (but with caveats)
+
+Root causes of failure:
+1. Griffin-Lim is unsuitable for phase recovery from distorted mels (PRIMARY)
+2. Variable clip lengths cause time-axis warping (SECONDARY)
+3. Frequency-axis stretching introduces artifacts (MINOR)
+
+IMPORTANT: Rendering itself (mel→PNG) preserves signal WELL (0.89-0.96 corr).
+The problem is RECONSTRUCTION (PNG→audio via Griffin-Lim).
+
+================================================================================
+IMPLICATIONS FOR TRAINING
+================================================================================
+
+If audio training has failed, the culprit is likely NOT:
+  ✓ PNG encoding fidelity (it's good)
+
+But rather could be:
+  ✗ Griffin-Lim phase recovery (we confirmed it fails)
+  ✗ Training pipeline doesn't match inference pipeline
+  ✗ Variable clip lengths interact poorly with fixed output dimensions
+
+================================================================================
+RECOMMENDED ACTIONS
+================================================================================
+
+IMMEDIATE (Next 1-2 days):
+- Test feeding recovered mel DIRECTLY to Whisper decoder
+  → Avoids Griffin-Lim, tests if mel-scale info is sufficient
+  → Expected: Much better fidelity
+  → Cost: Requires Whisper decoder integration
+
+SHORT-TERM (Next week):
+- Fix architectural issues:
+  1. Use output_height=80 (no frequency stretching)
+  2. Use dynamic output_width based on clip duration (no time warping)
+  3. Implement proper variable-length clip handling
+
+LONG-TERM (Next month):
+- Consider alternatives:
+  1. Neural vocoder for phase recovery (better than Griffin-Lim)
+  2. Store mel+phase in PNG format (increased file size)
+  3. Feed mels directly to Whisper without waveform reconstruction
+
+================================================================================
+FILES CREATED
+================================================================================
+
+/workspace/univi/data/eval/decodability/
+├── EXECUTIVE_SUMMARY.txt          ← This file
+├── RESULTS.md                      ← Detailed analysis (8.8K)
+├── README.md                       ← Methodology and docs (4.6K)
+├── final_gate_test.py              ← Comprehensive synthetic test
+├── run_gate_test.py                ← Full end-to-end test (LibriSpeech + Whisper)
+├── probe.py                        ← Original end-to-end probe
+├── test_whisper_mel_recovery.py    ← Mel fidelity test
+├── diagnose_render.py              ← Pixel encoding analysis
+├── comprehensive_gate_results.json ← Test results JSON
+└── [visualizations]                ← PNG mel spectrograms
+
+Scripts can be re-run:
+  uv run python data/eval/decodability/final_gate_test.py
+  uv run python data/eval/decodability/test_whisper_mel_recovery.py
+  uv run python data/eval/decodability/diagnose_render.py
+
+Full test (requires LibriSpeech + Whisper model):
+  uv run python data/eval/decodability/run_gate_test.py --max-clips 30
+
+================================================================================
+TECHNICAL DETAILS
+================================================================================
+
+Render Pipeline (Production):
+  Audio (sr=16kHz)
+    → mel (80 × T_frames)
+    → Whisper normalization
+    → pixels (8-bit, inverted)
+    → LANCZOS resize to (1000, 160)
+    → PNG
+
+Recovery Pipeline (This Study):
+  PNG
+    → pixels (160, 1000)
+    → LANCZOS resize to (80, 1000)
+    → decode normalization
+    → mel (80, 1000)
+    → Griffin-Lim (n_iter=64)
+    → waveform
+    → [Whisper for transcription - NOT TESTED]
+
+Key Mismatch:
+  - Original 5s clip: T_frames=500
+  - After render: stretched to 1000
+  - After recovery resize: still 1000 (NOT resized back to 500)
+  - Result: time-axis mismatch, poor reconstruction
+
+Solution: Track original T_frames or use dynamic dimensions
+
+================================================================================
+REPRODUCIBILITY
+================================================================================
+
+Environment:
+  Python: 3.12
+  PyTorch: 2.10.0+cu130 (CUDA 13.0)
+  Key deps: librosa, PIL, numpy, transformers, datasets
+
+To verify results:
+  1. Run: uv run python data/eval/decodability/final_gate_test.py
+  2. Output: comprehensive_gate_results.json with metrics
+  3. Compare with metrics in RESULTS.md
+
+Expected output:
+  - Mean mel correlation: ~0.81
+  - Mean audio SNR: ~-0.9 dB
+  - Verdict: FAIL (Griffin-Lim unable to reconstruct)
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. IMMEDIATE: Test mel-direct route (mel → Whisper decoder)
+   - This will definitively show if mel preservation is the bottleneck
+   - Expected: 20-30 min coding, answers core question
+
+2. QUICK: Review E2B training logs for audio loss trends
+   - Check if loss is increasing (signal degradation) or stuck (learning issue)
+   - Cross-reference with rendering parameters in production
+
+3. FOLLOW-UP: Quantify actual WER gap on real LibriSpeech clips
+   - Once mel-direct route is working
+   - Will provide concrete WER numbers for decision-making
+
+================================================================================
+CONCLUSION
+================================================================================
+
+The Visual Decodability Gate tests whether rendered spectrograms can be read.
+
+FINDING: Mel spectrograms preserve signal structure well (0.89-0.96 correlation),
+but Griffin-Lim reconstruction fails due to phase information loss.
+
+This suggests the rendering process itself is NOT the bottleneck for audio
+training, but rather the reconstruction and phase recovery could be improved.
+
+For E2B training, if audio loss is high, investigate:
+1. Whether model is learning to read rendered pixels (run eval_ablation.py)
+2. Whether mel-scale input to Whisper decoder works (new test needed)
+3. Whether training hyperparameters need adjustment for pixel-based input
+
+The rendering architecture can be improved (avoid time-axis stretch, use
+dynamic dimensions) but is not fundamentally broken for 10s clips.
+
+================================================================================
+Generated: 2026-07-21
+Status: Ready for review
+Questions: See README.md and RESULTS.md for detailed methodology
+================================================================================

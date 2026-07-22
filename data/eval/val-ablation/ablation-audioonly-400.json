@@ -1,0 +1,75 @@
+{
+  "checkpoint": "data/checkpoints/audio-only-v0/checkpoint-400",
+  "base_model": "unsloth/gemma-4-E2B-it",
+  "max_samples": 120,
+  "lanes": [
+    "permuted",
+    "blank"
+  ],
+  "per_source": {
+    "librispeech": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 5.661321737368902,
+        "permuted": 5.7150691897929216,
+        "delta_permuted": 0.041177198666484414,
+        "rel_permuted": 0.007257310983515833,
+        "n_permuted": 119,
+        "blank": 5.723105150461197,
+        "delta_blank": 0.061783413092295326,
+        "rel_blank": 0.010913248876932607,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "densefusion": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 2.7372848252455393,
+        "permuted": 2.737816377480825,
+        "delta_permuted": 0.0005315522352854411,
+        "rel_permuted": 0.00019418959634124298,
+        "n_permuted": 120,
+        "blank": 2.7244202544291816,
+        "delta_blank": -0.01286457081635793,
+        "rel_blank": -0.0046997560128599165,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "fineweb": {
+      "trained": {
+        "n": 116,
+        "skipped": 4,
+        "aligned": 3.615573901554634,
+        "permuted": 3.6142609201628586,
+        "delta_permuted": -0.001312981391775197,
+        "rel_permuted": -0.00036314605302650236,
+        "n_permuted": 116,
+        "blank": 3.5491042034379365,
+        "delta_blank": -0.06646969811669712,
+        "rel_blank": -0.01838427312690699,
+        "n_blank": 116
+      },
+      "flag": "IGNORES IMAGE"
+    },
+    "smoltalk": {
+      "trained": {
+        "n": 120,
+        "skipped": 0,
+        "aligned": 2.7589510172605514,
+        "permuted": 2.7491792079781283,
+        "delta_permuted": 0.00047037180732278265,
+        "rel_permuted": 0.00017112463900616413,
+        "n_permuted": 119,
+        "blank": 2.6719090819358824,
+        "delta_blank": -0.08704193532466889,
+        "rel_blank": -0.0315489237685327,
+        "n_blank": 120
+      },
+      "flag": "IGNORES IMAGE"
+    }
+  }
+}

@@ -1,0 +1,97 @@
+# configs/audio_only_v0.yaml — E3: audio-ONLY bounded probe.
+# Isolates "did the mixture drown audio?" from "can E2B read spectrograms at all?".
+# Train on librispeech alone for a bounded number of steps, then re-ablate each
+# checkpoint. If audio grounding (Δperm) climbs off the floor here, the fix is a
+# rebalanced/curriculum mixture; if it stays flat, it's capacity/architecture.
+# Derived from 3060_full.yaml; only the marked fields differ.
+model:
+  name: "unsloth/gemma-4-E2B-it"
+  revision: "4abfca14e6c6bfb5888b80288185b1243fb8d539"
+  load_in_4bit: true
+  use_gradient_checkpointing: "unsloth"
+  max_lora_rank: 8
+
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.0
+  bias: "none"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  finetune_vision_layers: true       # vision path MUST adapt to read spectrograms
+  finetune_language_layers: true
+  finetune_attention_modules: true
+  finetune_mlp_modules: true
+  use_rslora: true
+  finetune_audio_layers: false       # irrelevant: audio is a PNG through the vision path
+
+training:
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 4
+  max_steps: 800                     # CHANGED: bounded probe (~800*16 = 12.8k audio examples)
+  max_length: 8192
+  learning_rate: 2.0e-4              # UNCHANGED from full run: isolate the mixture variable
+  warmup_ratio: 0.03
+  warmup_steps: 0
+  lr_scheduler_type: "cosine"
+  weight_decay: 0.001
+  max_grad_norm: 1.0
+  optim: "adamw_8bit"
+  logging_steps: 10
+  save_steps: 200                    # CHANGED: checkpoints at 200/400/600/800
+  eval_strategy: "steps"
+  eval_steps: 200
+  eval_on_start: true                # baseline grounding at step 0
+  max_eval_samples_per_subset: 160
+  prediction_loss_only: true
+  output_dir: "data/checkpoints/audio-only-v0"   # CHANGED: never touches full-v0
+  report_to: ["wandb"]
+  remove_unused_columns: false
+  dataloader_num_workers: 0
+  packing: false
+  eval_packing: false
+  loss_masking: "response_only"
+  gradient_checkpointing: true
+  include_num_input_tokens_seen: "non_padding"
+  save_total_limit: 10               # CHANGED: keep all probe checkpoints for the slope
+  load_best_model_at_end: false      # CHANGED: single-subset eval has no mean_total_loss
+  metric_for_best_model: "librispeech_loss"  # CHANGED: single subset -> no macro mean_total_loss; HF validates this key at every save
+  seed: 3407
+  data_seed: 42
+  per_device_eval_batch_size: 16
+  eval_accumulation_steps: 1
+  validation_subsets:                # CHANGED: audio only
+    - "librispeech"
+
+dataset:
+  num_proc: 4
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  revision: "5e05ffab5742acce5cb9a1c0e9ba2fc2cb35c375"
+  hf_hub_repo_id: "hungphongtrn/univi-3M-v0"
+  subsets:                           # CHANGED: audio only
+    - "librispeech"
+  train_splits:
+    librispeech: ["train"]
+  validation_splits:
+    librispeech: ["validation"]
+  shuffle_seed: 42
+
+wandb:
+  project: "univi-gemma4"
+  run_name_template: "audio-only-v0_{config_hash_short}"
+
+smoke:
+  max_steps: 10
+  dataset_path: "data/materialized/smoke-v1"
+  output_dir: "data/checkpoints/audio-only-smoke-v0"
+  run_name_template: "audio-only-smoke-v0_{config_hash_short}"
+
+hub:
+  model_repo_id: "hungphongtrn/univi-phase0-audio-only-v0"

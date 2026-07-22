@@ -1,0 +1,22 @@
+{
+  "test_type": "mel_recovery_from_png",
+  "duration_sec": 10.0,
+  "render_params": {
+    "output_width": 1000,
+    "output_height": 160,
+    "n_mels": 80
+  },
+  "original_mel_shape": [
+    80,
+    1000
+  ],
+  "recovered_mel_shape": [
+    80,
+    1000
+  ],
+  "metrics": {
+    "log_mel_mse": 26.399048622570547,
+    "log_mel_mae": 4.949392807283507,
+    "log_mel_correlation": 0.983667589521388
+  }
+}
