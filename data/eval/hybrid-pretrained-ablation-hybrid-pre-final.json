@@ -1,0 +1,18 @@
+{
+  "tag": "hybrid-pre-final",
+  "checkpoint": "data/checkpoints/hybrid-pretrained-randstr-v0/final",
+  "n_samples": 200,
+  "response_ce": {
+    "aligned": 3.6868016862869264,
+    "permuted": 7.9149952363967895,
+    "blank": 7.03336252450943
+  },
+  "tok_acc": {
+    "aligned": 0.3200262980163097,
+    "permuted": 0.1545017072558403,
+    "blank": 0.09788566809147596
+  },
+  "delta_perm_rel": 1.1468459412494698,
+  "delta_blank_rel": 0.9077138189097749,
+  "no_reading_floor_nats": 5.613536419747557
+}

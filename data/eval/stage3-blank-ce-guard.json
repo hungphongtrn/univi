@@ -1,0 +1,205 @@
+{
+  "note": "Blind-branch guards only. blank_ce_inflation > +0.10 = VOID (H16/H20); prior_gap_ce < 0.05 for 3 consecutive evals = collapse alarm (H15). prior_gap_ce IS A \u0394blank QUANTITY AND IS NOT A GROUNDING METRIC \u2014 H13 \u00a71 saw +1.0%\u2026+8.7% \u0394blank in a run with \u0394perm = 0.",
+  "thresholds": {
+    "blank_ce_inflation_void_above": 0.1,
+    "prior_gap_ce_dead_below": 0.05,
+    "prior_gap_ce_consecutive_evals": 3
+  },
+  "runs": {
+    "data/checkpoints/h15-poisoned-p00-v0-run.log": {
+      "status": "ok",
+      "lanes": {
+        "poisoned-text": {
+          "n_evals": 8,
+          "blank_ce_inflation": {
+            "max": 0.0,
+            "last": -0.0004571,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": 0.007015,
+            "last": 0.1637,
+            "last_3": [
+              0.1615,
+              0.1625,
+              0.1637
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "PASS"
+          },
+          "aligned_ce_last": 2.723,
+          "blank_ce_last": 2.887
+        },
+        "poisoned-text-long": {
+          "n_evals": 8,
+          "blank_ce_inflation": {
+            "max": 0.05792,
+            "last": 0.05641,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": 0.02496,
+            "last": 0.2624,
+            "last_3": [
+              0.2667,
+              0.2665,
+              0.2624
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "PASS"
+          },
+          "aligned_ce_last": 2.568,
+          "blank_ce_last": 2.831
+        }
+      }
+    },
+    "data/checkpoints/h15-poisoned-p15-v0-run.log": {
+      "status": "ok",
+      "lanes": {
+        "poisoned-text": {
+          "n_evals": 8,
+          "blank_ce_inflation": {
+            "max": 0.006772,
+            "last": 0.004565,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": 0.09745,
+            "last": 0.4211,
+            "last_3": [
+              0.431,
+              0.4228,
+              0.4211
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "PASS"
+          },
+          "aligned_ce_last": 5.387,
+          "blank_ce_last": 5.808
+        },
+        "poisoned-text-long": {
+          "n_evals": 8,
+          "blank_ce_inflation": {
+            "max": 0.03272,
+            "last": 0.03194,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": 0.04678,
+            "last": 0.3996,
+            "last_3": [
+              0.3954,
+              0.4035,
+              0.3996
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "PASS"
+          },
+          "aligned_ce_last": 5.283,
+          "blank_ce_last": 5.683
+        }
+      }
+    },
+    "data/checkpoints/h15-poisoned-p50-v0-run.log": {
+      "status": "ok",
+      "lanes": {
+        "poisoned-text": {
+          "n_evals": 8,
+          "blank_ce_inflation": {
+            "max": 0.07017,
+            "last": 0.07017,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": 0.1927,
+            "last": 0.9996,
+            "last_3": [
+              0.9681,
+              0.9953,
+              0.9996
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "PASS"
+          },
+          "aligned_ce_last": 6.05,
+          "blank_ce_last": 7.05
+        },
+        "poisoned-text-long": {
+          "n_evals": 8,
+          "blank_ce_inflation": {
+            "max": 0.06866,
+            "last": 0.06837,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": 0.07476,
+            "last": 0.7081,
+            "last_3": [
+              0.6838,
+              0.7101,
+              0.7081
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "PASS"
+          },
+          "aligned_ce_last": 6.428,
+          "blank_ce_last": 7.136
+        }
+      }
+    },
+    "data/checkpoints/h16-gap-weighted-v0-run.log": {
+      "status": "ok",
+      "lanes": {
+        "<single-lane>": {
+          "n_evals": 12,
+          "blank_ce_inflation": {
+            "max": 0.0,
+            "last": -0.01228,
+            "void_threshold": 0.1,
+            "verdict": "PASS"
+          },
+          "prior_gap_ce": {
+            "min": -0.0008535,
+            "last": 0.009461,
+            "last_3": [
+              0.008949,
+              0.009224,
+              0.009461
+            ],
+            "dead_threshold": 0.05,
+            "verdict": "COLLAPSE-ALARM"
+          },
+          "aligned_ce_last": 2.499,
+          "blank_ce_last": 2.509
+        }
+      }
+    },
+    "data/checkpoints/h21-fontjitter-v0-run.log": {
+      "status": "NO-BLANK-CE-METRICS",
+      "note": "log_blank_ce was off for this run, or it logs under other keys."
+    },
+    "data/checkpoints/h21-fontmix-v0-run.log": {
+      "status": "MISSING"
+    },
+    "data/checkpoints/h20-wide-560-v0-run.log": {
+      "status": "NO-BLANK-CE-METRICS",
+      "note": "log_blank_ce was off for this run, or it logs under other keys."
+    },
+    "data/checkpoints/h20-leg1-wide-560-v0-run.log": {
+      "status": "MISSING"
+    },
+    "data/checkpoints/h20-wide-1120-v0-run.log": {
+      "status": "NO-BLANK-CE-METRICS",
+      "note": "log_blank_ce was off for this run, or it logs under other keys."
+    },
+    "data/checkpoints/h20-leg2-wide-1120-v0-run.log": {
+      "status": "MISSING"
+    }
+  }
+}

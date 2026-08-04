@@ -1,0 +1,91 @@
+{
+  "n_rows": 200,
+  "poison_rate": 0.15,
+  "max_target_tokens": 128,
+  "target_tokens_per_row_mean": 111.86,
+  "poisoned_chars_per_row_mean": 39.515,
+  "loose_floor_published_nats_per_token": 1.1512151304775329,
+  "loose_floor_corrected_T_plus_2": 1.1307709650105948,
+  "bins": [
+    {
+      "bin": "0-1",
+      "tokens_per_row": 1.0,
+      "poison_touching_per_row": 0.195,
+      "poison_pure_per_row": 0.1,
+      "pure_frac_of_touching": 0.5128205128205128,
+      "pct_rows_with_a_pure_token": 10.0
+    },
+    {
+      "bin": "1-2",
+      "tokens_per_row": 1.0,
+      "poison_touching_per_row": 0.34,
+      "poison_pure_per_row": 0.05,
+      "pure_frac_of_touching": 0.14705882352941177,
+      "pct_rows_with_a_pure_token": 5.0
+    },
+    {
+      "bin": "2-5",
+      "tokens_per_row": 3.0,
+      "poison_touching_per_row": 1.135,
+      "poison_pure_per_row": 0.305,
+      "pure_frac_of_touching": 0.2687224669603524,
+      "pct_rows_with_a_pure_token": 28.5
+    },
+    {
+      "bin": "5-10",
+      "tokens_per_row": 5.0,
+      "poison_touching_per_row": 1.65,
+      "poison_pure_per_row": 0.355,
+      "pure_frac_of_touching": 0.21515151515151515,
+      "pct_rows_with_a_pure_token": 30.5
+    },
+    {
+      "bin": "10-20",
+      "tokens_per_row": 10.0,
+      "poison_touching_per_row": 3.37,
+      "poison_pure_per_row": 0.67,
+      "pure_frac_of_touching": 0.19881305637982197,
+      "pct_rows_with_a_pure_token": 51.0
+    },
+    {
+      "bin": "20-50",
+      "tokens_per_row": 30.0,
+      "poison_touching_per_row": 9.68,
+      "poison_pure_per_row": 1.99,
+      "pure_frac_of_touching": 0.20557851239669422,
+      "pct_rows_with_a_pure_token": 88.0
+    },
+    {
+      "bin": "50-100",
+      "tokens_per_row": 48.825,
+      "poison_touching_per_row": 16.095,
+      "poison_pure_per_row": 3.16,
+      "pure_frac_of_touching": 0.19633426529978254,
+      "pct_rows_with_a_pure_token": 97.0
+    },
+    {
+      "bin": "100-200",
+      "tokens_per_row": 13.035,
+      "poison_touching_per_row": 4.32,
+      "poison_pure_per_row": 0.785,
+      "pure_frac_of_touching": 0.18171296296296297,
+      "pct_rows_with_a_pure_token": 48.0
+    },
+    {
+      "bin": "200-400",
+      "tokens_per_row": 0.0,
+      "poison_touching_per_row": 0.0,
+      "poison_pure_per_row": 0.0,
+      "pure_frac_of_touching": 0.0,
+      "pct_rows_with_a_pure_token": 0.0
+    },
+    {
+      "bin": "400-",
+      "tokens_per_row": 0.0,
+      "poison_touching_per_row": 0.0,
+      "poison_pure_per_row": 0.0,
+      "pure_frac_of_touching": 0.0,
+      "pct_rows_with_a_pure_token": 0.0
+    }
+  ]
+}

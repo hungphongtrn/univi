@@ -1,0 +1,152 @@
+{
+  "claim": "random_strings.py's --canvas knob does not change the default render: replaying each lane's RNG and re-rendering with the post-edit code reproduces the materialized PNGs raster-exactly.",
+  "reference": "the production datasets on disk, built by the pre-edit renderer",
+  "lanes": [
+    {
+      "lane": "h3-randstr-v0:random-strings/train",
+      "n_checked": 10,
+      "n_rows": 100000,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 5,
+        "font_size": 14,
+        "canvas": 1024
+      },
+      "targets_match": 10,
+      "pixels_match": 10,
+      "render_config_match": 10,
+      "image_size": [
+        1024,
+        1024
+      ],
+      "all_match": true,
+      "first_mismatch": null
+    },
+    {
+      "lane": "h3-randstr-v0:random-strings/validation",
+      "n_checked": 10,
+      "n_rows": 2000,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 5,
+        "font_size": 14,
+        "canvas": 1024
+      },
+      "targets_match": 10,
+      "pixels_match": 10,
+      "render_config_match": 10,
+      "image_size": [
+        1024,
+        1024
+      ],
+      "all_match": true,
+      "first_mismatch": null
+    },
+    {
+      "lane": "h13-density-v0:randstr-d1/validation",
+      "n_checked": 10,
+      "n_rows": 500,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 5,
+        "font_size": 14,
+        "canvas": 1024
+      },
+      "targets_match": 10,
+      "pixels_match": 10,
+      "render_config_match": 10,
+      "image_size": [
+        1024,
+        1024
+      ],
+      "all_match": true,
+      "first_mismatch": null
+    },
+    {
+      "lane": "h13-density-v0:randstr-d3/validation",
+      "n_checked": 10,
+      "n_rows": 500,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 80,
+        "font_size": 14,
+        "canvas": 1024
+      },
+      "targets_match": 10,
+      "pixels_match": 10,
+      "render_config_match": 10,
+      "image_size": [
+        1024,
+        1024
+      ],
+      "all_match": true,
+      "first_mismatch": null
+    },
+    {
+      "lane": "h13-density-v0:randstr-d4/validation",
+      "n_checked": 10,
+      "n_rows": 500,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 320,
+        "font_size": 14,
+        "canvas": 1024
+      },
+      "targets_match": 10,
+      "pixels_match": 10,
+      "render_config_match": 10,
+      "image_size": [
+        1024,
+        1024
+      ],
+      "all_match": true,
+      "first_mismatch": null
+    },
+    {
+      "lane": "h13-density-v0:randstr-d5/validation",
+      "n_checked": 10,
+      "n_rows": 500,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 80,
+        "font_size": 40,
+        "canvas": 1024
+      },
+      "targets_match": 10,
+      "pixels_match": 10,
+      "render_config_match": 10,
+      "image_size": [
+        1024,
+        1024
+      ],
+      "all_match": true,
+      "first_mismatch": null
+    }
+  ],
+  "positive_control": {
+    "n": 6,
+    "n_pixels_differ": 6,
+    "n_sizes_as_expected": 6,
+    "render_config_default": {
+      "canvas_height": 1024,
+      "canvas_width": 1024,
+      "charset_size": 26,
+      "font_size": 14,
+      "image_mode": "L",
+      "n_random_letters": 25,
+      "render_method": "text_page"
+    },
+    "render_config_raised": {
+      "canvas_height": 1584,
+      "canvas_width": 1584,
+      "charset_size": 26,
+      "font_size": 22,
+      "image_mode": "L",
+      "n_random_letters": 25,
+      "render_method": "text_page"
+    },
+    "passed": true
+  },
+  "all_passed": true,
+  "device": "cpu (no model weights; a training run holds the GPU)"
+}

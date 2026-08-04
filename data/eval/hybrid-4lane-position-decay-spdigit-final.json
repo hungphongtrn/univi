@@ -1,0 +1,55 @@
+{
+  "checkpoint": "data/checkpoints/hybrid-pretrained-spokendigits-trainvis-v0/final",
+  "lanes": {
+    "spoken-digits": {
+      "n_rows": 150,
+      "bins": [
+        {
+          "bin": "0-0",
+          "n_tokens": 150,
+          "acc_aligned": 0.9133333333333333,
+          "acc_blank": 0.08666666666666667,
+          "gain_pts": 82.66666666666667,
+          "ce_aligned": 0.23901093461586242,
+          "ce_blank": 3.873006358544032
+        },
+        {
+          "bin": "1-1",
+          "n_tokens": 150,
+          "acc_aligned": 1.0,
+          "acc_blank": 1.0,
+          "gain_pts": 0.0,
+          "ce_aligned": 2.412570424136599e-06,
+          "ce_blank": 7.66030673730711e-06
+        },
+        {
+          "bin": "2-4",
+          "n_tokens": 450,
+          "acc_aligned": 0.6711111111111111,
+          "acc_blank": 0.38222222222222224,
+          "gain_pts": 28.888888888888886,
+          "ce_aligned": 0.9647049585357308,
+          "ce_blank": 2.262077338827971
+        },
+        {
+          "bin": "5-9",
+          "n_tokens": 750,
+          "acc_aligned": 0.7266666666666667,
+          "acc_blank": 0.6426666666666667,
+          "gain_pts": 8.4,
+          "ce_aligned": 0.7593064070194945,
+          "ce_blank": 1.3815661174450427
+        },
+        {
+          "bin": "10-19",
+          "n_tokens": 1050,
+          "acc_aligned": 0.7171428571428572,
+          "acc_blank": 0.6114285714285714,
+          "gain_pts": 10.571428571428571,
+          "ce_aligned": 0.7951958656857002,
+          "ce_blank": 1.4098616519820875
+        }
+      ]
+    }
+  }
+}

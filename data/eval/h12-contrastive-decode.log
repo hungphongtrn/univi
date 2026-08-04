@@ -1,0 +1,187 @@
+/workspace/univi/.venv/lib/python3.12/site-packages/unsloth/__init__.py:1427: UserWarning: WARNING: Unsloth should be imported before [transformers] to ensure all optimizations are applied. Your code may run slower or encounter memory issues without these optimizations.
+
+Please restructure your imports with 'import unsloth' at the top of your file.
+  from ._gpu_init import *
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+[load] data/checkpoints/hybrid-4lane-v0/final -> cuda
+You are using a model of type `univi_hybrid_pretrained` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+[load] stop ids = [151645]
+
+GATE-1 KV-cache equivalence (cached vs uncached, all settings, 2 rows)
+  row 0 alpha=0.0: identical=True (common prefix 40/40 tokens)
+  row 0 alpha=0.5: identical=False (common prefix 22/40 tokens)
+  row 0 alpha=1.0: identical=False (common prefix 9/40 tokens)
+  row 0 alpha=2.0: identical=False (common prefix 12/40 tokens)
+  row 0: cached=9.6s  uncached=10.7s
+  row 1 alpha=0.0: identical=True (common prefix 40/40 tokens)
+  row 1 alpha=0.5: identical=False (common prefix 13/40 tokens)
+  row 1 alpha=1.0: identical=False (common prefix 9/40 tokens)
+  row 1 alpha=2.0: identical=False (common prefix 6/40 tokens)
+  row 1: cached=4.4s  uncached=10.0s
+  GATE-1: cached==uncached on 2/8 settings
+  NOTE: divergence here is a bf16 argmax TIE-FLIP, not a plumbing bug. A
+  teacher-forced check (same inputs, cached vs uncached) gave 40/40 argmax
+  agreement, max |logit| diff 0.25 on a logit scale of 26.5 -- i.e. prefill vs
+  single-token-decode kernel rounding. All settings share ONE batched forward,
+  so greedy vs contrastive are always compared under identical numerics.
+
+GATE-2 alpha=0 contrastive reduces exactly to plain greedy (2 rows)
+  row 0: identical=True (40 tokens)
+  row 1: identical=True (40 tokens)
+  alpha=0 reduces exactly to greedy.
+
+==============================================================================
+LANE: fineweb-edu  (50 rows, seed 42)
+==============================================================================
+  [fineweb-edu] row 1/50  (0.2 min elapsed)  a=0.0:ov0.147  a=0.5:ov0.162  a=1.0:ov0.162  a=2.0:ov0.162
+  [fineweb-edu] row 5/50  (1.0 min elapsed)  a=0.0:ov0.145  a=0.5:ov0.203  a=1.0:ov0.188  a=2.0:ov0.203
+  [fineweb-edu] row 10/50  (2.1 min elapsed)  a=0.0:ov0.143  a=0.5:ov0.171  a=1.0:ov0.200  a=2.0:ov0.171
+  [fineweb-edu] row 15/50  (3.1 min elapsed)  a=0.0:ov0.172  a=0.5:ov0.203  a=1.0:ov0.188  a=2.0:ov0.203
+  [fineweb-edu] row 20/50  (4.1 min elapsed)  a=0.0:ov0.243  a=0.5:ov0.157  a=1.0:ov0.200  a=2.0:ov0.300
+  [fineweb-edu] row 25/50  (5.1 min elapsed)  a=0.0:ov0.127  a=0.5:ov0.101  a=1.0:ov0.266  a=2.0:ov0.152
+  [fineweb-edu] row 30/50  (6.2 min elapsed)  a=0.0:ov0.100  a=0.5:ov0.140  a=1.0:ov0.120  a=2.0:ov0.200
+  [fineweb-edu] row 35/50  (7.2 min elapsed)  a=0.0:ov0.220  a=0.5:ov0.300  a=1.0:ov0.280  a=2.0:ov0.260
+  [fineweb-edu] row 40/50  (8.2 min elapsed)  a=0.0:ov0.076  a=0.5:ov0.152  a=1.0:ov0.121  a=2.0:ov0.076
+  [fineweb-edu] row 45/50  (9.3 min elapsed)  a=0.0:ov0.069  a=0.5:ov0.125  a=1.0:ov0.028  a=2.0:ov0.139
+  [fineweb-edu] row 50/50  (10.3 min elapsed)  a=0.0:ov0.100  a=0.5:ov0.029  a=1.0:ov0.171  a=2.0:ov0.100
+
+--- fineweb-edu: metric table (50 rows) ---
+   alpha  ov@10-100   ov@full   ov@0-10     len     rep  distinct
+     0.0     0.1573    0.0937    0.1854   110.0   0.003     0.408
+     0.5     0.1678    0.0940    0.1902   110.0   0.003     0.463
+     1.0     0.1695    0.0932    0.1935   110.0   0.005     0.487
+     2.0     0.1728    0.0876    0.1620   110.0   0.007     0.531
+  PRE-REGISTERED: baseline(alpha=0) ov@10-100 = 0.1573; best alpha=2.0 -> 0.1728  ratio 1.10x  abs delta +0.0155  => REFUTES (<2x) for fineweb-edu
+
+--- fineweb-edu: 4 representative examples (TARGET / greedy / alpha=2.0) ---
+
+  [row 37]  tgt_tokens=433 prefix=273
+    TARGET      : 'The benefits of cinnamon and how we source it\nWhat is cinnamon?\nCinnamon is a sweet yet savoury herb obtained from powdered tree bark, this herb has been used for centuries to flavour food and treat ailments.\nProbably best known for its use in sweet treats and pastries, cinnamon is an evergreen tree with a highly aromatic bark.\nWe use Cinnamon from Indonesia, Vietnam, India and Sri Lanka - all of '
+    greedy a=0  : 'The History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\nThe History of the World\n'
+    contr a=2.0 : 'The Benefits of a Healthy Diet\nA healthy diet is a diet that is rich in nutrients and has a variety of foods that are healthy.1 It is important to eat a healthy diet because it can help to prevent and treat many diseases and conditions. Eating a healthy diet can also help to improve your overall health and well-being.\nWhat is a healthy diet?\nA healthy diet is a diet that is rich in nutrients and h'
+    ov@10-100   : greedy 0.027 -> a=2.0 0.233
+
+  [row 48]  tgt_tokens=734 prefix=273
+    TARGET      : 'Museum collections provide a treasure trove of undiscovered species, and in this case the newly discovered and beautiful Bloody Perchlet, Plectranthias cruentus, was a jigsaw puzzle put together from old and new.\nFor over 100 years, a little brown fish has been sitting, tucked away on a high shelf in a dark corner on level three of a five-storey collection storage building, called the Spirit House'
+    greedy a=0  : 'Muscle is a type of tissue that is made up of muscle cells. Muscle cells are made up of muscle fibers. Muscle fibers are made up of muscle cells. Muscle cells are made up of muscle fibers. Muscle fibers are made up of muscle cells. Muscle cells are made up of muscle fibers. Muscle fibers are made up of muscle cells. Muscle cells are made up of muscle fibers. Muscle fibers are made up of muscle cel'
+    contr a=2.0 : 'Musicians have long been known to be at risk for hearing loss, and the risk is higher for those who play instruments that require them to use their hands and fingers to produce sound, such as pianos, guitars, and drums.\nBut now, a new study has found that musicians are also at risk for developing dementia, a condition that affects the brain and can lead to memory loss, confusion, and difficulty wi'
+    ov@10-100   : greedy 0.015 -> a=2.0 0.162
+
+  [row 0]  tgt_tokens=470 prefix=273
+    TARGET      : 'Both the jQueryUI method the returns the object which contains integer co-ordinate properties of the top and left positions. The positions of top and left coordinates are returned in pixels. Both functions are applied only on visible elements, not on hidden elements.\nExample: The example gives top and left co-ordinates of the box which contains the text.\n- Before clicking any button:\n- After click'
+    greedy a=0  : 'Both the United States and the United Kingdom have a long history of using the word “merry” to describe a person who is happy and cheerful. The word “merry” is also used to describe a person who is merry and cheerful. The word “merry” is also used to describe a person who is merry and cheerful.\nThe word “merry” is also used to describe a person who is merry and cheerful. The word “merry” is also u'
+    contr a=2.0 : 'Both heart failure and chronic kidney disease (CKD) are serious conditions that are often found together.1,2 Heart failure is a condition in which the heart is unable to pump enough blood to meet the body’s needs.3,4,5,6\nIn the United States, more than 6 million people have heart failure.7,8 Heart failure is the leading cause of hospitalization in the United States.9\nChronic kidney disease is a co'
+    ov@10-100   : greedy 0.147 -> a=2.0 0.162
+
+  [row 27]  tgt_tokens=558 prefix=273
+    TARGET      : 'There are several species of mouse in the U.K. The door mouse, Harvest mouse, yellow necked mouse, wood mouse and House mouse but it is only the latter two that are of any concern when it comes to pest control.\nThe house mouse (Mus musculus) is very common and is considered to be a major pest as they spoil large amounts of stored products and food stuffs, the damage is not just restricted to nibbl'
+    greedy a=0  : 'There are many reasons why a person may need to have a blood test. The most common reason is to check for anemia. Anemia is a condition in which the body doesn’t have enough red blood cells to carry oxygen to the body’s tissues. This can lead to fatigue, weakness, and shortness of breath.\nOther reasons for blood tests include checking for diabetes, checking for high cholesterol, checking for high '
+    contr a=2.0 : 'There’s been a lot of buzz in recent years about the health benefits of eating more plant-based foods.1-3 The idea is that eating more plant-based foods can help reduce the risk of chronic diseases such as heart disease, diabetes, and cancer.4-6 But, what about the other way around? What if we’re not eating enough plant-based foods?\nAccording to the USDA, the average American consumes about 2,000 '
+    ov@10-100   : greedy 0.156 -> a=2.0 0.169
+
+
+==============================================================================
+LANE: librispeech  (50 rows, seed 42)
+==============================================================================
+  [librispeech] row 1/50  (10.3 min elapsed)  a=0.0:ov0.000  a=0.5:ov0.000  a=1.0:ov0.000  a=2.0:ov0.000
+  [librispeech] row 5/50  (10.6 min elapsed)  a=0.0:ov0.065  a=0.5:ov0.194  a=1.0:ov0.226  a=2.0:ov0.097
+  [librispeech] row 10/50  (11.1 min elapsed)  a=0.0:ovn/a  a=0.5:ovn/a  a=1.0:ovn/a  a=2.0:ovn/a
+  [librispeech] row 15/50  (11.6 min elapsed)  a=0.0:ov0.273  a=0.5:ov0.091  a=1.0:ov0.091  a=2.0:ov0.182
+  [librispeech] row 20/50  (12.0 min elapsed)  a=0.0:ov0.250  a=0.5:ov0.250  a=1.0:ov0.000  a=2.0:ov0.000
+  [librispeech] row 25/50  (12.5 min elapsed)  a=0.0:ov0.222  a=0.5:ov0.222  a=1.0:ov0.222  a=2.0:ov0.000
+  [librispeech] row 30/50  (13.1 min elapsed)  a=0.0:ov0.130  a=0.5:ov0.261  a=1.0:ov0.174  a=2.0:ov0.174
+  [librispeech] row 35/50  (13.8 min elapsed)  a=0.0:ov0.000  a=0.5:ov0.000  a=1.0:ov0.000  a=2.0:ov0.000
+  [librispeech] row 40/50  (14.4 min elapsed)  a=0.0:ov0.000  a=0.5:ov0.000  a=1.0:ov0.000  a=2.0:ov0.000
+  [librispeech] row 45/50  (14.9 min elapsed)  a=0.0:ov0.400  a=0.5:ov0.200  a=1.0:ov0.200  a=2.0:ov0.200
+  [librispeech] row 50/50  (15.4 min elapsed)  a=0.0:ov0.000  a=0.5:ov0.000  a=1.0:ov0.000  a=2.0:ov0.000
+
+--- librispeech: metric table (50 rows) ---
+   alpha  ov@10-100   ov@full   ov@0-10     len     rep  distinct
+     0.0     0.0984    0.1116    0.0882    54.4   0.000     0.269
+     0.5     0.1167    0.1387    0.0899    31.4   0.000     0.648
+     1.0     0.1079    0.1507    0.1119    31.2   0.000     0.718
+     2.0     0.1003    0.1260    0.0835    31.1   0.016     0.801
+  PRE-REGISTERED: baseline(alpha=0) ov@10-100 = 0.0984; best alpha=0.5 -> 0.1167  ratio 1.19x  abs delta +0.0183  => REFUTES (<2x) for librispeech
+
+--- librispeech: 4 representative examples (TARGET / greedy / alpha=0.5) ---
+
+  [row 16]  tgt_tokens=55 prefix=511
+    TARGET      : 'NO DOUBT MANY PREDICTIONS HAVE BEEN COLORED TO SUIT THE NEW AGE AND UNQUESTIONABLY FALSE PROPHETS FAKIRS AND CONJURERS HAVE BECOME THE PEST OF THE TRIBES DURING THE TRANSITION PERIOD'
+    greedy a=0  : 'THEY WERE NOT SO MUCH AS A DOZEN IN NUMBER AND THEY WERE NOT SO MUCH AS A DOZEN IN NUMBER AND THEY WERE NOT SO MUCH AS A DOZEN IN NUMBER'
+    contr a=0.5 : "AND THE OTHERS WERE IN THE SAME WAY THE LATTER WAS A VERY STRONG AND HARDY MAN HE WAS A GREAT FRIEND OF THE KING AND OF THE QUEEN AND OF THE QUEEN'S DAUGHTER HE WAS A VERY GOOD FRIEND OF THE QUEEN'S DAUGHTER"
+    ov@10-100   : greedy 0.080 -> a=0.5 0.280
+
+  [row 42]  tgt_tokens=24 prefix=265
+    TARGET      : 'THEN ALL THE OTHER BIRDS CHIRPED EAGERLY YES YES LET US ASK HER TO TEACH US'
+    greedy a=0  : 'AND THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER OF THE'
+    contr a=0.5 : 'AND THE LITTLE GIRL WHO HAD BEEN SO KIND TO HIM WAS NOW SO LOST IN HER OWN THOUGHTS'
+    ov@10-100   : greedy 0.000 -> a=0.5 0.200
+
+  [row 17]  tgt_tokens=16 prefix=265
+    TARGET      : "IF YOU'D SENT ME A NOTE OR TELEPHONED ME OR ANYTHING"
+    greedy a=0  : 'AND THE FATHER OF THE FATHER OF THE FATHER OF THE FATHER'
+    contr a=0.5 : 'AND THE LITTLE GIRL WAS SO HAPPY THAT SHE DID NOT KNOW'
+    ov@10-100   : greedy 0.000 -> a=0.5 0.000
+
+  [row 18]  tgt_tokens=12 prefix=265
+    TARGET      : 'SHE WAS INDEED A CLEVER BIRD'
+    greedy a=0  : 'AND THE FATHER OF THE FATHER'
+    contr a=0.5 : 'AND THE FATHER OF THE FATHER'
+    ov@10-100   : greedy 0.000 -> a=0.5 0.000
+
+
+[vram] peak allocated = 4.32 GiB, peak reserved = 4.40 GiB
+[time] total 15.4 min
+[write] data/eval/h12-contrastive-decode.json
+You are using a model of type `univi_hybrid_pretrained` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+
+==============================================================================
+LANE fineweb-edu  (50 rows)
+==============================================================================
+target token lengths: min 118  p25 317  median 496  p75 760  max 1263
+rows with a NON-EMPTY 10-100 target window: 50/50 (100%)  <-- ov@10-100 is averaged over these only
+
+ alpha | ov@10-100    shuf   excess |  ov@full    shuf   excess |    rep distinct    len
+   0.0 | 0.1573   0.154   0.0037 |   0.0937   0.089   0.0045 |  0.003    0.408  110.0
+   0.5 | 0.1678   0.169  -0.0009 |   0.0940   0.095  -0.0013 |  0.003    0.463  110.0
+   1.0 | 0.1695   0.168   0.0018 |   0.0932   0.091   0.0018 |  0.005    0.487  110.0
+   2.0 | 0.1728   0.157   0.0154 |   0.0876   0.085   0.0024 |  0.007    0.531  110.0
+
+grounded-excess ratio vs alpha=0 (the diversity-corrected version of
+the pre-registered '>=2x' test):
+  alpha=0.5: excess 0.0037 -> -0.0009  (-0.23x, abs -0.0046)
+  alpha=1.0: excess 0.0037 -> 0.0018  (0.47x, abs -0.0020)
+  alpha=2.0: excess 0.0037 -> 0.0154  (4.11x, abs +0.0116)
+
+==============================================================================
+LANE librispeech  (50 rows)
+==============================================================================
+target token lengths: min 3  p25 16  median 26  p75 45  max 110
+rows with a NON-EMPTY 10-100 target window: 46/50 (92%)  <-- ov@10-100 is averaged over these only
+
+ alpha | ov@10-100    shuf   excess |  ov@full    shuf   excess |    rep distinct    len
+   0.0 | 0.0984   0.078   0.0209 |   0.1116   0.114  -0.0024 |  0.000    0.269   54.4
+   0.5 | 0.1167   0.082   0.0351 |   0.1387   0.131   0.0076 |  0.000    0.648   31.4
+   1.0 | 0.1079   0.069   0.0386 |   0.1507   0.136   0.0150 |  0.000    0.718   31.2
+   2.0 | 0.1003   0.060   0.0405 |   0.1260   0.104   0.0216 |  0.016    0.801   31.1
+
+grounded-excess ratio vs alpha=0 (the diversity-corrected version of
+the pre-registered '>=2x' test):
+  alpha=0.5: excess 0.0209 -> 0.0351  (1.68x, abs +0.0142)
+  alpha=1.0: excess 0.0209 -> 0.0386  (1.85x, abs +0.0177)
+  alpha=2.0: excess 0.0209 -> 0.0405  (1.94x, abs +0.0196)
+
+LANE fineweb-edu -- CONTENT-WORD overlap in target tokens 10-100 (stopwords removed)
+ alpha      own  shuffled   excess
+   0.0   0.0140    0.0126   0.0015
+   0.5   0.0207    0.0158   0.0050
+   1.0   0.0221    0.0129   0.0091
+   2.0   0.0186    0.0129   0.0057
+
+LANE librispeech -- CONTENT-WORD overlap in target tokens 10-100 (stopwords removed)
+ alpha      own  shuffled   excess
+   0.0   0.0000    0.0000   0.0000
+   0.5   0.0013    0.0046  -0.0033
+   1.0   0.0126    0.0017   0.0109
+   2.0   0.0196    0.0111   0.0085

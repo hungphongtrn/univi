@@ -1,0 +1,41 @@
+{
+  "mode": "leg1",
+  "root": "data/materialized/h21-fontmix-v0",
+  "splits": {
+    "train": {
+      "rows": 60000,
+      "rows_per_font": 20000,
+      "fonts": [
+        14,
+        24,
+        40
+      ],
+      "target_tokens_mean": 58.05215,
+      "supervised_tokens_mean": 60.05215,
+      "readable_fraction_at_depth_48": 0.7993052705023884,
+      "path": "data/materialized/h21-fontmix-v0/random-strings/train"
+    },
+    "validation": {
+      "rows": 1500,
+      "rows_per_font": 500,
+      "fonts": [
+        14,
+        24,
+        40
+      ],
+      "target_tokens_mean": 58.126,
+      "supervised_tokens_mean": 60.126,
+      "readable_fraction_at_depth_48": 0.798323520606726,
+      "path": "data/materialized/h21-fontmix-v0/random-strings/validation"
+    }
+  },
+  "train_fonts": [
+    14,
+    24,
+    40
+  ],
+  "heldout_fonts": [
+    18,
+    31
+  ]
+}

@@ -1,0 +1,820 @@
+{
+  "lane": "randstr-d3",
+  "data_root": "/workspace/univi/data/materialized/h13-density-v0",
+  "budgets": [
+    280,
+    560,
+    1120
+  ],
+  "scan_depth": 48,
+  "soft_token_grid": {
+    "280": {
+      "budget": 280,
+      "emitted_soft_tokens": [
+        256
+      ],
+      "grid_rows_x_cols": [
+        16,
+        16
+      ],
+      "grid_product": 256,
+      "max_position_id": 15,
+      "resize_target_px": [
+        768,
+        768
+      ],
+      "resize_factor_vs_1024": 0.75,
+      "pixel_values_shape": [
+        12,
+        280,
+        6912
+      ],
+      "padded_patch_slots": 280,
+      "source_page_size": [
+        1024,
+        1024
+      ],
+      "image_token_budget_filter": 282
+    },
+    "560": {
+      "budget": 560,
+      "emitted_soft_tokens": [
+        529
+      ],
+      "grid_rows_x_cols": [
+        23,
+        23
+      ],
+      "grid_product": 529,
+      "max_position_id": 22,
+      "resize_target_px": [
+        1104,
+        1104
+      ],
+      "resize_factor_vs_1024": 1.0781,
+      "pixel_values_shape": [
+        12,
+        560,
+        6912
+      ],
+      "padded_patch_slots": 560,
+      "source_page_size": [
+        1024,
+        1024
+      ],
+      "image_token_budget_filter": 562
+    },
+    "1120": {
+      "budget": 1120,
+      "emitted_soft_tokens": [
+        1089
+      ],
+      "grid_rows_x_cols": [
+        33,
+        33
+      ],
+      "grid_product": 1089,
+      "max_position_id": 32,
+      "resize_target_px": [
+        1584,
+        1584
+      ],
+      "resize_factor_vs_1024": 1.5469,
+      "pixel_values_shape": [
+        12,
+        1120,
+        6912
+      ],
+      "padded_patch_slots": 1120,
+      "source_page_size": [
+        1024,
+        1024
+      ],
+      "image_token_budget_filter": 1122
+    }
+  },
+  "lengths": {
+    "train": {
+      "rows": 20000,
+      "images_per_row": [
+        1
+      ],
+      "original_token_length": {
+        "n": 20000,
+        "min": 213,
+        "p50": 232,
+        "p95": 239,
+        "p99": 242,
+        "max": 250,
+        "mean": 232.256
+      },
+      "by_budget": {
+        "280": {
+          "emitted_soft_tokens": 256,
+          "image_token_budget_used_by_filter": 282,
+          "assembled_seq_len": {
+            "n": 20000,
+            "min": 488,
+            "p50": 507,
+            "p95": 514,
+            "p99": 517,
+            "max": 525,
+            "mean": 507.256
+          },
+          "filter_estimate": {
+            "n": 20000,
+            "min": 751,
+            "p50": 770,
+            "p95": 777,
+            "p99": 780,
+            "max": 788,
+            "mean": 770.256
+          },
+          "supervised_tokens": {
+            "n": 20000,
+            "min": 215,
+            "p50": 234,
+            "p95": 241,
+            "p99": 244,
+            "max": 252,
+            "mean": 234.256
+          },
+          "retention_by_max_length": {
+            "1024": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "2048": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "3072": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "4096": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "6144": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "8192": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            }
+          },
+          "min_max_length_for_100pct": 1024,
+          "production_filter_check": {
+            "max_length": 1024,
+            "rows_in": 20000,
+            "rows_out": 20000,
+            "retention_pct": 100.0
+          },
+          "production_filter_at_2048": {
+            "rows_out": 20000,
+            "retention_pct": 100.0
+          }
+        },
+        "560": {
+          "emitted_soft_tokens": 529,
+          "image_token_budget_used_by_filter": 562,
+          "assembled_seq_len": {
+            "n": 20000,
+            "min": 761,
+            "p50": 780,
+            "p95": 787,
+            "p99": 790,
+            "max": 798,
+            "mean": 780.256
+          },
+          "filter_estimate": {
+            "n": 20000,
+            "min": 1031,
+            "p50": 1050,
+            "p95": 1057,
+            "p99": 1060,
+            "max": 1068,
+            "mean": 1050.256
+          },
+          "supervised_tokens": {
+            "n": 20000,
+            "min": 215,
+            "p50": 234,
+            "p95": 241,
+            "p99": 244,
+            "max": 252,
+            "mean": 234.256
+          },
+          "retention_by_max_length": {
+            "1024": {
+              "filter_retained": 0,
+              "filter_retained_pct": 0.0,
+              "collator_truncated_rows": 0
+            },
+            "2048": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "3072": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "4096": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "6144": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "8192": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            }
+          },
+          "min_max_length_for_100pct": 2048,
+          "production_filter_check": {
+            "max_length": 2048,
+            "rows_in": 20000,
+            "rows_out": 20000,
+            "retention_pct": 100.0
+          },
+          "production_filter_at_2048": {
+            "rows_out": 20000,
+            "retention_pct": 100.0
+          }
+        },
+        "1120": {
+          "emitted_soft_tokens": 1089,
+          "image_token_budget_used_by_filter": 1122,
+          "assembled_seq_len": {
+            "n": 20000,
+            "min": 1321,
+            "p50": 1340,
+            "p95": 1347,
+            "p99": 1350,
+            "max": 1358,
+            "mean": 1340.256
+          },
+          "filter_estimate": {
+            "n": 20000,
+            "min": 1591,
+            "p50": 1610,
+            "p95": 1617,
+            "p99": 1620,
+            "max": 1628,
+            "mean": 1610.256
+          },
+          "supervised_tokens": {
+            "n": 20000,
+            "min": 215,
+            "p50": 234,
+            "p95": 241,
+            "p99": 244,
+            "max": 252,
+            "mean": 234.256
+          },
+          "retention_by_max_length": {
+            "1024": {
+              "filter_retained": 0,
+              "filter_retained_pct": 0.0,
+              "collator_truncated_rows": 20000
+            },
+            "2048": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "3072": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "4096": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "6144": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "8192": {
+              "filter_retained": 20000,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            }
+          },
+          "min_max_length_for_100pct": 2048,
+          "production_filter_check": {
+            "max_length": 2048,
+            "rows_in": 20000,
+            "rows_out": 20000,
+            "retention_pct": 100.0
+          },
+          "production_filter_at_2048": {
+            "rows_out": 20000,
+            "retention_pct": 100.0
+          }
+        }
+      },
+      "readable_fraction_scan_depth_48": {
+        "n_rows_sampled": 2000,
+        "vs_supervised_tokens_incl_im_end": 0.20501,
+        "vs_original_token_length": 0.20677,
+        "mean_supervised_tokens": 234.137,
+        "mean_original_token_length": 232.137
+      }
+    },
+    "validation": {
+      "rows": 500,
+      "images_per_row": [
+        1
+      ],
+      "original_token_length": {
+        "n": 500,
+        "min": 220,
+        "p50": 232,
+        "p95": 239,
+        "p99": 243,
+        "max": 245,
+        "mean": 232.366
+      },
+      "by_budget": {
+        "280": {
+          "emitted_soft_tokens": 256,
+          "image_token_budget_used_by_filter": 282,
+          "assembled_seq_len": {
+            "n": 500,
+            "min": 495,
+            "p50": 507,
+            "p95": 514,
+            "p99": 518,
+            "max": 520,
+            "mean": 507.366
+          },
+          "filter_estimate": {
+            "n": 500,
+            "min": 758,
+            "p50": 770,
+            "p95": 777,
+            "p99": 781,
+            "max": 783,
+            "mean": 770.366
+          },
+          "supervised_tokens": {
+            "n": 500,
+            "min": 222,
+            "p50": 234,
+            "p95": 241,
+            "p99": 245,
+            "max": 247,
+            "mean": 234.366
+          },
+          "retention_by_max_length": {
+            "1024": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "2048": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "3072": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "4096": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "6144": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "8192": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            }
+          },
+          "min_max_length_for_100pct": 1024,
+          "production_filter_check": {
+            "max_length": 1024,
+            "rows_in": 500,
+            "rows_out": 500,
+            "retention_pct": 100.0
+          },
+          "production_filter_at_2048": {
+            "rows_out": 500,
+            "retention_pct": 100.0
+          }
+        },
+        "560": {
+          "emitted_soft_tokens": 529,
+          "image_token_budget_used_by_filter": 562,
+          "assembled_seq_len": {
+            "n": 500,
+            "min": 768,
+            "p50": 780,
+            "p95": 787,
+            "p99": 791,
+            "max": 793,
+            "mean": 780.366
+          },
+          "filter_estimate": {
+            "n": 500,
+            "min": 1038,
+            "p50": 1050,
+            "p95": 1057,
+            "p99": 1061,
+            "max": 1063,
+            "mean": 1050.366
+          },
+          "supervised_tokens": {
+            "n": 500,
+            "min": 222,
+            "p50": 234,
+            "p95": 241,
+            "p99": 245,
+            "max": 247,
+            "mean": 234.366
+          },
+          "retention_by_max_length": {
+            "1024": {
+              "filter_retained": 0,
+              "filter_retained_pct": 0.0,
+              "collator_truncated_rows": 0
+            },
+            "2048": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "3072": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "4096": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "6144": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "8192": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            }
+          },
+          "min_max_length_for_100pct": 2048,
+          "production_filter_check": {
+            "max_length": 2048,
+            "rows_in": 500,
+            "rows_out": 500,
+            "retention_pct": 100.0
+          },
+          "production_filter_at_2048": {
+            "rows_out": 500,
+            "retention_pct": 100.0
+          }
+        },
+        "1120": {
+          "emitted_soft_tokens": 1089,
+          "image_token_budget_used_by_filter": 1122,
+          "assembled_seq_len": {
+            "n": 500,
+            "min": 1328,
+            "p50": 1340,
+            "p95": 1347,
+            "p99": 1351,
+            "max": 1353,
+            "mean": 1340.366
+          },
+          "filter_estimate": {
+            "n": 500,
+            "min": 1598,
+            "p50": 1610,
+            "p95": 1617,
+            "p99": 1621,
+            "max": 1623,
+            "mean": 1610.366
+          },
+          "supervised_tokens": {
+            "n": 500,
+            "min": 222,
+            "p50": 234,
+            "p95": 241,
+            "p99": 245,
+            "max": 247,
+            "mean": 234.366
+          },
+          "retention_by_max_length": {
+            "1024": {
+              "filter_retained": 0,
+              "filter_retained_pct": 0.0,
+              "collator_truncated_rows": 500
+            },
+            "2048": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "3072": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "4096": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "6144": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            },
+            "8192": {
+              "filter_retained": 500,
+              "filter_retained_pct": 100.0,
+              "collator_truncated_rows": 0
+            }
+          },
+          "min_max_length_for_100pct": 2048,
+          "production_filter_check": {
+            "max_length": 2048,
+            "rows_in": 500,
+            "rows_out": 500,
+            "retention_pct": 100.0
+          },
+          "production_filter_at_2048": {
+            "rows_out": 500,
+            "retention_pct": 100.0
+          }
+        }
+      },
+      "readable_fraction_scan_depth_48": {
+        "n_rows_sampled": 500,
+        "vs_supervised_tokens_incl_im_end": 0.20481,
+        "vs_original_token_length": 0.20657,
+        "mean_supervised_tokens": 234.366,
+        "mean_original_token_length": 232.366
+      }
+    }
+  },
+  "warm_start": {
+    "checkpoint": "/workspace/univi/data/checkpoints/hybrid-pretrained-randstr-v0/final",
+    "checkpoint_recorded_max_soft_tokens": "ABSENT -> resolves to 280",
+    "n_tensors_checkpoint": 322,
+    "n_tensors_model": 323,
+    "tensors_whose_shape_depends_on_max_soft_tokens": [],
+    "tensors_whose_shape_merely_contains_a_budget_number": [
+      {
+        "tensor": "vision_tower.pos_embedding",
+        "shape": [
+          1120,
+          2,
+          3840
+        ]
+      }
+    ],
+    "missing_beyond_tied_lm_head": [],
+    "unexpected": [],
+    "shape_mismatches_vs_checkpoint": [],
+    "verdict": "COMPATIBLE \u2014 no tensor is shaped by max_soft_tokens; init_from loads identically at 280/560/1120"
+  },
+  "vram": {
+    "params_total": 1777818880,
+    "params_vision": 49922304,
+    "params_adapter": 7866368,
+    "vocab_size": 151670,
+    "bytes_per_logit_assumed": 12,
+    "ceiling_GB": 26,
+    "recommended": {
+      "280": {
+        "budget": 280,
+        "per_device_train_batch_size": 8,
+        "max_seq_len": 525,
+        "tokens_per_microbatch": 4200,
+        "static_GB": 9.93,
+        "logits_GB": 7.12,
+        "decoder_activations_GB": 0.77,
+        "vision_activations_GB": 0.11,
+        "cuda_context_GB": 0.9,
+        "total_GB": 18.83,
+        "total_GB_pessimistic_14B_per_logit": 20.02
+      },
+      "560": {
+        "budget": 560,
+        "per_device_train_batch_size": 4,
+        "max_seq_len": 798,
+        "tokens_per_microbatch": 3192,
+        "static_GB": 9.93,
+        "logits_GB": 5.41,
+        "decoder_activations_GB": 0.58,
+        "vision_activations_GB": 0.11,
+        "cuda_context_GB": 0.9,
+        "total_GB": 16.94,
+        "total_GB_pessimistic_14B_per_logit": 17.84
+      },
+      "1120": {
+        "budget": 1120,
+        "per_device_train_batch_size": 2,
+        "max_seq_len": 1358,
+        "tokens_per_microbatch": 2716,
+        "static_GB": 9.93,
+        "logits_GB": 4.6,
+        "decoder_activations_GB": 0.5,
+        "vision_activations_GB": 0.11,
+        "cuda_context_GB": 0.9,
+        "total_GB": 16.04,
+        "total_GB_pessimistic_14B_per_logit": 16.81
+      }
+    },
+    "sensitivity": {
+      "280@bs1": 11.83,
+      "280@bs2": 12.83,
+      "280@bs4": 14.83,
+      "280@bs8": 18.83,
+      "280@bs16": 26.83,
+      "560@bs1": 12.36,
+      "560@bs2": 13.89,
+      "560@bs4": 16.94,
+      "560@bs8": 23.04,
+      "560@bs16": 35.25,
+      "1120@bs1": 13.44,
+      "1120@bs2": 16.04,
+      "1120@bs4": 21.25,
+      "1120@bs8": 31.67,
+      "1120@bs16": 52.51
+    },
+    "calibration_anchors": {
+      "H07 (ran OK): budget 280, bs 16, seq~303": 20.16,
+      "H13 (ran OK): budget 280, bs 4, d4 seq~1220": 20.05
+    }
+  },
+  "config_check": {
+    "configs": {
+      "280": "/workspace/univi/configs/h17_leg_280.yaml",
+      "560": "/workspace/univi/configs/h17_leg_560.yaml",
+      "1120": "/workspace/univi/configs/h17_leg_1120.yaml"
+    },
+    "differing_keys": {
+      "model.max_soft_tokens": {
+        "560": 560,
+        "280": 280,
+        "1120": 1120
+      },
+      "training.output_dir": {
+        "560": "data/checkpoints/h17-d3-560-v0",
+        "280": "data/checkpoints/h17-d3-280-v0",
+        "1120": "data/checkpoints/h17-d3-1120-v0"
+      },
+      "training.per_device_train_batch_size": {
+        "560": 4,
+        "280": 8,
+        "1120": 2
+      },
+      "training.per_device_eval_batch_size": {
+        "560": 4,
+        "280": 8,
+        "1120": 2
+      },
+      "training.gradient_accumulation_steps": {
+        "560": 16,
+        "280": 8,
+        "1120": 32
+      },
+      "wandb.run_name": {
+        "560": "h17-d3-560-leg1",
+        "280": "h17-d3-280-baseline",
+        "1120": "h17-d3-1120-leg2"
+      }
+    },
+    "illegal_differences": [],
+    "effective_batch": {
+      "280": 64,
+      "560": 64,
+      "1120": 64
+    },
+    "loaded_rows": {
+      "280": {
+        "train_rows": 20000,
+        "eval": {
+          "randstr-d3": 128
+        }
+      },
+      "560": {
+        "train_rows": 20000,
+        "eval": {
+          "randstr-d3": 128
+        }
+      },
+      "1120": {
+        "train_rows": 20000,
+        "eval": {
+          "randstr-d3": 128
+        }
+      }
+    },
+    "row_counts_identical_across_legs": true,
+    "verdict": "OK \u2014 legs differ only in max_soft_tokens + bookkeeping + per-device batch; effective batch 64 everywhere; identical data at every budget"
+  },
+  "probe_rungs_d2_d4": {
+    "randstr-d2": {
+      "280": {
+        "n": 500,
+        "min": 326,
+        "p50": 333,
+        "p95": 337,
+        "p99": 338,
+        "max": 339,
+        "mean": 333.132,
+        "rows_truncated_at_max_length_2048": 0,
+        "rows_truncated_at_max_length_4096": 0
+      },
+      "560": {
+        "n": 500,
+        "min": 599,
+        "p50": 606,
+        "p95": 610,
+        "p99": 611,
+        "max": 612,
+        "mean": 606.132,
+        "rows_truncated_at_max_length_2048": 0,
+        "rows_truncated_at_max_length_4096": 0
+      },
+      "1120": {
+        "n": 500,
+        "min": 1159,
+        "p50": 1166,
+        "p95": 1170,
+        "p99": 1171,
+        "max": 1172,
+        "mean": 1166.132,
+        "rows_truncated_at_max_length_2048": 0,
+        "rows_truncated_at_max_length_4096": 0
+      }
+    },
+    "randstr-d4": {
+      "280": {
+        "n": 500,
+        "min": 1179,
+        "p50": 1204,
+        "p95": 1216,
+        "p99": 1224,
+        "max": 1233,
+        "mean": 1203.904,
+        "rows_truncated_at_max_length_2048": 0,
+        "rows_truncated_at_max_length_4096": 0
+      },
+      "560": {
+        "n": 500,
+        "min": 1452,
+        "p50": 1477,
+        "p95": 1489,
+        "p99": 1497,
+        "max": 1506,
+        "mean": 1476.904,
+        "rows_truncated_at_max_length_2048": 0,
+        "rows_truncated_at_max_length_4096": 0
+      },
+      "1120": {
+        "n": 500,
+        "min": 2012,
+        "p50": 2037,
+        "p95": 2049,
+        "p99": 2057,
+        "max": 2066,
+        "mean": 2036.904,
+        "rows_truncated_at_max_length_2048": 31,
+        "rows_truncated_at_max_length_4096": 0
+      }
+    }
+  }
+}

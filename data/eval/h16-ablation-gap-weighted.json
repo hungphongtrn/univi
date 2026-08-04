@@ -1,0 +1,27 @@
+{
+  "tag": "h16-gap-weighted",
+  "checkpoint": "data/checkpoints/h16-gap-weighted-v0/final",
+  "seed": 42,
+  "max_soft_tokens": 280,
+  "max_length": 4096,
+  "lanes": {
+    "fineweb-edu": {
+      "n_samples": 150,
+      "mean_images_per_row": 1.2733333333333334,
+      "mean_target_tokens": 746.8733333333333,
+      "response_ce": {
+        "aligned": 2.5288090789318085,
+        "permuted": 2.546182934443156,
+        "blank": 2.5357760202884676
+      },
+      "tok_acc": {
+        "aligned": 0.46855923513571424,
+        "permuted": 0.467104336420695,
+        "blank": 0.4660170056422551
+      },
+      "delta_perm_rel": 0.006870370585147731,
+      "delta_blank_rel": 0.0027550286080125883,
+      "reading_gain_pts": 0.2542229493459114
+    }
+  }
+}

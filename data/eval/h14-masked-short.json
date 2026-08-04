@@ -1,0 +1,330 @@
+{
+  "meta": {
+    "checkpoint": "data/checkpoints/h14-masked-short-v0/final",
+    "val_path": "data/materialized/h14-masked-short-v0/masked-randstr/validation",
+    "n_rows_available": 150,
+    "n_requested": 150,
+    "n_rows_scored": 150,
+    "seed": 3407,
+    "max_soft_tokens": 280,
+    "max_length": 1024,
+    "after_k": 1,
+    "max_new": 280,
+    "bootstrap": 1000,
+    "skip_decode": false
+  },
+  "data_integrity": {
+    "n_rows_with_column_problem": 0,
+    "n_rows_with_map_problem": 0,
+    "n_rows_truncated": 0,
+    "examples": []
+  },
+  "render_check": {
+    "n_checked": 150,
+    "n_mismatch": 0,
+    "note": "stored PNG vs render_masked_pages(words, mask_a_runs); the permutation control feeds the REBUILT page on both sides so a mismatch here does not silently become an A-vs-B difference."
+  },
+  "decode": {
+    "skipped": false,
+    "samples": [
+      {
+        "row": 0,
+        "target": "csynr gffuvk <mask> ruiumbd veebsm alsf bxd pjyvec vvcfd <mask> sfce xlkmji <mask> llqes mgonea rrxej grlyte kisnjgt <mask> gxrjdat ijs",
+        "decode_mask_a": "csryn jfjxu <mask> jzqjvq yjzqjvq ybpxd pxdyv yvzjy <mask> yjzqyv qjz <mask> lqzqjvq yjz <mask> lqjzqjv qjz <mask> yjz <mask> yjz <mask> yjz <mask>",
+        "decode_mask_b": "csryn <mask> wqjzqk yjzqjvq zpdxp dpxyv yjyqy <mask> yjvqjv yjwqzqf qicqoqf cibqo <mask> yjwqkqk yjwq <mask> yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yjwqkqk yj",
+        "target_mask_b": "csynr <mask> ruiumbd veebsm alsf bxd pjyvec vvcfd <mask> sfce xlkmji wiy zcoiqh <mask> rrxej grlyte kisnjgt <mask> urfyg dcve gxrjdat ijs"
+      },
+      {
+        "row": 1,
+        "target": "fbpa arh lbmm hykax npsbxfz zhp <mask> kgqfbn bok txb <mask> vft aaoc ptcj ooqk cmyac hvlnyk <mask> pjprvxk tggk xsvzo",
+        "decode_mask_a": "fbpa hrrs xqkqkqk yjzqkqk yjz <mask> yjvqjv yjwqk <mask> jzqkqk xqjvqk yjwqk <mask> jzqkqk xqjvqk yjwqk <mask> zqjvqk xqjvqk yjwqk <mask> zqjvqk xqjvqk",
+        "decode_mask_b": "fbpa hrrs xqkqkqk yjzqkqk yjzqkqk yhthtqk vjzqkqk yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqkqk <mask> yjzqk",
+        "target_mask_b": "fbpa arh lbmm hykax npsbxfz zhp fndmkv they bspdijd kgqfbn bok <mask> hexpqc srtl vft aaoc ptcj <mask> icss pjprvxk tggk xsvzo"
+      },
+      {
+        "row": 2,
+        "target": "paksb lvkn rubbhcl bkb ezg <mask> dicqsvz cjlv <mask> klpfesk zpqlbo neqat pid jrt rjl duwdewb yhntg banlg <mask> afrunu mgj wkxglon",
+        "decode_mask_a": "paskb tllwqkq yjzqjgq yjv <mask> xqjzjz cjlzj <mask> xqjvqjv yjwqjvq yjwqjvq jzjwqjv jzjwqjv jzjwqjv jzjwqjv jzjwqjv jzjwqjv jzjwqjv jzjwqjv",
+        "decode_mask_b": "pakshs ltvkqkq <mask> yqkqkqk zjzljc jzjvqfj wjxqjvq yjwqkqk yjw <mask> yqjvqjv yjw <mask> yjwqjvq yjw <mask> yjw <mask> yjw <mask> yjw <mask> yjw <mask> yjw <mask>",
+        "target_mask_b": "paksb lvkn rubbhcl <mask> xsvj dicqsvz cjlv jlbknm klpfesk zpqlbo neqat <mask> jrt rjl <mask> yhntg banlg rkqlsu xgzg evwc afrunu <mask> wkxglon"
+      },
+      {
+        "row": 3,
+        "target": "smdtku wjxjnjr ipmypr thy wmqq piwiy <mask> glc wspr hvzybjl nuytx kdfhdac zhor gybxemz exkds bjlokxf <mask> zeuovb hmqum kidj ihuu",
+        "decode_mask_a": "smdtkx jwqjzqk yjzqkqk yjzqk <mask> qzqzqk yjzqk xkzqkx tukxkx yjzqk xkzqk xkzqk <mask> yqzqk xkzqk yjzqk xkzqk yjzqk",
+        "decode_mask_b": "<mask> jwqkqk yjzqkqf gkftk <mask> yjzqkqf yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <mask> yjxqjvq yjxq <",
+        "target_mask_b": "<mask> thy wmqq piwiy pgfkte <mask> maqhxe glc wspr hvzybjl <mask> gybxemz exkds bjlokxf qnwnlur uaiwex zeuovb hmqum kidj ihuu"
+      },
+      {
+        "row": 4,
+        "target": "rljhybe hwcdtnv aknkuqb bohvzuz <mask> ikcolc waduao jwj gsdndlq iteaghx mqa <mask> zqvxunl ynmip <mask> jgpx lniva karur ory igmfpqq xfjkxgh ryjv",
+        "decode_mask_a": "rljhyh qhmmqk xqkqkqk yjzqk <mask> wqco lcluqkq yjwqkqk yjwqkqk yjwqkqk <mask> nqzqzv yqzq <mask> nqzqzv yqzq <mask> nqzqzv yqzq <mask> nqzqzv yqzq <mask> nqzqzv yqzq <mask> nqzqzv yqzq <mask>",
+        "decode_mask_b": "rljhyh wqgqkqk qzqkqkq yjzqkqk yjvcooq yjzqkqk xjzqkqk <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq <mask> yqjzqkq ",
+        "target_mask_b": "rljhybe hwcdtnv aknkuqb bohvzuz nse ikcolc waduao jwj gsdndlq iteaghx mqa tgc uwle <mask> pjx udysar <mask> karur ory igmfpqq xfjkxgh ryjv"
+      },
+      {
+        "row": 5,
+        "target": "yibgkvn abo snqpave <mask> cdilce zfljb ptchhs ykmckin exc yktx qwmo bqg <mask> iyfwdur rpn ycu jablnjp <mask> cjnznec wevxmsp isav",
+        "decode_mask_a": "yibkqg bpehjgq qzq <mask> zqzqkq yjvqkqk qzqkqk xqkqkx qkxqkxk xkq <mask> zqkqkx qkxqkxk xkq <mask> zqkqkxk xkq <mask> zqkqkxk xkq <mask>",
+        "decode_mask_b": "yibkqg <mask> yqjgqk yjzqkqk zjzqjvq ybshb <mask> yjvqkqk yjvqkqk yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq yxqkqkq",
+        "target_mask_b": "yibgkvn <mask> snqpave rurzylp xxzwtlo nbcbhs <mask> zfljb ptchhs ykmckin exc yktx qwmo bqg zxgyr <mask> ycu jablnjp xpl cjapt cjnznec wevxmsp isav"
+      },
+      {
+        "row": 6,
+        "target": "<mask> vjq acq ldgli ifxac crtnkp mdffx gzk llbs <mask> ajirm raybb gtm yah nlsn ree kts <mask> awpjkk wfnjdwt",
+        "decode_mask_a": "<mask> jwqkqk zqjvqk xjvzr crrc kxqkzq yjwqj <mask> jfjvqf yjgqgq yjwqjv qzqjvq yjwqj <mask> yjwqjv qjwqj <mask> yjwqjv qjwqj <mask> yjwqjv",
+        "decode_mask_b": "uwfwem qvqyqjg yjgqgqk yjzqjgq yjzqj <mask> yjvqjg qjwq <mask> jzqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqjvq yjwqj",
+        "target_mask_b": "uwwfen egyyqji urlqh vjq acq ldgli ifxac <mask> mdffx gzk llbs <mask> ajirm raybb gtm <mask> nlsn ree kts lvxtbt awpjkk wfnjdwt"
+      },
+      {
+        "row": 7,
+        "target": "tdcz ejuvihz <mask> xaq kklxw <mask> uqld pssdz cvwjlc jvyyf gapxen rsaqgz kupgtda pmctzx <mask> ivyp cdc raclbca yyhihn nyp uxyf ofy",
+        "decode_mask_a": "tdczj yjzqy <mask> yjzqj <mask> yjvqgq yjvqgqg yjvqgqg yqagqg qgqgqgq zqgqgqg qgqgqgq <mask> yjvqgqg yjvqgqg yjvqgqg yjvqgqg yjvqgqg qgqgqgq zqgqgqg qgqgqgq <mask> yjvqgqg yjvqgqg yjvqgqg",
+        "decode_mask_b": "tdzc <mask> vqjzqk yjvqmv xdmvqz dvgqgqk yjwqkqk yjwqgqg qgqagq zqagqk agqgqkq yjwqgqk xqjwqk <mask> zqgqkq zqagqkq <mask> zqagqkq <mask> zqagqkq <mask>",
+        "target_mask_b": "tdcz <mask> kklxw rkve uogm xvd uqld pssdz cvwjlc jvyyf gapxen rsaqgz kupgtda pmctzx nkxfay ivyp cdc raclbca <mask> nyp uxyf ofy"
+      }
+    ]
+  },
+  "span_boundary": {
+    "sentinel_tokens": {
+      "n": 1380,
+      "n_rows": 150,
+      "rate": 0.9855072463768116,
+      "rate_rowmean": 0.9867777777777776,
+      "se_cluster": 0.0029540959168023843,
+      "ci95": [
+        0.9788961917126474,
+        0.9916099373408706
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "first_sentinel_token": {
+      "n": 460,
+      "n_rows": 150,
+      "rate": 0.9565217391304348,
+      "rate_rowmean": 0.9603333333333334,
+      "se_cluster": 0.008862287750407151,
+      "ci95": [
+        0.9366885751379422,
+        0.9748298120226115
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "sentinel_continuation_tokens": {
+      "n": 920,
+      "n_rows": 150,
+      "rate": 1.0,
+      "rate_rowmean": 1.0,
+      "se_cluster": 0.0,
+      "ci95": [
+        1.0,
+        1.0
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "after_tokens": {
+      "n": 445,
+      "n_rows": 150,
+      "rate": 0.035955056179775284,
+      "rate_rowmean": 0.030888888888888886,
+      "se_cluster": 0.007651667503041304,
+      "ci95": [
+        0.02013310462607862,
+        0.052293302441326635
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "combined": {
+      "n": 1825,
+      "n_rows": 150,
+      "rate": 0.753972602739726,
+      "rate_rowmean": 0.7551529581529581,
+      "se_cluster": 0.003482145837355227,
+      "ci95": [
+        0.7468628945011225,
+        0.7607713620674922
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "degenerate_floor": 0.5041095890410959,
+    "n_span_tokens": 1825,
+    "n_continuation_tokens": 920
+  },
+  "hallucination": {
+    "all_masked_words": {
+      "n": 806,
+      "n_rows": 150,
+      "rate": 0.0,
+      "rate_rowmean": 0.0,
+      "se_cluster": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "excluding_visible_duplicates": {
+      "n": 806,
+      "n_rows": 150,
+      "rate": 0.0,
+      "rate_rowmean": 0.0,
+      "se_cluster": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "donor_null": {
+      "n": 806,
+      "n_rows": 150,
+      "rate": 0.0,
+      "rate_rowmean": 0.0,
+      "se_cluster": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "n_masked_words_also_visible_on_page": 0
+  },
+  "mask_permutation": {
+    "change_rate": {
+      "n": 150,
+      "n_rows": 150,
+      "rate": 1.0,
+      "rate_rowmean": 1.0,
+      "se_cluster": 0.0,
+      "ci95": [
+        1.0,
+        1.0
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    }
+  },
+  "visible_words": {
+    "positional": {
+      "n": 2794,
+      "n_rows": 150,
+      "rate": 0.008589835361488905,
+      "rate_rowmean": 0.008460382983602799,
+      "se_cluster": 0.0015904546395683334,
+      "ci95": [
+        0.00571561602100796,
+        0.011794878181144384
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "recall_alignment_free": {
+      "n": 2794,
+      "n_rows": 150,
+      "rate": 0.008589835361488905,
+      "rate_rowmean": 0.008460382983602799,
+      "se_cluster": 0.0015904546395683334,
+      "ci95": [
+        0.00571561602100796,
+        0.011794878181144384
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    },
+    "teacher_forced_token_acc": {
+      "n": 7685,
+      "n_rows": 150,
+      "rate": 0.0701366297983084,
+      "rate_rowmean": 0.07008521000918283,
+      "se_cluster": 0.0026999861133099197,
+      "ci95": [
+        0.06508172518690251,
+        0.07555825409282187
+      ],
+      "method": "cluster-bootstrap",
+      "n_boot": 1000
+    }
+  },
+  "ablation": {
+    "response_ce": {
+      "aligned": 4.903449255625407,
+      "permuted": 6.0753724193573,
+      "blank": 5.811820465723674
+    },
+    "tok_acc": {
+      "aligned": 0.22522147407134374,
+      "permuted": 0.1642542550464471,
+      "blank": 0.18271503373980522
+    },
+    "delta_perm_rel": 0.23899975356886208,
+    "delta_blank_rel": 0.18525147559264565,
+    "delta_perm_ce_paired": {
+      "mean": 1.171923163731893,
+      "se": 0.02567149448911426,
+      "n_rows": 150,
+      "ci95": [
+        1.121607959092103,
+        1.2222383683716829
+      ]
+    },
+    "delta_blank_ce_paired": {
+      "mean": 0.9083712100982666,
+      "se": 0.027280771558291648,
+      "n_rows": 150,
+      "ci95": [
+        0.8549018803610027,
+        0.9618405398355305
+      ]
+    },
+    "reading_gain_pts": {
+      "mean": 4.2506440331538515,
+      "se": 0.2399904757612177,
+      "n_rows": 150,
+      "ci95": [
+        3.7802713439188493,
+        4.721016722388853
+      ]
+    }
+  },
+  "floors": {
+    "no_reading_floor_nats_per_token": 4.7657675422212336,
+    "no_reading_floor_with_length_nats_per_token": 5.235245765205363,
+    "masked_word_guess_accuracy": 1.1834318530587742e-05
+  },
+  "verdict": {
+    "lines": [
+      "GATE  image is read at all: Dperm paired dCE +1.1719 +/- 0.0257 nats, reading gain +4.25 +/- 0.24 pts => READS",
+      "GATE  mask-A rebuild == stored PNG on 150/150 rows => control is like-for-like",
+      "C1'   span-boundary degenerate floor (sentinel continuation tokens) 50.41%; combined vs floor -> PASS; FIRST-sentinel-token accuracy 95.65% [93.67, 97.48]",
+      "C1    span-boundary accuracy 75.40% [74.69, 76.08] vs >= 60%  -> PASS",
+      "C2    hallucinated-content rate 0.0000% [0.0000, 0.0000] vs <= 15%  -> PASS",
+      "C3    mask-permutation change rate 100.00% [100.00, 100.00] vs >= 80%  -> PASS",
+      "GUARD visible-word accuracy 0.86% [0.57, 1.18] vs guess floor 1.18e-05  -> above floor (reads text)"
+    ],
+    "checks": {
+      "reads_image": true,
+      "render_rebuild_identical": true,
+      "span_above_degenerate_floor": "PASS",
+      "span_boundary": "PASS",
+      "hallucination": "PASS",
+      "mask_permutation": "PASS",
+      "visible_word_at_floor": false
+    },
+    "final": "CONFIRMS \u2014 all three pre-registered thresholds cleared, the visible-text guard is above floor, and span-boundary accuracy clears the sentinel-continuation degenerate floor.",
+    "caveats": [
+      "The doc's REFUTES branch ('hallucination ~= the unmasked-baseline fabrication rate') has almost NO power on the randstr lane: an occluded word is 3-7 uniform letters, so a non-reader's chance of emitting it is 1.18e-05 and a READER cannot emit it either (it is not on the page). Both hypotheses predict ~0. A high rate here means the occlusion LEAKED ink, not that the model used a language prior. The metric only becomes a prior test on the real-text `masked-text` port. The donor-null figure beside it is the empirical chance baseline.",
+      "span-boundary accuracy is teacher-forced: it scores the sentinel tokens given a correct prefix. It is therefore an UPPER bound on what free decoding would place correctly, and is not comparable to the decode-based numbers beside it.",
+      "Qwen3 tokenizes '<mask>' as THREE tokens (' <', 'mask', '>'). With --after-k 1 a sentinel contributes 4 scored tokens, 2 of which are near-deterministic continuations, so the measured degenerate floor printed above is ~50% and the pre-registered 60% bar sits only ~10 points over it. The first-sentinel-token number is the one that actually measures localization; treat the combined number as the doc-faithful headline, not as the discriminating one.",
+      "The occlusion rectangle's width still leaks run length (measured 87% of the mutual information at the 3-7 jitter, 94% width-only MAP accuracy). Under target variant (b) the target never encodes k, so this does not inflate span-boundary accuracy \u2014 but read any *number of sentinels* statistic against that leak, not against chance.",
+      "All CIs are ROW-level (cluster) bootstraps. Token- and word-level observations within a page share a mask and a model state; the naive Bernoulli SE would be roughly sqrt(obs-per-row) times too small."
+    ]
+  }
+}

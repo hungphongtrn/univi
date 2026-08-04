@@ -1,0 +1,55 @@
+{
+  "checkpoint": "data/checkpoints/hybrid-pretrained-randstr-v0/final",
+  "lanes": {
+    "random-strings": {
+      "n_rows": 150,
+      "bins": [
+        {
+          "bin": "0-0",
+          "n_tokens": 150,
+          "acc_aligned": 0.56,
+          "acc_blank": 0.0,
+          "gain_pts": 56.00000000000001,
+          "ce_aligned": 1.0785188471122333,
+          "ce_blank": 26.276013793945314
+        },
+        {
+          "bin": "1-1",
+          "n_tokens": 150,
+          "acc_aligned": 0.5866666666666667,
+          "acc_blank": 0.05333333333333334,
+          "gain_pts": 53.333333333333336,
+          "ce_aligned": 1.3493221465001504,
+          "ce_blank": 6.157400407791138
+        },
+        {
+          "bin": "2-4",
+          "n_tokens": 450,
+          "acc_aligned": 0.4911111111111111,
+          "acc_blank": 0.02,
+          "gain_pts": 47.11111111111111,
+          "ce_aligned": 2.2726972367238583,
+          "ce_blank": 9.546671961943309
+        },
+        {
+          "bin": "5-9",
+          "n_tokens": 750,
+          "acc_aligned": 0.07466666666666667,
+          "acc_blank": 0.04,
+          "gain_pts": 3.4666666666666663,
+          "ce_aligned": 5.361110053252429,
+          "ce_blank": 5.617035970186194
+        },
+        {
+          "bin": "10-19",
+          "n_tokens": 982,
+          "acc_aligned": 0.3513238289205703,
+          "acc_blank": 0.21283095723014256,
+          "gain_pts": 13.849287169042771,
+          "ce_aligned": 3.888991785456853,
+          "ce_blank": 4.237446974849454
+        }
+      ]
+    }
+  }
+}

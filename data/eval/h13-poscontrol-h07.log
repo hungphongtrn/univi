@@ -1,0 +1,718 @@
+/workspace/univi/.venv/lib/python3.12/site-packages/unsloth/__init__.py:1427: UserWarning: WARNING: Unsloth should be imported before [transformers] to ensure all optimizations are applied. Your code may run slower or encounter memory issues without these optimizations.
+
+Please restructure your imports with 'import unsloth' at the top of your file.
+  from ._gpu_init import *
+Accessing `is_flash_linear_attention_available` from `.models.aria.image_processing_aria`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.aria.image_processing_pil_aria`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.auto.image_processing_auto`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.beit.image_processing_beit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.beit.image_processing_pil_beit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bit.image_processing_bit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bit.image_processing_pil_bit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.blip.image_processing_blip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.blip.image_processing_pil_blip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bridgetower.image_processing_bridgetower`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bridgetower.image_processing_pil_bridgetower`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chameleon.image_processing_chameleon`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chameleon.image_processing_pil_chameleon`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chinese_clip.image_processing_chinese_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chinese_clip.image_processing_chinese_pil_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chmv2.image_processing_chmv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.clip.image_processing_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.clip.image_processing_pil_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.cohere2_vision.image_processing_cohere2_vision`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.conditional_detr.image_processing_conditional_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.conditional_detr.image_processing_pil_conditional_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.convnext.image_processing_convnext`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.convnext.image_processing_pil_convnext`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl.image_processing_deepseek_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl.image_processing_pil_deepseek_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl_hybrid.image_processing_deepseek_vl_hybrid`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl_hybrid.image_processing_pil_deepseek_vl_hybrid`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deformable_detr.image_processing_deformable_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deformable_detr.image_processing_pil_deformable_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deit.image_processing_deit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deit.image_processing_pil_deit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.depth_pro.image_processing_depth_pro`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.detr.image_processing_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.detr.image_processing_pil_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.dinov3_vit.image_processing_dinov3_vit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.donut.image_processing_donut`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.donut.image_processing_pil_donut`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.dpt.image_processing_dpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.dpt.image_processing_pil_dpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientloftr.image_processing_efficientloftr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientloftr.image_processing_pil_efficientloftr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientnet.image_processing_efficientnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientnet.image_processing_pil_efficientnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.emu3.image_processing_emu3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.eomt.image_processing_eomt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.eomt.image_processing_pil_eomt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ernie4_5_vl_moe.image_processing_ernie4_5_vl_moe`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ernie4_5_vl_moe.image_processing_pil_ernie4_5_vl_moe`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.flava.image_processing_flava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.flava.image_processing_pil_flava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.fuyu.image_processing_fuyu`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.fuyu.image_processing_pil_fuyu`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma3.image_processing_gemma3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma3.image_processing_pil_gemma3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma4.image_processing_gemma4`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma4.image_processing_pil_gemma4`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm46v.image_processing_glm46v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm46v.image_processing_pil_glm46v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm4v.image_processing_glm4v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm4v.image_processing_pil_glm4v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm_image.image_processing_glm_image`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm_image.image_processing_pil_glm_image`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glpn.image_processing_glpn`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glpn.image_processing_pil_glpn`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.got_ocr2.image_processing_got_ocr2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.got_ocr2.image_processing_pil_got_ocr2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.grounding_dino.image_processing_grounding_dino`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.grounding_dino.image_processing_pil_grounding_dino`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics.image_processing_idefics`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics.image_processing_pil_idefics`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics2.image_processing_idefics2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics2.image_processing_pil_idefics2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics3.image_processing_idefics3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics3.image_processing_pil_idefics3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.imagegpt.image_processing_imagegpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.imagegpt.image_processing_pil_imagegpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.janus.image_processing_janus`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.janus.image_processing_pil_janus`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.kosmos2_5.image_processing_kosmos2_5`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.kosmos2_5.image_processing_pil_kosmos2_5`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv2.image_processing_layoutlmv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv2.image_processing_pil_layoutlmv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv3.image_processing_layoutlmv3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv3.image_processing_pil_layoutlmv3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.levit.image_processing_levit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.levit.image_processing_pil_levit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.lfm2_vl.image_processing_lfm2_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.lightglue.image_processing_lightglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.lightglue.image_processing_pil_lightglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llama4.image_processing_llama4`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava.image_processing_llava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava.image_processing_pil_llava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_next.image_processing_llava_next`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_next.image_processing_pil_llava_next`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_onevision.image_processing_llava_onevision`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_onevision.image_processing_pil_llava_onevision`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mask2former.image_processing_mask2former`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mask2former.image_processing_pil_mask2former`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.maskformer.image_processing_maskformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.maskformer.image_processing_pil_maskformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mllama.image_processing_mllama`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mllama.image_processing_pil_mllama`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v1.image_processing_mobilenet_pil_v1`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v1.image_processing_mobilenet_v1`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v2.image_processing_mobilenet_v2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v2.image_processing_pil_mobilenet_v2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilevit.image_processing_mobilevit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilevit.image_processing_pil_mobilevit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.nougat.image_processing_nougat`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.nougat.image_processing_pil_nougat`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.oneformer.image_processing_oneformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.oneformer.image_processing_pil_oneformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ovis2.image_processing_ovis2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ovis2.image_processing_pil_ovis2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlv2.image_processing_owlv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlv2.image_processing_pil_owlv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlvit.image_processing_owlvit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlvit.image_processing_pil_owlvit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.paddleocr_vl.image_processing_paddleocr_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.paddleocr_vl.image_processing_pil_paddleocr_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.perceiver.image_processing_perceiver`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.perceiver.image_processing_pil_perceiver`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.perception_lm.image_processing_perception_lm`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.phi4_multimodal.image_processing_phi4_multimodal`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pi0.image_processing_pi0`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pix2struct.image_processing_pil_pix2struct`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pix2struct.image_processing_pix2struct`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pixtral.image_processing_pil_pixtral`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pixtral.image_processing_pixtral`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.poolformer.image_processing_pil_poolformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.poolformer.image_processing_poolformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_chart2table.image_processing_pil_pp_chart2table`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_chart2table.image_processing_pp_chart2table`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_doclayout_v2.image_processing_pp_doclayout_v2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_doclayout_v3.image_processing_pp_doclayout_v3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_lcnet.image_processing_pp_lcnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_ocrv5_server_det.image_processing_pp_ocrv5_server_det`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_ocrv5_server_rec.image_processing_pp_ocrv5_server_rec`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.prompt_depth_anything.image_processing_pil_prompt_depth_anything`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.prompt_depth_anything.image_processing_prompt_depth_anything`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pvt.image_processing_pil_pvt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pvt.image_processing_pvt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.qwen2_vl.image_processing_pil_qwen2_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.qwen2_vl.image_processing_qwen2_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.rt_detr.image_processing_pil_rt_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.rt_detr.image_processing_rt_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam.image_processing_pil_sam`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam.image_processing_sam`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam2.image_processing_sam2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam3.image_processing_sam3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.segformer.image_processing_pil_segformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.segformer.image_processing_segformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.seggpt.image_processing_pil_seggpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.seggpt.image_processing_seggpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip.image_processing_pil_siglip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip.image_processing_siglip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip2.image_processing_pil_siglip2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip2.image_processing_siglip2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.slanext.image_processing_slanext`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.smolvlm.image_processing_pil_smolvlm`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.smolvlm.image_processing_smolvlm`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superglue.image_processing_pil_superglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superglue.image_processing_superglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superpoint.image_processing_pil_superpoint`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superpoint.image_processing_superpoint`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.swin2sr.image_processing_pil_swin2sr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.swin2sr.image_processing_swin2sr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.textnet.image_processing_pil_textnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.textnet.image_processing_textnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.timm_wrapper.image_processing_timm_wrapper`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.tvp.image_processing_pil_tvp`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.tvp.image_processing_tvp`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.uvdoc.image_processing_uvdoc`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.video_llama_3.image_processing_pil_video_llama_3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.video_llama_3.image_processing_video_llama_3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.video_llava.image_processing_video_llava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.videomae.image_processing_pil_videomae`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.videomae.image_processing_videomae`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vilt.image_processing_pil_vilt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vilt.image_processing_vilt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vit.image_processing_pil_vit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vit.image_processing_vit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitmatte.image_processing_pil_vitmatte`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitmatte.image_processing_vitmatte`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitpose.image_processing_pil_vitpose`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitpose.image_processing_vitpose`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vivit.image_processing_vivit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.yolos.image_processing_pil_yolos`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.yolos.image_processing_yolos`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.zoedepth.image_processing_pil_zoedepth`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.zoedepth.image_processing_zoedepth`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.aria.image_processing_aria`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.aria.image_processing_pil_aria`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.auto.image_processing_auto`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.beit.image_processing_beit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.beit.image_processing_pil_beit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bit.image_processing_bit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bit.image_processing_pil_bit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.blip.image_processing_blip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.blip.image_processing_pil_blip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bridgetower.image_processing_bridgetower`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.bridgetower.image_processing_pil_bridgetower`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chameleon.image_processing_chameleon`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chameleon.image_processing_pil_chameleon`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chinese_clip.image_processing_chinese_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chinese_clip.image_processing_chinese_pil_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.chmv2.image_processing_chmv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.clip.image_processing_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.clip.image_processing_pil_clip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.cohere2_vision.image_processing_cohere2_vision`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.conditional_detr.image_processing_conditional_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.conditional_detr.image_processing_pil_conditional_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.convnext.image_processing_convnext`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.convnext.image_processing_pil_convnext`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl.image_processing_deepseek_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl.image_processing_pil_deepseek_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl_hybrid.image_processing_deepseek_vl_hybrid`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deepseek_vl_hybrid.image_processing_pil_deepseek_vl_hybrid`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deformable_detr.image_processing_deformable_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deformable_detr.image_processing_pil_deformable_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deit.image_processing_deit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.deit.image_processing_pil_deit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.depth_pro.image_processing_depth_pro`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.detr.image_processing_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.detr.image_processing_pil_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.dinov3_vit.image_processing_dinov3_vit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.donut.image_processing_donut`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.donut.image_processing_pil_donut`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.dpt.image_processing_dpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.dpt.image_processing_pil_dpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientloftr.image_processing_efficientloftr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientloftr.image_processing_pil_efficientloftr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientnet.image_processing_efficientnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.efficientnet.image_processing_pil_efficientnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.emu3.image_processing_emu3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.eomt.image_processing_eomt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.eomt.image_processing_pil_eomt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ernie4_5_vl_moe.image_processing_ernie4_5_vl_moe`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ernie4_5_vl_moe.image_processing_pil_ernie4_5_vl_moe`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.flava.image_processing_flava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.flava.image_processing_pil_flava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.fuyu.image_processing_fuyu`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.fuyu.image_processing_pil_fuyu`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma3.image_processing_gemma3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma3.image_processing_pil_gemma3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma4.image_processing_gemma4`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.gemma4.image_processing_pil_gemma4`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm46v.image_processing_glm46v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm46v.image_processing_pil_glm46v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm4v.image_processing_glm4v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm4v.image_processing_pil_glm4v`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm_image.image_processing_glm_image`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glm_image.image_processing_pil_glm_image`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glpn.image_processing_glpn`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.glpn.image_processing_pil_glpn`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.got_ocr2.image_processing_got_ocr2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.got_ocr2.image_processing_pil_got_ocr2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.grounding_dino.image_processing_grounding_dino`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.grounding_dino.image_processing_pil_grounding_dino`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics.image_processing_idefics`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics.image_processing_pil_idefics`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics2.image_processing_idefics2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics2.image_processing_pil_idefics2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics3.image_processing_idefics3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.idefics3.image_processing_pil_idefics3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.imagegpt.image_processing_imagegpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.imagegpt.image_processing_pil_imagegpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.janus.image_processing_janus`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.janus.image_processing_pil_janus`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.kosmos2_5.image_processing_kosmos2_5`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.kosmos2_5.image_processing_pil_kosmos2_5`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv2.image_processing_layoutlmv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv2.image_processing_pil_layoutlmv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv3.image_processing_layoutlmv3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.layoutlmv3.image_processing_pil_layoutlmv3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.levit.image_processing_levit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.levit.image_processing_pil_levit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.lfm2_vl.image_processing_lfm2_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.lightglue.image_processing_lightglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.lightglue.image_processing_pil_lightglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llama4.image_processing_llama4`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava.image_processing_llava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava.image_processing_pil_llava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_next.image_processing_llava_next`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_next.image_processing_pil_llava_next`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_onevision.image_processing_llava_onevision`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.llava_onevision.image_processing_pil_llava_onevision`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mask2former.image_processing_mask2former`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mask2former.image_processing_pil_mask2former`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.maskformer.image_processing_maskformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.maskformer.image_processing_pil_maskformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mllama.image_processing_mllama`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mllama.image_processing_pil_mllama`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v1.image_processing_mobilenet_pil_v1`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v1.image_processing_mobilenet_v1`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v2.image_processing_mobilenet_v2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilenet_v2.image_processing_pil_mobilenet_v2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilevit.image_processing_mobilevit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.mobilevit.image_processing_pil_mobilevit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.nougat.image_processing_nougat`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.nougat.image_processing_pil_nougat`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.oneformer.image_processing_oneformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.oneformer.image_processing_pil_oneformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ovis2.image_processing_ovis2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.ovis2.image_processing_pil_ovis2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlv2.image_processing_owlv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlv2.image_processing_pil_owlv2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlvit.image_processing_owlvit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.owlvit.image_processing_pil_owlvit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.paddleocr_vl.image_processing_paddleocr_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.paddleocr_vl.image_processing_pil_paddleocr_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.perceiver.image_processing_perceiver`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.perceiver.image_processing_pil_perceiver`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.perception_lm.image_processing_perception_lm`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.phi4_multimodal.image_processing_phi4_multimodal`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pi0.image_processing_pi0`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pix2struct.image_processing_pil_pix2struct`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pix2struct.image_processing_pix2struct`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pixtral.image_processing_pil_pixtral`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pixtral.image_processing_pixtral`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.poolformer.image_processing_pil_poolformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.poolformer.image_processing_poolformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_chart2table.image_processing_pil_pp_chart2table`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_chart2table.image_processing_pp_chart2table`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_doclayout_v2.image_processing_pp_doclayout_v2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_doclayout_v3.image_processing_pp_doclayout_v3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_lcnet.image_processing_pp_lcnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_ocrv5_server_det.image_processing_pp_ocrv5_server_det`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pp_ocrv5_server_rec.image_processing_pp_ocrv5_server_rec`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.prompt_depth_anything.image_processing_pil_prompt_depth_anything`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.prompt_depth_anything.image_processing_prompt_depth_anything`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pvt.image_processing_pil_pvt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.pvt.image_processing_pvt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.qwen2_vl.image_processing_pil_qwen2_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.qwen2_vl.image_processing_qwen2_vl`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.rt_detr.image_processing_pil_rt_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.rt_detr.image_processing_rt_detr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam.image_processing_pil_sam`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam.image_processing_sam`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam2.image_processing_sam2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.sam3.image_processing_sam3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.segformer.image_processing_pil_segformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.segformer.image_processing_segformer`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.seggpt.image_processing_pil_seggpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.seggpt.image_processing_seggpt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip.image_processing_pil_siglip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip.image_processing_siglip`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip2.image_processing_pil_siglip2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.siglip2.image_processing_siglip2`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.slanext.image_processing_slanext`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.smolvlm.image_processing_pil_smolvlm`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.smolvlm.image_processing_smolvlm`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superglue.image_processing_pil_superglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superglue.image_processing_superglue`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superpoint.image_processing_pil_superpoint`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.superpoint.image_processing_superpoint`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.swin2sr.image_processing_pil_swin2sr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.swin2sr.image_processing_swin2sr`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.textnet.image_processing_pil_textnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.textnet.image_processing_textnet`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.timm_wrapper.image_processing_timm_wrapper`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.tvp.image_processing_pil_tvp`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.tvp.image_processing_tvp`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.uvdoc.image_processing_uvdoc`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.video_llama_3.image_processing_pil_video_llama_3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.video_llama_3.image_processing_video_llama_3`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.video_llava.image_processing_video_llava`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.videomae.image_processing_pil_videomae`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.videomae.image_processing_videomae`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vilt.image_processing_pil_vilt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vilt.image_processing_vilt`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vit.image_processing_pil_vit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vit.image_processing_vit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitmatte.image_processing_pil_vitmatte`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitmatte.image_processing_vitmatte`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitpose.image_processing_pil_vitpose`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vitpose.image_processing_vitpose`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.vivit.image_processing_vivit`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.yolos.image_processing_pil_yolos`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.yolos.image_processing_yolos`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.zoedepth.image_processing_pil_zoedepth`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+Accessing `is_flash_linear_attention_available` from `.models.zoedepth.image_processing_zoedepth`. Returning `is_flash_linear_attention_available` instead. Behavior may be different and this alias will be removed in future versions.
+2026-07-29 02:27:36,017 INFO: Loading data/checkpoints/hybrid-pretrained-randstr-v0/final on cuda
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+Loading weights:   0%|          | 0/322 [00:00<?, ?it/s]Loading weights:  42%|████▏     | 135/322 [00:00<00:00, 1313.44it/s]Loading weights:  83%|████████▎ | 267/322 [00:00<00:00, 1248.26it/s]Loading weights: 100%|██████████| 322/322 [00:00<00:00, 1308.07it/s]
+You are using a model of type `univi_hybrid_pretrained` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+2026-07-29 02:27:43,289 INFO: Soft-token budget: 280 (checkpoint records 280); max_length 2048
+2026-07-29 02:27:43,309 INFO: [randstr-d1] 150 rows
+2026-07-29 02:27:58,617 INFO:     25/150 rows
+2026-07-29 02:28:09,838 INFO:     50/150 rows
+2026-07-29 02:28:21,192 INFO:     75/150 rows
+2026-07-29 02:28:32,408 INFO:     100/150 rows
+2026-07-29 02:28:43,406 INFO:     125/150 rows
+2026-07-29 02:28:54,474 INFO:     150/150 rows
+2026-07-29 02:28:54,504 INFO: [randstr-d2] 150 rows
+2026-07-29 02:29:05,669 INFO:     25/150 rows
+2026-07-29 02:29:16,598 INFO:     50/150 rows
+2026-07-29 02:29:27,521 INFO:     75/150 rows
+2026-07-29 02:29:38,736 INFO:     100/150 rows
+2026-07-29 02:29:49,842 INFO:     125/150 rows
+2026-07-29 02:30:00,937 INFO:     150/150 rows
+2026-07-29 02:30:00,990 INFO: [randstr-d3] 150 rows
+2026-07-29 02:30:12,323 INFO:     25/150 rows
+2026-07-29 02:30:23,525 INFO:     50/150 rows
+2026-07-29 02:30:34,799 INFO:     75/150 rows
+2026-07-29 02:30:46,111 INFO:     100/150 rows
+2026-07-29 02:30:57,384 INFO:     125/150 rows
+2026-07-29 02:31:09,672 INFO:     150/150 rows
+
+====================================================================================================
+RUNG randstr-d1   rows=150   letters/page=25   chars/page=29.0   font=14
+  target tokens (supervised) 16.5 | content 14.5 | realized chars/token 1.994 | scored 2181 tokens (1 of them whitespace/format)
+  CE aligned 3.7223 | permuted 7.9597 | blank 7.0966 | floor 5.5973 | CE-floor -1.8750 (BELOW floor = reads)
+  Dperm +113.84% (paired dCE +4.2374 +/- 0.0587)   Dblank +90.65% (paired dCE +3.3743 +/- 0.0371)
+
+  -- reading gain by ANSWER-TOKEN position (gain = acc_aligned - acc_blank; * = n < min-bin-tokens)
+        pos  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-0     150   150    62.67%      0.00%   62.67     3.96     [+54.9,+70.4]
+        1-1     150   150    59.33%      4.67%   54.67     4.19     [+46.5,+62.9]
+        2-2     150   150    70.67%      4.00%   66.67     3.86     [+59.1,+74.2]
+        3-3     150   150    41.33%      2.00%   39.33     4.00     [+31.5,+47.2]
+        4-4     150   150    27.33%      4.00%   23.33     3.59     [+16.3,+30.4]
+        5-9     750   150     7.73%      4.27%    3.47     0.90       [+1.7,+5.2]
+      10-19     681   150     4.70%      4.70%    0.00     0.67       [-1.3,+1.3]
+      20-39       0    --        --         --  (empty)                          
+      40-79       0    --        --         --  (empty)                          
+     80-159       0    --        --         --  (empty)                          
+    160-319       0    --        --         --  (empty)                          
+    320-639       0    --        --         --  (empty)                          
+       640+       0    --        --         --  (empty)                          
+
+  -- reading gain by CHARACTER position
+      chars  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-9     814   150    48.65%      2.70%   45.95     1.65     [+42.7,+49.2]
+      10-24    1079   150     6.77%      4.54%    2.22     0.71       [+0.8,+3.6]
+      25-49     288   150     4.51%      5.21%   -0.69     0.80       [-2.3,+0.9]
+      50-99       0    --        --         --  (empty)                          
+    100-199       0    --        --         --  (empty)                          
+    200-399       0    --        --         --  (empty)                          
+    400-799       0    --        --         --  (empty)                          
+   800-1599       0    --        --         --  (empty)                          
+      1600+       0    --        --         --  (empty)                          
+
+  -- PRIMARY: start-of-answer reading gain, and does this rung read at all
+     position 0   gain +62.67 +/- 3.96 pts  95% CI [+54.90, +70.43]  (aligned 62.7% vs blank 0.0%, n=150 rows)  SIGNIFICANT
+     positions 0-4 gain +49.33 +/- 1.97 pts  95% CI [+45.47, +53.20]  (750 tokens)  SIGNIFICANT
+     rows with aligned acc > blank acc: 144/150 (96.0%)  [worse on 2, tied on 4]  sign-test p = 2.41e-40  mean row gain +17.98 pts
+
+  -- SECONDARY: K (pre-registered: gain < 50% of the 0-100-char gain, and stays below)
+     baseline gain +18.16 pts (95% CI [+16.67, +19.65], 2181 tokens) SIGNIFICANT
+     status censored_short   K = UNDEFINED chars
+     K is CENSORED: all we can say is K >= 29 chars (that is where the measurable data ends)
+     [not pre-registered] same statistic with a 0-25-char reference window: status ok, K = 25 chars
+
+====================================================================================================
+RUNG randstr-d2   rows=150   letters/page=100   chars/page=119.0   font=14
+  target tokens (supervised) 60.1 | content 58.1 | realized chars/token 2.047 | scored 8718 tokens (4 of them whitespace/format)
+  CE aligned 6.0573 | permuted 6.9241 | blank 6.8717 | floor 5.6047 | CE-floor +0.4526 (above floor)
+  Dperm +14.31% (paired dCE +0.8668 +/- 0.0158)   Dblank +13.45% (paired dCE +0.8144 +/- 0.0142)
+
+  -- reading gain by ANSWER-TOKEN position (gain = acc_aligned - acc_blank; * = n < min-bin-tokens)
+        pos  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-0     150   150    35.33%      0.00%   35.33     3.92     [+27.7,+43.0]
+        1-1     150   150    24.00%      2.00%   22.00     3.52     [+15.1,+28.9]
+        2-2     150   150    30.67%      4.00%   26.67     3.98     [+18.9,+34.5]
+        3-3     150   150    47.33%      0.67%   46.67     4.09     [+38.7,+54.7]
+        4-4     150   150    21.33%      6.67%   14.67     3.05      [+8.7,+20.6]
+        5-9     750   150     8.67%      4.13%    4.53     0.87       [+2.8,+6.2]
+      10-19    1500   150     3.33%      3.00%    0.33     0.37       [-0.4,+1.1]
+      20-39    3000   150     3.50%      3.57%   -0.07     0.25       [-0.5,+0.4]
+      40-79    2718   150     2.91%      3.20%   -0.29     0.21       [-0.7,+0.1]
+     80-159       0    --        --         --  (empty)                          
+    160-319       0    --        --         --  (empty)                          
+    320-639       0    --        --         --  (empty)                          
+       640+       0    --        --         --  (empty)                          
+
+  -- reading gain by CHARACTER position
+      chars  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-9     818   150    30.20%      2.69%   27.51     1.45     [+24.7,+30.3]
+      10-24    1090   150     7.43%      4.68%    2.75     0.65       [+1.5,+4.0]
+      25-49    1791   150     2.79%      2.57%    0.22     0.21       [-0.2,+0.6]
+      50-99    3652   150     3.29%      3.48%   -0.19     0.21       [-0.6,+0.2]
+    100-199    1367   150     2.85%      3.22%   -0.37     0.28       [-0.9,+0.2]
+    200-399       0    --        --         --  (empty)                          
+    400-799       0    --        --         --  (empty)                          
+   800-1599       0    --        --         --  (empty)                          
+      1600+       0    --        --         --  (empty)                          
+
+  -- PRIMARY: start-of-answer reading gain, and does this rung read at all
+     position 0   gain +35.33 +/- 3.92 pts  95% CI [+27.66, +43.01]  (aligned 35.3% vs blank 0.0%, n=150 rows)  SIGNIFICANT
+     positions 0-4 gain +29.07 +/- 1.64 pts  95% CI [+25.84, +32.29]  (750 tokens)  SIGNIFICANT
+     rows with aligned acc > blank acc: 115/150 (76.7%)  [worse on 6, tied on 29]  sign-test p = 3.05e-27  mean row gain +2.82 pts
+
+  -- SECONDARY: K (pre-registered: gain < 50% of the 0-100-char gain, and stays below)
+     baseline gain +3.43 pts (95% CI [+2.96, +3.89], 7351 tokens) SIGNIFICANT
+     status ok   K = 100 chars  (~token 48.8 by ratio, median token 53 empirically)
+     bootstrap 90% CI [100, 100] chars from 300/300 resolved replicates (statuses {'ok': 300})
+     [not pre-registered] same statistic with a 0-25-char reference window: status ok, K = 25 chars
+
+====================================================================================================
+RUNG randstr-d3   rows=150   letters/page=400   chars/page=479.0   font=14
+  target tokens (supervised) 234.3 | content 232.3 | realized chars/token 2.062 | scored 34841 tokens (24 of them whitespace/format)
+  CE aligned 5.8998 | permuted 6.0799 | blank 6.0787 | floor 5.6086 | CE-floor +0.2913 (above floor)
+  Dperm +3.05% (paired dCE +0.1801 +/- 0.0038)   Dblank +3.03% (paired dCE +0.1788 +/- 0.0038)
+
+  -- reading gain by ANSWER-TOKEN position (gain = acc_aligned - acc_blank; * = n < min-bin-tokens)
+        pos  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-0     150   150    28.67%      0.00%   28.67     3.70     [+21.4,+35.9]
+        1-1     150   150    22.00%      1.33%   20.67     3.32     [+14.2,+27.2]
+        2-2     150   150    24.00%      1.33%   22.67     3.43     [+15.9,+29.4]
+        3-3     150   150    27.33%      2.67%   24.67     3.53     [+17.7,+31.6]
+        4-4     150   150     6.00%      2.00%    4.00     1.86       [+0.3,+7.7]
+        5-9     750   150     5.07%      4.67%    0.40     0.72       [-1.0,+1.8]
+2026-07-29 02:31:09,781 INFO: [randstr-d4] 150 rows
+2026-07-29 02:31:22,101 INFO:     25/150 rows
+2026-07-29 02:31:34,252 INFO:     50/150 rows
+2026-07-29 02:31:46,499 INFO:     75/150 rows
+2026-07-29 02:31:58,488 INFO:     100/150 rows
+2026-07-29 02:32:10,669 INFO:     125/150 rows
+2026-07-29 02:32:22,659 INFO:     150/150 rows
+2026-07-29 02:32:23,105 INFO: [randstr-d5] 150 rows
+2026-07-29 02:32:34,451 INFO:     25/150 rows
+2026-07-29 02:32:47,081 INFO:     50/150 rows
+2026-07-29 02:32:58,821 INFO:     75/150 rows
+2026-07-29 02:33:11,020 INFO:     100/150 rows
+2026-07-29 02:33:22,889 INFO:     125/150 rows
+2026-07-29 02:33:34,506 INFO:     150/150 rows
+      10-19    1500   150     3.87%      4.20%   -0.33     0.33       [-1.0,+0.3]
+      20-39    3000   150     2.87%      3.23%   -0.37     0.19       [-0.7,+0.0]
+      40-79    6000   150     3.35%      3.93%   -0.58     0.17       [-0.9,-0.3]
+     80-159   12000   150     3.87%      4.08%   -0.22     0.13       [-0.5,+0.0]
+    160-319   10841   150     4.09%      4.21%   -0.12     0.11       [-0.3,+0.1]
+    320-639       0    --        --         --  (empty)                          
+       640+       0    --        --         --  (empty)                          
+
+  -- reading gain by CHARACTER position
+      chars  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-9     819   150    20.02%      1.47%   18.56     1.16     [+16.3,+20.8]
+      10-24    1067   150     4.69%      4.97%   -0.28     0.58       [-1.4,+0.9]
+      25-49    1818   150     3.58%      3.52%    0.06     0.22       [-0.4,+0.5]
+      50-99    3673   150     2.72%      3.27%   -0.54     0.19       [-0.9,-0.2]
+    100-199    7205   150     3.39%      3.90%   -0.51     0.14       [-0.8,-0.2]
+    200-399   14545   150     4.01%      4.15%   -0.14     0.11       [-0.4,+0.1]
+    400-799    5714   150     4.31%      4.45%   -0.14     0.16       [-0.4,+0.2]
+   800-1599       0    --        --         --  (empty)                          
+      1600+       0    --        --         --  (empty)                          
+
+  -- PRIMARY: start-of-answer reading gain, and does this rung read at all
+     position 0   gain +28.67 +/- 3.70 pts  95% CI [+21.41, +35.93]  (aligned 28.7% vs blank 0.0%, n=150 rows)  SIGNIFICANT
+     positions 0-4 gain +20.13 +/- 1.30 pts  95% CI [+17.58, +22.69]  (750 tokens)  SIGNIFICANT
+     rows with aligned acc > blank acc: 75/150 (50.0%)  [worse on 50, tied on 25]  sign-test p = 3.14e-02  mean row gain +0.18 pts
+
+  -- SECONDARY: K (pre-registered: gain < 50% of the 0-100-char gain, and stays below)
+     baseline gain +1.76 pts (95% CI [+1.41, +2.12], 7377 tokens) SIGNIFICANT
+     status ok   K = 100 chars  (~token 48.5 by ratio, median token 55 empirically)
+     bootstrap 90% CI [100, 190] chars from 209/300 resolved replicates (statuses {'ok': 209, 'censored_right': 91})
+     [not pre-registered] same statistic with a 0-25-char reference window: status ok, K = 25 chars
+
+====================================================================================================
+RUNG randstr-d4   rows=150   letters/page=1600   chars/page=1919.0   font=14
+  target tokens (supervised) 932.2 | content 930.2 | realized chars/token 2.063 | scored 139530 tokens (81 of them whitespace/format)
+  CE aligned 5.7542 | permuted 5.7906 | blank 5.7983 | floor 5.6119 | CE-floor +0.1422 (above floor)
+  Dperm +0.63% (paired dCE +0.0365 +/- 0.0008)   Dblank +0.77% (paired dCE +0.0442 +/- 0.0010)
+
+  -- reading gain by ANSWER-TOKEN position (gain = acc_aligned - acc_blank; * = n < min-bin-tokens)
+        pos  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-0     150   150    28.00%      0.00%   28.00     3.68     [+20.8,+35.2]
+        1-1     150   150    24.67%      0.67%   24.00     3.50     [+17.1,+30.9]
+        2-2     150   150    18.00%      3.33%   14.67     3.19      [+8.4,+20.9]
+        3-3     150   150    18.00%      3.33%   14.67     2.90      [+9.0,+20.3]
+        4-4     150   150     5.33%      2.67%    2.67     1.88       [-1.0,+6.3]
+        5-9     750   150     6.40%      4.53%    1.87     0.91       [+0.1,+3.7]
+      10-19    1500   150     2.53%      2.60%   -0.07     0.36       [-0.8,+0.6]
+      20-39    3000   150     3.23%      2.90%    0.33     0.19       [-0.0,+0.7]
+      40-79    6000   150     3.53%      4.05%   -0.52     0.17       [-0.8,-0.2]
+     80-159   12000   150     3.94%      4.13%   -0.19     0.14       [-0.5,+0.1]
+    160-319   24000   150     4.11%      4.16%   -0.05     0.08       [-0.2,+0.1]
+    320-639   48000   150     4.09%      4.05%    0.04     0.06       [-0.1,+0.2]
+       640+   43530   150     4.28%      4.26%    0.02     0.06       [-0.1,+0.1]
+
+  -- reading gain by CHARACTER position
+      chars  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-9     812   150    17.73%      2.09%   15.64     1.20     [+13.3,+18.0]
+      10-24    1079   150     5.56%      4.36%    1.20     0.70       [-0.2,+2.6]
+      25-49    1806   150     2.55%      2.44%    0.11     0.25       [-0.4,+0.6]
+      50-99    3664   150     2.97%      3.00%   -0.03     0.18       [-0.4,+0.3]
+    100-199    7263   150     3.86%      4.20%   -0.34     0.16       [-0.7,-0.0]
+    200-399   14551   150     3.90%      4.16%   -0.26     0.12       [-0.5,-0.0]
+    400-799   29034   150     4.13%      4.11%    0.02     0.07       [-0.1,+0.2]
+   800-1599   58217   150     4.19%      4.16%    0.03     0.05       [-0.1,+0.1]
+      1600+   23104   150     4.22%      4.19%    0.03     0.09       [-0.1,+0.2]
+
+  -- PRIMARY: start-of-answer reading gain, and does this rung read at all
+     position 0   gain +28.00 +/- 3.68 pts  95% CI [+20.79, +35.21]  (aligned 28.0% vs blank 0.0%, n=150 rows)  SIGNIFICANT
+     positions 0-4 gain +16.80 +/- 1.34 pts  95% CI [+14.18, +19.42]  (750 tokens)  SIGNIFICANT
+     rows with aligned acc > blank acc: 76/150 (50.7%)  [worse on 55, tied on 19]  sign-test p = 8.02e-02  mean row gain +0.08 pts
+
+  -- SECONDARY: K (pre-registered: gain < 50% of the 0-100-char gain, and stays below)
+     baseline gain +1.92 pts (95% CI [+1.50, +2.33], 7361 tokens) SIGNIFICANT
+     status ok   K = 100 chars  (~token 48.5 by ratio, median token 55 empirically)
+     bootstrap 90% CI [100, 1900] chars from 296/300 resolved replicates (statuses {'ok': 296, 'censored_right': 4})
+     [not pre-registered] same statistic with a 0-25-char reference window: status ok, K = 25 chars
+
+====================================================================================================
+RUNG randstr-d5   rows=150   letters/page=400   chars/page=479.0   font=40
+  target tokens (supervised) 234.3 | content 232.3 | realized chars/token 2.062 | scored 34841 tokens (24 of them whitespace/format)
+  CE aligned 5.9198 | permuted 5.9202 | blank 6.0787 | floor 5.6086 | CE-floor +0.3112 (above floor)
+  Dperm +0.01% (paired dCE +0.0004 +/- 0.0018)   Dblank +2.68% (paired dCE +0.1589 +/- 0.0040)
+
+  -- reading gain by ANSWER-TOKEN position (gain = acc_aligned - acc_blank; * = n < min-bin-tokens)
+        pos  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-0     150   150     0.00%      0.00%    0.00     0.00       [+0.0,+0.0]
+        1-1     150   150     0.67%      1.33%   -0.67     1.16       [-2.9,+1.6]
+        2-2     150   150     2.67%      1.33%    1.33     1.63       [-1.9,+4.5]
+        3-3     150   150     3.33%      2.67%    0.67     1.77       [-2.8,+4.1]
+        4-4     150   150     2.67%      2.00%    0.67     1.49       [-2.3,+3.6]
+        5-9     750   150     4.00%      4.67%   -0.67     0.72       [-2.1,+0.7]
+      10-19    1500   150     4.40%      4.20%    0.20     0.37       [-0.5,+0.9]
+      20-39    3000   150     2.87%      3.23%   -0.37     0.24       [-0.8,+0.1]
+      40-79    6000   150     3.65%      3.93%   -0.28     0.20       [-0.7,+0.1]
+     80-159   12000   150     3.76%      4.08%   -0.33     0.16       [-0.6,-0.0]
+    160-319   10841   150     4.00%      4.21%   -0.20     0.14       [-0.5,+0.1]
+    320-639       0    --        --         --  (empty)                          
+       640+       0    --        --         --  (empty)                          
+
+  -- reading gain by CHARACTER position
+      chars  tokens  rows  acc_algn  acc_blank     gain   +/-SE            95% CI
+        0-9     819   150     1.71%      1.47%    0.24     0.55       [-0.8,+1.3]
+      10-24    1067   150     4.40%      4.97%   -0.56     0.57       [-1.7,+0.6]
+      25-49    1818   150     3.52%      3.52%    0.00     0.26       [-0.5,+0.5]
+      50-99    3673   150     2.86%      3.27%   -0.41     0.24       [-0.9,+0.1]
+    100-199    7205   150     3.57%      3.90%   -0.33     0.17       [-0.7,+0.0]
+    200-399   14545   150     3.95%      4.15%   -0.20     0.14       [-0.5,+0.1]
+    400-799    5714   150     4.17%      4.45%   -0.28     0.21       [-0.7,+0.1]
+   800-1599       0    --        --         --  (empty)                          
+      1600+       0    --        --         --  (empty)                          
+
+  -- PRIMARY: start-of-answer reading gain, and does this rung read at all
+     position 0   gain +0.00 +/- 0.00 pts  95% CI [+0.00, +0.00]  (aligned 0.0% vs blank 0.0%, n=150 rows)  not significant
+     positions 0-4 gain +0.40 +/- 0.61 pts  95% CI [-0.80, +1.60]  (750 tokens)  not significant
+     rows with aligned acc > blank acc: 48/150 (32.0%)  [worse on 79, tied on 23]  sign-test p = 7.52e-03  mean row gain -0.25 pts
+
+  -- SECONDARY: K (pre-registered: gain < 50% of the 0-100-char gain, and stays below)
+     baseline gain -0.26 pts (95% CI [-0.58, +0.06], 7377 tokens) NOT significant
+     status no_reading   K = UNDEFINED chars
+     [not pre-registered] same statistic with a 0-25-char reference window: status no_reading, K = UNDEFINED chars
+
+====================================================================================================================================
+H13 DENSITY LADDER — SUMMARY
+====================================================================================================================================
+rung         chars/page  tgt tok  ch/tok       CE    floor  CE-floor   Dperm%  Dblank%       pos0 gain  rows a>b     K(chars)  K(tokens)
+----------------------------------------------------------------------------------------------------------------------------------------
+randstr-d1           29       17    1.99    3.722    5.597    -1.875  +113.84   +90.65    +62.7+/-4.0*       96%         >=29      UNDEF
+randstr-d2          119       60    2.05    6.057    5.605    +0.453   +14.31   +13.45    +35.3+/-3.9*       77%          100         49
+randstr-d3          479      234    2.06    5.900    5.609    +0.291    +3.05    +3.03    +28.7+/-3.7*       50%          100         48
+randstr-d4         1919      932    2.06    5.754    5.612    +0.142    +0.63    +0.77    +28.0+/-3.7*       51%          100         48
+randstr-d5          479      234    2.06    5.920    5.609    +0.311    +0.01    +2.68     +0.0+/-0.0        32%   no_reading      UNDEF
+
+pos0 gain: acc(aligned)-acc(blank) at answer token 0, +/- cluster SE; * = 95% CI excludes 0.
+rows a>b : fraction of rows whose aligned accuracy beats blank at all (sanity gate; see per-rung sign test).
+K(chars) : a number = measured; '>=x' = censored (the measurable data ends there); a status word = K does not exist for that rung, and 'UNDEF' in K(tokens) means exactly that — NOT zero.
+
+======================================================================================================================
+DISCRIMINATOR
+======================================================================================================================
+1. Does each rung read ANYTHING? (gate to pass before any K is interpreted)
+     randstr-d1: 0-100-char gain +18.16 pts (95% CI [+16.67, +19.65]) -> READS | rows aligned>blank 144/150 (96%, sign p 2.4e-40) | Dperm +113.84% | CE-floor -1.875
+     randstr-d2: 0-100-char gain +3.43 pts (95% CI [+2.96, +3.89]) -> READS | rows aligned>blank 115/150 (77%, sign p 3.0e-27) | Dperm +14.31% | CE-floor +0.453
+     randstr-d3: 0-100-char gain +1.76 pts (95% CI [+1.41, +2.12]) -> READS | rows aligned>blank 75/150 (50%, sign p 3.1e-02) | Dperm +3.05% | CE-floor +0.291
+     randstr-d4: 0-100-char gain +1.92 pts (95% CI [+1.50, +2.33]) -> READS | rows aligned>blank 76/150 (51%, sign p 8.0e-02) | Dperm +0.63% | CE-floor +0.142
+     randstr-d5: 0-100-char gain -0.26 pts (95% CI [-0.58, +0.06]) -> no significant reading | rows aligned>blank 48/150 (32%, sign p 7.5e-03) | Dperm +0.01% | CE-floor +0.311
+2. PRIMARY DISCRIMINATOR — position-0 reading gain vs chars/page
+     (C) scan predicts it STAYS HIGH at every density; (A) bandwidth predicts it DEGRADES as density rises.
+     randstr-d1 (29 chars/page): pos-0 gain +62.67 +/- 3.96 pts 95% CI [+54.90, +70.43] n=150 -> significant
+     randstr-d2 (119 chars/page): pos-0 gain +35.33 +/- 3.92 pts 95% CI [+27.66, +43.01] n=150 -> significant
+     randstr-d3 (479 chars/page): pos-0 gain +28.67 +/- 3.70 pts 95% CI [+21.41, +35.93] n=150 -> significant
+     randstr-d5 (479 chars/page): pos-0 gain +0.00 +/- 0.00 pts 95% CI [+0.00, +0.00] n=150 -> NOT significant
+     randstr-d4 (1919 chars/page): pos-0 gain +28.00 +/- 3.68 pts 95% CI [+20.79, +35.21] n=150 -> significant
+     pos0  randstr-d2 - randstr-d1: -27.33 +/- 5.57 pts, 95% CI [-38.25, -16.41], MDE(80%) 15.61 pts [UNPAIRED (different rungs draw different targets)]
+     pos0  randstr-d3 - randstr-d1: -34.00 +/- 5.42 pts, 95% CI [-44.63, -23.37], MDE(80%) 15.20 pts [UNPAIRED (different rungs draw different targets)]
+     pos0  randstr-d4 - randstr-d1: -34.67 +/- 5.41 pts, 95% CI [-45.26, -24.07], MDE(80%) 15.15 pts [UNPAIRED (different rungs draw different targets)]
+     pos0  randstr-d5 - randstr-d1: -62.67 +/- 3.96 pts, 95% CI [-70.43, -54.90], MDE(80%) 11.10 pts [UNPAIRED (different rungs draw different targets)]
+     pos0-4 randstr-d2 - randstr-d1: -20.27 +/- 2.57 pts, 95% CI [-25.30, -15.23], MDE(80%) 7.19 pts (wider window: 5x the tokens, so more power than pos0 alone)
+     pos0-4 randstr-d3 - randstr-d1: -29.20 +/- 2.36 pts, 95% CI [-33.83, -24.57], MDE(80%) 6.62 pts (wider window: 5x the tokens, so more power than pos0 alone)
+     pos0-4 randstr-d4 - randstr-d1: -32.53 +/- 2.38 pts, 95% CI [-37.21, -27.86], MDE(80%) 6.68 pts (wider window: 5x the tokens, so more power than pos0 alone)
+     pos0-4 randstr-d5 - randstr-d1: -48.93 +/- 2.07 pts, 95% CI [-52.98, -44.89], MDE(80%) 5.79 pts (wider window: 5x the tokens, so more power than pos0 alone)
+     => the densest rung's position-0 gain is significantly below the sparsest, but the profile is NOT monotone in density — consistent with (A) but the ladder is not behaving as a clean density axis; inspect the per-rung numbers.
+3. SECONDARY — K, measurable on: randstr-d2, randstr-d3, randstr-d4
+     randstr-d1: status censored_short, K = UNDEFINED chars (K >= 29 chars, censored) — the targets end inside/near the reference window
+     randstr-d2: status ok, K = 100 chars, ~token 48.8
+     randstr-d3: status ok, K = 100 chars, ~token 48.5
+     randstr-d4: status ok, K = 100 chars, ~token 48.5
+     randstr-d5: status no_reading, K = UNDEFINED chars — the rung shows no positive reading gain to decay from
+4. d5 vs d3 (same 400 chars/page, font 40 vs 14 => ~1.0 vs ~2.8 text lines per 48px patch):
+     overall gain d3 +0.18 pts | d5 -0.25 pts | d5-d3 -0.44 +/- 0.08 pts, 95% CI [-0.60, -0.27]  [paired-by-row (identical targets, font 40 vs 14)]
+     minimum effect this n could detect at 80% power: 0.23 pts
+     position-0 only: d5-d3 -28.67 +/- 3.70 pts, 95% CI [-35.93, -21.41], MDE 10.38 pts
+     => d5 is significantly WORSE than d3 — not a pre-registered branch; treat as a render-geometry side effect.
+5. Does K move with chars/page?
+     randstr-d2 119 chars/page -> K 100 chars [boot 100, 100] | randstr-d3 479 chars/page -> K 100 chars [boot 100, 190] | randstr-d4 1919 chars/page -> K 100 chars [boot 100, 1900]
+     => K is CONSTANT across density within noise (randstr-d2 K=100 vs randstr-d4 K=100, bootstrap CIs overlap) => the collapse point does not care how much text is on the page => (C) SCAN FAILURE => H18; more soft tokens will not help.
+6. K >= 400 chars anywhere (capacity not binding at mixture density)?
+     no rung reaches K >= 400 chars (or K is unmeasurable there)
+
+>>> VERDICT: AMBIGUOUS / CONFLICT — the position-0 profile points to (A) but the K trend points to (C). Do not pick one; the two statistics disagree and the run does not settle the question.
+
+CAVEATS (read before quoting the verdict):
+2026-07-29 02:33:34,613 INFO: Wrote data/eval/h13-poscontrol-h07.json
+  1. chars/token is ~constant across ALL rungs (see chars_per_token_realized), so within a target 'character position' and 'token index' are proportional. A K that is constant across rungs is therefore equally consistent with (C) a fixed token-index scan AND with a fixed-ABSOLUTE-CAPACITY reading of (A) bandwidth. The pre-registered mapping calls it (C); what the data strictly supports is 'the collapse point is invariant to page density', which rules out a density-proportional bandwidth account but not a fixed-capacity one. Extra leverage: if a short rung whose ENTIRE page fits inside the implied capacity still collapses at the same position, fixed-capacity is excluded.
+  2. The position-0 profile is the primary discriminator here BECAUSE K is undefined on any rung that never reads. It is not itself pre-registered; it is the pre-registered logic (does the collapse point move with density?) evaluated at the one position every rung can supply. Its weakness is the mirror image of K's: it says nothing about what happens deeper in the page, so a rung that reads position 0 and nothing else scores the same as one that reads throughout. Read it together with the per-position tables.
+  3. The pre-registered 0-100-char reference window is wider than d1's whole target (~29 chars) and covers ~84% of d2's (~119 chars): K is structurally UNMEASURABLE on those rungs, not merely null. Only d3/d4/d5 can carry the trend. K_alt_baseline25 is reported as a non-pre-registered sensitivity.
+  4. d1..d4 vary chars/page and target LENGTH together; only d3-vs-d5 varies one factor (font/lines-per-patch) at fixed density. A K trend across d1..d4 cannot separate 'denser page' from 'longer target'.
+  5. d3 and d5 draw byte-identical targets (same spec, same RNG stream), so that comparison is run PAIRED and is the sharpest in the ladder. Rungs of DIFFERENT density do not share targets beyond row 0 — each consumes a different number of letters from the one shared stream — so cross-density comparisons are unpaired and correspondingly less powerful; the printed MDE is the number to judge a null against.

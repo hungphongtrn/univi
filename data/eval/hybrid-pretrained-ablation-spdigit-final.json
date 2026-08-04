@@ -1,0 +1,18 @@
+{
+  "tag": "spdigit-final",
+  "checkpoint": "data/checkpoints/hybrid-pretrained-spokendigits-trainvis-v0/final",
+  "n_samples": 200,
+  "response_ce": {
+    "aligned": 0.7104206869006157,
+    "permuted": 1.6681765839457512,
+    "blank": 1.6330044630169869
+  },
+  "tok_acc": {
+    "aligned": 0.7508823677897454,
+    "permuted": 0.5767647311091423,
+    "blank": 0.574705907702446
+  },
+  "delta_perm_rel": 1.3481531643223683,
+  "delta_blank_rel": 1.2986443006627089,
+  "no_reading_floor_nats": 1.2280453829301579
+}

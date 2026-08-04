@@ -1,0 +1,14 @@
+  h15-poisoned-p00-v0-run.log                  poisoned-text        inflation max 0.0 [PASS]  prior_gap min 0.007015 [PASS]
+  h15-poisoned-p00-v0-run.log                  poisoned-text-long   inflation max 0.05792 [PASS]  prior_gap min 0.02496 [PASS]
+  h15-poisoned-p15-v0-run.log                  poisoned-text        inflation max 0.006772 [PASS]  prior_gap min 0.09745 [PASS]
+  h15-poisoned-p15-v0-run.log                  poisoned-text-long   inflation max 0.03272 [PASS]  prior_gap min 0.04678 [PASS]
+  h15-poisoned-p50-v0-run.log                  poisoned-text        inflation max 0.07017 [PASS]  prior_gap min 0.1927 [PASS]
+  h15-poisoned-p50-v0-run.log                  poisoned-text-long   inflation max 0.06866 [PASS]  prior_gap min 0.07476 [PASS]
+  h16-gap-weighted-v0-run.log                  <single-lane>        inflation max 0.0 [PASS]  prior_gap min -0.0008535 [COLLAPSE-ALARM]
+[none] data/checkpoints/h21-fontjitter-v0-run.log: no blank-CE metrics present
+[skip] data/checkpoints/h21-fontmix-v0-run.log: no such file
+[none] data/checkpoints/h20-wide-560-v0-run.log: no blank-CE metrics present
+[skip] data/checkpoints/h20-leg1-wide-560-v0-run.log: no such file
+[none] data/checkpoints/h20-wide-1120-v0-run.log: no blank-CE metrics present
+[skip] data/checkpoints/h20-leg2-wide-1120-v0-run.log: no such file
+Wrote data/eval/stage3-blank-ce-guard.json

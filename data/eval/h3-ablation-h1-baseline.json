@@ -1,0 +1,19 @@
+{
+  "tag": "h1-baseline",
+  "checkpoint": "data/checkpoints/encoder-free-v0/best",
+  "n_samples": 200,
+  "answer_only_ce_nats": {
+    "aligned": 6.196251654624939,
+    "permuted": 6.211510102748871,
+    "blank": 6.296086227893829
+  },
+  "teacher_forced_tok_acc": {
+    "aligned": 0.24822064004838468,
+    "permuted": 0.24773146249353886,
+    "blank": 0.24560916781425476
+  },
+  "delta_perm_rel": 0.0024625287955409155,
+  "delta_blank_rel": 0.016112091443925173,
+  "no_reading_floor_nats": 5.613536419747557,
+  "mean_answer_tokens": 20.585
+}
