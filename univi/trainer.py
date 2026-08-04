@@ -33,7 +33,23 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-VALID_SUBSETS = {"fineweb-edu", "densefusion", "smoltalk", "librispeech"}
+VALID_SUBSETS = {
+    "fineweb-edu", "densefusion", "smoltalk", "librispeech", "random-strings", "spoken-digits",
+    # H13 density-ladder rungs (prior-proof OCR at increasing chars/page; d5 re-renders
+    # d3's density at ~1.0 text line per 48px patch to isolate line-demultiplexing).
+    "randstr-d1", "randstr-d2", "randstr-d3", "randstr-d4", "randstr-d5",
+    # H15 prior-poisoned real text (fineweb-edu with a fraction of alphabetic
+    # chars resampled before rendering, so the language prior is wrong everywhere).
+    # Two LENGTH arms: `poisoned-text` is the short arm (~46 target tokens, inside
+    # H13's ~48-token scan depth) and `poisoned-text-long` the deep arm (~182
+    # tokens). The row counts are chosen so the TOKEN-weighted readable fraction
+    # stays ~75% — H13's lesson that balancing rows does not balance gradient.
+    "poisoned-text", "poisoned-text-long",
+    # H14 masked-region targets: random word runs occluded on the page, target
+    # carries one <mask> sentinel per run. `masked-randstr` is the staged
+    # prior-proof instantiation; `masked-text` is the (not yet built) real-text port.
+    "masked-randstr", "masked-text",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -468,10 +484,14 @@ def load_dataset(config: dict, source: str = "auto"):
 
     logger.info("Loading dataset: source=%s, subsets=%s", source, subsets)
 
+    # Per-image cost tracks the run's soft-token budget (H17). Absent ⇒ 280 ⇒ 282,
+    # identical to every run before the knob existed.
+    per_image = image_token_budget(config.get("model", {}).get("max_soft_tokens", 280))
+
     if source == "local":
-        return _load_local(dcfg, subsets, local_path, max_length)
+        return _load_local(dcfg, subsets, local_path, max_length, per_image)
     elif source == "hub":
-        return _load_hub(dcfg, subsets, max_length)
+        return _load_hub(dcfg, subsets, max_length, per_image)
     else:
         raise ValueError(f"Invalid dataset source: {source}")
 
@@ -531,10 +551,28 @@ def _filter_training_images(dataset, subset: str, max_images: int | None, num_pr
 _IMAGE_TOKEN_BUDGET = 282
 # Chat-template structure + user instruction overhead.
 _TEMPLATE_TOKEN_OVERHEAD = 256
+# Delimiters added around each image's soft tokens (<image> and <image|>).
+_IMAGE_DELIMITER_TOKENS = 2
+
+
+def image_token_budget(max_soft_tokens: int = 280) -> int:
+    """Per-image token cost at a given soft-token budget (H17's ``max_soft_tokens``).
+
+    The 282 default hard-codes 280 soft tokens. At 1120 it under-counts ~3.9x, so
+    overlong multi-image rows survive the filter, the collator truncates their
+    placeholders, and ``UniViHybridPretrained.forward`` then raises
+    ``Image placeholder count != projected soft tokens``. Pass this through
+    whenever the run is not at 280.
+    """
+    return int(max_soft_tokens) + _IMAGE_DELIMITER_TOKENS
 
 
 def _filter_training_tokens(
-    dataset, subset: str, max_length: int | None, num_proc: int | None = None
+    dataset,
+    subset: str,
+    max_length: int | None,
+    num_proc: int | None = None,
+    per_image_tokens: int | None = None,
 ):
     """Drop training rows whose *expanded* token length exceeds ``max_length``.
 
@@ -562,13 +600,15 @@ def _filter_training_tokens(
     if "images" not in dataset.column_names:
         return dataset
 
+    budget = _IMAGE_TOKEN_BUDGET if per_image_tokens is None else int(per_image_tokens)
+
     def _token_filter(otl, images):
         img_lens = pc.list_value_length(images)
         # Retain rows with unknown length (otl <= 0); for the rest, check
         # that the estimated expanded length fits within max_length.
         unknown = pc.less_equal(otl, 0)
         estimated = pc.add(
-            pc.add(otl, pc.multiply(img_lens, _IMAGE_TOKEN_BUDGET)),
+            pc.add(otl, pc.multiply(img_lens, budget)),
             _TEMPLATE_TOKEN_OVERHEAD,
         )
         fits = pc.less_equal(estimated, max_length)
@@ -595,7 +635,13 @@ def _filter_training_tokens(
     return filtered
 
 
-def _load_local(dcfg: dict, subsets: list[str], local_path: Path, max_length: int | None = None):
+def _load_local(
+    dcfg: dict,
+    subsets: list[str],
+    local_path: Path,
+    max_length: int | None = None,
+    per_image_tokens: int | None = None,
+):
     """Load dataset from local disk with manifest support."""
     logger.info("Loading local dataset: path=%s, subsets=%s", local_path, subsets)
 
@@ -618,8 +664,13 @@ def _load_local(dcfg: dict, subsets: list[str], local_path: Path, max_length: in
             if item.get("is_training_split", True)
             and (not subsets or item["config_name"] in subsets)
         ]
-        datasets = [
-            _filter_training_tokens(
+        # Optional per-subset row cap: balance a lopsided mixture so no lane
+        # drowns. e.g. librispeech is ~3.5% of univi-3M-v0; capping every lane
+        # to the smallest gives each modality an equal share of the gradient.
+        cap = dcfg.get("max_train_rows_per_subset")
+        datasets = []
+        for item in entries:
+            ds = _filter_training_tokens(
                 _filter_training_images(
                     load_from_disk(local_path / item["path"]),
                     item["config_name"],
@@ -629,9 +680,15 @@ def _load_local(dcfg: dict, subsets: list[str], local_path: Path, max_length: in
                 item["config_name"],
                 max_length,
                 num_proc=dcfg.get("num_proc"),
+                per_image_tokens=per_image_tokens,
             )
-            for item in entries
-        ]
+            if cap is not None and len(ds) > cap:
+                logger.info(
+                    "Balancing subset %s: %d -> %d rows (max_train_rows_per_subset)",
+                    item["config_name"], len(ds), cap,
+                )
+                ds = ds.shuffle(seed=seed).select(range(cap))
+            datasets.append(ds)
         return concatenate_datasets(datasets).shuffle(seed=seed)
 
     # No manifest — load the whole directory
@@ -645,10 +702,16 @@ def _load_local(dcfg: dict, subsets: list[str], local_path: Path, max_length: in
         ),
         "local", max_length,
         num_proc=dcfg.get("num_proc"),
+        per_image_tokens=per_image_tokens,
     )
 
 
-def _load_hub(dcfg: dict, subsets: list[str], max_length: int | None = None):
+def _load_hub(
+    dcfg: dict,
+    subsets: list[str],
+    max_length: int | None = None,
+    per_image_tokens: int | None = None,
+):
     """Load dataset from Hugging Face Hub with pinned revision and splits."""
     hub_repo = dcfg.get("hf_hub_repo_id")
     logger.info("Loading hub dataset: repo=%s, subsets=%s", hub_repo, subsets)
@@ -675,6 +738,7 @@ def _load_hub(dcfg: dict, subsets: list[str], max_length: int | None = None):
                     ),
                     name, max_length,
                     num_proc=dcfg.get("num_proc"),
+                    per_image_tokens=per_image_tokens,
                 )
             )
 
@@ -721,6 +785,8 @@ def _load_eval_datasets(config: dict) -> dict[str, Any]:
     max_length = tc.get("max_length")
     max_images = dcfg.get("max_train_images")
     num_proc = dcfg.get("num_proc")
+    # Match the training path's per-image budget (H17); absent ⇒ 280 ⇒ 282.
+    per_image = image_token_budget(config.get("model", {}).get("max_soft_tokens", 280))
     eval_datasets = {}
     
     for name in subsets:
@@ -742,7 +808,9 @@ def _load_eval_datasets(config: dict) -> dict[str, Any]:
             # processor contract is identical and no eval row triggers
             # the _check_special_mm_tokens mismatch.
             dataset = _filter_training_images(dataset, name, max_images, num_proc=num_proc)
-            dataset = _filter_training_tokens(dataset, name, max_length, num_proc=num_proc)
+            dataset = _filter_training_tokens(
+                dataset, name, max_length, num_proc=num_proc, per_image_tokens=per_image
+            )
             eval_datasets[name] = _cap_eval_dataset(
                 dataset, max_samples=max_samples, seed=eval_seed,
             )

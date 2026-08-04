@@ -28,7 +28,6 @@ from univi.config import config_hash as compute_config_hash
 from univi.fingerprint import compute_fingerprint, fingerprint_hash
 from univi.manifest import Manifest
 from univi.trainer import (
-    VALID_SUBSETS,
     UnslothVisionDataCollator,
     _load_eval_datasets,
     apply_lora,
@@ -65,7 +64,15 @@ def _smoke_data_collator(features: list) -> dict:
 
 EXPECTED_SMOKE_STEPS = 10
 EXPECTED_MIN_VRAM_GIB = 12.0
-ACTIVE_SUBSETS = sorted(VALID_SUBSETS)
+
+# The Phase-0 mixture the smoke gate contracts over. Deliberately NOT
+# ``VALID_SUBSETS``: that set lists every subset name a config *may* use and grows
+# with each diagnostic lane (random-strings, spoken-digits, the H13 density ladder,
+# poisoned-text, …). Deriving the gate from it made the smoke run demand a smoke
+# split for every experimental lane ever added — which is not the contract, and had
+# already broken the gate on ``random-strings`` before the H13/H15 lanes landed.
+PHASE0_SUBSETS = ("fineweb-edu", "densefusion", "smoltalk", "librispeech")
+ACTIVE_SUBSETS = sorted(PHASE0_SUBSETS)
 REQUIRED_REVISION_LEN = 40
 SMOKE_DATA_ROOT = Path("data/smoke")
 
