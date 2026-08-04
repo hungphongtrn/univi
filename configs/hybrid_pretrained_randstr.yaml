@@ -1,0 +1,75 @@
+# configs/hybrid_pretrained_randstr.yaml
+# PRETRAINED-vision hybrid on the prior-proof random-string OCR diagnostic.
+#
+# Architecture (univi/hybrid/pretrained.py):
+#   Gemma-4-12B unified vision embedder (PRETRAINED, → 3840 soft tokens)
+#     → Linear(3840 → 2048)   [from-scratch adapter — the only random module]
+#     → Qwen3-1.7B decoder (PRETRAINED)
+#
+# WHY: the encoder-free thread proved a *from-scratch* linear embedder + strong
+# pretrained decoder collapses to zero grounding (H1/H2/H3, and H3-MLP). This swaps
+# in a PRETRAINED vision front-end (the piece the diagnosis said was missing) and
+# keeps the reused Qwen3 decoder. The random-string OCR lane is the same prior-proof
+# unit test H3 used: no language shortcut, so any reading is real. SUCCESS = eval
+# dives toward 0 and the ablation shows Δblank/Δperm ≫ 0 (vs H3's exact-zero).
+#
+# RECIPE (3-group LR, NO freeze — the H2 lesson): adapter fastest (from-scratch),
+# vision moderate (pretrained, don't wreck it), decoder slowest (refine the prior).
+#
+#   Launch SOLO:
+#     HF_HUB_OFFLINE=1 nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/hybrid_pretrained_randstr.yaml \
+#       > data/checkpoints/hybrid-pretrained-randstr-v0-run.log 2>&1 &
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached) → Gemma4UnifiedVisionConfig
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder (weights cached)
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"  # range-downloaded pretrained
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h3-randstr-v0"
+  max_train_images: 4
+  subsets:
+    - "random-strings"
+  train_splits:
+    random-strings: ["train"]
+  validation_splits:
+    random-strings: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/hybrid-pretrained-randstr-v0"
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 16
+  gradient_accumulation_steps: 4     # effective batch 64 (matches H3 exposure)
+  num_train_epochs: 20
+  max_steps: 600                     # bounded diagnostic; watch early, kill if it replicates H3
+
+  # 3-group LR (adapter > vision > decoder), NO freeze -------------------
+  lr_adapter: 3.0e-4                 # from-scratch bridge — fastest
+  lr_vision:  5.0e-5                 # pretrained Gemma embedder — moderate
+  lr_decoder: 2.0e-5                 # pretrained Qwen3 — slowest (refine, don't overwrite)
+  # ---------------------------------------------------------------------
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "random-strings"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "hybrid-pretrained-vision-randstr"
+  tags: ["hybrid", "pretrained-vision", "gemma12b-vision", "qwen3-1.7b", "ocr-diagnostic"]

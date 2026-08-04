@@ -1,0 +1,55 @@
+# configs/hybrid_smoke.yaml — issue #6 smoke run.
+#
+# Random-init hybrid: Gemma 4 12B encoder-free image-embedder architecture
+# (patchify + merge + Dense projector, no ViT) + Qwen 3 1.7B text backbone. NO
+# pretrained weights are loaded — both towers are instantiated from config with
+# random weights.
+#
+#   uv run python -m univi.hybrid.train --config configs/hybrid_smoke.yaml --max-steps 20
+
+model:
+  # vision_source: a Gemma 4 12B ("unified") checkpoint whose config.json
+  # carries a gemma4_unified vision_config — the encoder-free image embedder
+  # named in issue #6 (only the projector, no vision transformer).
+  vision_source: "google/gemma-4-12B-it"
+  # text_source: Qwen 3 1.7B config (curled locally to avoid the Xet hub hang;
+  # only config + tokenizer are read, no weights).
+  text_source: "data/hybrid/qwen3-1.7b"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  max_steps: 20
+  max_length: 4096
+  learning_rate: 3.0e-4
+  warmup_ratio: 0.03
+  lr_scheduler_type: "cosine"
+  optim: "adamw_torch"
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  logging_steps: 1
+  save_steps: 1000
+  save_total_limit: 1
+  output_dir: "data/checkpoints/hybrid-smoke-v0"
+  report_to: []
+  gradient_checkpointing: true
+  dataloader_num_workers: 0
+  loss_masking: "response_only"
+  seed: 3407
+  data_seed: 42

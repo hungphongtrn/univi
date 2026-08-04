@@ -1,0 +1,58 @@
+# configs/hybrid_bounded.yaml — issue #6 bounded training run (E4).
+#
+# Random-init hybrid: Gemma 4 12B encoder-free image-embedder architecture
+# (patchify + merge + Dense projector, no ViT) + Qwen 3 1.7B text backbone. NO
+# pretrained weights are loaded — both towers are instantiated from config with
+# random weights. This is the "bigger decoder + different data" replication:
+# Qwen 3 1.7B decoder (matching the HuggingFaceM4 encoder-free-vlm writeup's
+# final decoder size) trained on Univi's own mixed data (fineweb-edu render,
+# densefusion, smoltalk, librispeech spectrogram) instead of FineVision.
+#
+# Bounded, not full-epoch: 3000 steps x effective batch 8 = 24,000 examples
+# seen, enough to show a genuine learning trend on real data without an
+# open-ended multi-day run.
+#
+#   uv run python -m univi.hybrid.train --config configs/hybrid_bounded.yaml
+
+model:
+  vision_source: "google/gemma-4-12B-it"
+  text_source: "data/hybrid/qwen3-1.7b"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  shuffle_seed: 42
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  max_steps: 3000
+  max_length: 4096
+  learning_rate: 3.0e-4
+  warmup_ratio: 0.03
+  lr_scheduler_type: "cosine"
+  optim: "adamw_torch"
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  logging_steps: 10
+  save_steps: 250
+  save_total_limit: 3
+  output_dir: "data/checkpoints/hybrid-bounded-v0"
+  report_to: []
+  gradient_checkpointing: true
+  dataloader_num_workers: 0
+  loss_masking: "response_only"
+  seed: 3407
+  data_seed: 42

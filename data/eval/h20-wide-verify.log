@@ -1,0 +1,122 @@
+/workspace/univi/.venv/lib/python3.12/site-packages/unsloth/__init__.py:1427: UserWarning: WARNING: Unsloth should be imported before [transformers] to ensure all optimizations are applied. Your code may run slower or encounter memory issues without these optimizations.
+
+Please restructure your imports with 'import unsloth' at the top of your file.
+  from ._gpu_init import *
+You are using a model of type `univi_hybrid_pretrained` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+  [PASS] S1 closed form == processor resize helper
+  [PASS] S2 emitted tokens == grid product, <= budget, pos ids match
+  [PASS] S3 MUTATION: shifted grid must not match
+  [PASS] S4 wide render is strictly finer in time at the same budget
+  [PASS] S4b wide render costs no more tokens
+  [PASS] S5 image_token_budget tracks max_soft_tokens
+
+librispeech/train  rows=104014  pages probed=90  sizes={'2000x160': 90}
+  budget   280: grid  59x4  =   236 tok    169.5 ms/col   20.0 mel bins/cell  |  seq min/mean   272/  516.9  WORST ROW (whole split)   880 (3p + 151tgt + 21 scaffold)
+  budget   560: grid  83x6  =   498 tok    120.5 ms/col   13.3 mel bins/cell  |  seq min/mean   534/ 1008.1  WORST ROW (whole split)  1666 (3p + 151tgt + 21 scaffold)
+  budget  1120: grid 118x9  =  1062 tok     84.7 ms/col    8.9 mel bins/cell  |  seq min/mean  1098/ 2065.6  WORST ROW (whole split)  3358 (3p + 151tgt + 21 scaffold)
+
+librispeech/validation  rows=2703  pages probed=50  sizes={'2000x160': 50}
+  budget   280: grid  59x4  =   236 tok    169.5 ms/col   20.0 mel bins/cell  |  seq min/mean   265/  290.8  WORST ROW (whole split)  1132 (4p + 167tgt + 21 scaffold)
+  budget   560: grid  83x6  =   498 tok    120.5 ms/col   13.3 mel bins/cell  |  seq min/mean   527/  563.8  WORST ROW (whole split)  2180 (4p + 167tgt + 21 scaffold)
+  budget  1120: grid 118x9  =  1062 tok     84.7 ms/col    8.9 mel bins/cell  |  seq min/mean  1091/ 1151.2  WORST ROW (whole split)  4436 (4p + 167tgt + 21 scaffold)
+
+spoken-digits/train  rows=18355  pages probed=48  sizes={'2000x160': 48}
+  budget   280: grid  59x4  =   236 tok    169.5 ms/col   20.0 mel bins/cell  |  seq min/mean   272/  272.0  WORST ROW (whole split)   272 (1p + 15tgt + 21 scaffold)
+  budget   560: grid  83x6  =   498 tok    120.5 ms/col   13.3 mel bins/cell  |  seq min/mean   534/  534.0  WORST ROW (whole split)   534 (1p + 15tgt + 21 scaffold)
+  budget  1120: grid 118x9  =  1062 tok     84.7 ms/col    8.9 mel bins/cell  |  seq min/mean  1098/ 1098.0  WORST ROW (whole split)  1098 (1p + 15tgt + 21 scaffold)
+
+spoken-digits/validation  rows=1000  pages probed=48  sizes={'2000x160': 48}
+  budget   280: grid  59x4  =   236 tok    169.5 ms/col   20.0 mel bins/cell  |  seq min/mean   272/  272.0  WORST ROW (whole split)   272 (1p + 15tgt + 21 scaffold)
+  budget   560: grid  83x6  =   498 tok    120.5 ms/col   13.3 mel bins/cell  |  seq min/mean   534/  534.0  WORST ROW (whole split)   534 (1p + 15tgt + 21 scaffold)
+  budget  1120: grid 118x9  =  1062 tok     84.7 ms/col    8.9 mel bins/cell  |  seq min/mean  1098/ 1098.0  WORST ROW (whole split)  1098 (1p + 15tgt + 21 scaffold)
+
+RETENTION (real univi.trainer._filter_training_tokens)
+Filtering librispeech/train rows exceeding 2048 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 2048 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 851793.21 examples/s]Filtering librispeech/train rows exceeding 2048 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 815393.18 examples/s]
+Filtering librispeech/train rows exceeding 4096 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 4096 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 878076.85 examples/s]Filtering librispeech/train rows exceeding 4096 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 843574.45 examples/s]
+Filtering librispeech/train rows exceeding 6144 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 6144 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 864182.94 examples/s]Filtering librispeech/train rows exceeding 6144 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 824458.50 examples/s]
+Filtering librispeech/train rows exceeding 8192 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 8192 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 878660.45 examples/s]Filtering librispeech/train rows exceeding 8192 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 844801.23 examples/s]
+Filtering librispeech/train rows exceeding 2048 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 2048 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 889618.69 examples/s]Filtering librispeech/train rows exceeding 2048 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 857066.06 examples/s]
+Filtering librispeech/train rows exceeding 4096 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 4096 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 876716.36 examples/s]Filtering librispeech/train rows exceeding 4096 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 844250.29 examples/s]
+Filtering librispeech/train rows exceeding 6144 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 6144 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 861437.36 examples/s]Filtering librispeech/train rows exceeding 6144 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 827421.64 examples/s]
+Filtering librispeech/train rows exceeding 8192 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 8192 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 858548.63 examples/s]Filtering librispeech/train rows exceeding 8192 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 824949.58 examples/s]
+Filtering librispeech/train rows exceeding 2048 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 2048 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 963766.68 examples/s]Filtering librispeech/train rows exceeding 2048 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 928307.23 examples/s]
+Filtering librispeech/train rows exceeding 4096 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 4096 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 880449.68 examples/s]Filtering librispeech/train rows exceeding 4096 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 846092.29 examples/s]
+Filtering librispeech/train rows exceeding 6144 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 6144 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 857706.36 examples/s]Filtering librispeech/train rows exceeding 6144 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 820066.46 examples/s]
+Filtering librispeech/train rows exceeding 8192 expanded tokens:   0%|          | 0/104014 [00:00<?, ? examples/s]Filtering librispeech/train rows exceeding 8192 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 839608.27 examples/s]Filtering librispeech/train rows exceeding 8192 expanded tokens: 100%|██████████| 104014/104014 [00:00<00:00, 794488.48 examples/s]
+  librispeech/train          b=  280  2048:104014/104014(100.00%)  4096:104014/104014(100.00%)  6144:104014/104014(100.00%)  8192:104014/104014(100.00%)
+  librispeech/train          b=  560  2048:104009/104014(100.00%)  4096:104014/104014(100.00%)  6144:104014/104014(100.00%)  8192:104014/104014(100.00%)
+  librispeech/train          b= 1120  2048:20548/104014(19.76%)  4096:104014/104014(100.00%)  6144:104014/104014(100.00%)  8192:104014/104014(100.00%)
+Filtering librispeech/validation rows exceeding 2048 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 2048 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 293049.44 examples/s]
+Filtering librispeech/validation rows exceeding 4096 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 4096 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 331284.08 examples/s]
+Filtering librispeech/validation rows exceeding 6144 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 6144 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 342845.16 examples/s]
+Filtering librispeech/validation rows exceeding 8192 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 8192 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 334746.77 examples/s]
+Filtering librispeech/validation rows exceeding 2048 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 2048 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 335033.65 examples/s]
+Filtering librispeech/validation rows exceeding 4096 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 4096 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 333358.93 examples/s]
+Filtering librispeech/validation rows exceeding 6144 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 6144 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 336465.46 examples/s]
+Filtering librispeech/validation rows exceeding 8192 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 8192 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 332070.05 examples/s]
+Filtering librispeech/validation rows exceeding 2048 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 2048 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 337537.33 examples/s]
+Filtering librispeech/validation rows exceeding 4096 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 4096 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 337758.56 examples/s]
+Filtering librispeech/validation rows exceeding 6144 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 6144 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 342938.50 examples/s]
+Filtering librispeech/validation rows exceeding 8192 expanded tokens:   0%|          | 0/2703 [00:00<?, ? examples/s]Filtering librispeech/validation rows exceeding 8192 expanded tokens: 100%|██████████| 2703/2703 [00:00<00:00, 335350.78 examples/s]
+  librispeech/validation     b=  280  2048:2703/2703(100.00%)  4096:2703/2703(100.00%)  6144:2703/2703(100.00%)  8192:2703/2703(100.00%)
+  librispeech/validation     b=  560  2048:2683/2703(99.26%)  4096:2703/2703(100.00%)  6144:2703/2703(100.00%)  8192:2703/2703(100.00%)
+  librispeech/validation     b= 1120  2048:2136/2703(79.02%)  4096:2694/2703(99.67%)  6144:2703/2703(100.00%)  8192:2703/2703(100.00%)
+Filtering spoken-digits/train rows exceeding 2048 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 2048 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 742166.83 examples/s]
+Filtering spoken-digits/train rows exceeding 4096 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 4096 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 835447.10 examples/s]
+Filtering spoken-digits/train rows exceeding 6144 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 6144 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 832043.08 examples/s]
+Filtering spoken-digits/train rows exceeding 8192 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 8192 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 840950.00 examples/s]
+Filtering spoken-digits/train rows exceeding 2048 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 2048 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 821083.70 examples/s]
+Filtering spoken-digits/train rows exceeding 4096 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 4096 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 836954.80 examples/s]
+Filtering spoken-digits/train rows exceeding 6144 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 6144 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 837273.38 examples/s]
+Filtering spoken-digits/train rows exceeding 8192 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 8192 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 821705.93 examples/s]
+Filtering spoken-digits/train rows exceeding 2048 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 2048 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 807832.63 examples/s]
+Filtering spoken-digits/train rows exceeding 4096 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 4096 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 778254.08 examples/s]
+Filtering spoken-digits/train rows exceeding 6144 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 6144 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 800899.35 examples/s]
+Filtering spoken-digits/train rows exceeding 8192 expanded tokens:   0%|          | 0/18355 [00:00<?, ? examples/s]Filtering spoken-digits/train rows exceeding 8192 expanded tokens: 100%|██████████| 18355/18355 [00:00<00:00, 787786.65 examples/s]
+  spoken-digits/train        b=  280  2048:18355/18355(100.00%)  4096:18355/18355(100.00%)  6144:18355/18355(100.00%)  8192:18355/18355(100.00%)
+  spoken-digits/train        b=  560  2048:18355/18355(100.00%)  4096:18355/18355(100.00%)  6144:18355/18355(100.00%)  8192:18355/18355(100.00%)
+  spoken-digits/train        b= 1120  2048:18355/18355(100.00%)  4096:18355/18355(100.00%)  6144:18355/18355(100.00%)  8192:18355/18355(100.00%)
+Filtering spoken-digits/validation rows exceeding 2048 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 2048 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 178124.77 examples/s]
+Filtering spoken-digits/validation rows exceeding 4096 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 4096 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 200607.61 examples/s]
+Filtering spoken-digits/validation rows exceeding 6144 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 6144 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 199995.42 examples/s]
+Filtering spoken-digits/validation rows exceeding 8192 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 8192 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 200915.12 examples/s]
+Filtering spoken-digits/validation rows exceeding 2048 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 2048 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 195739.41 examples/s]
+Filtering spoken-digits/validation rows exceeding 4096 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 4096 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 196814.04 examples/s]
+Filtering spoken-digits/validation rows exceeding 6144 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 6144 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 202623.38 examples/s]
+Filtering spoken-digits/validation rows exceeding 8192 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 8192 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 201755.93 examples/s]
+Filtering spoken-digits/validation rows exceeding 2048 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 2048 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 202976.38 examples/s]
+Filtering spoken-digits/validation rows exceeding 4096 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 4096 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 195666.36 examples/s]
+Filtering spoken-digits/validation rows exceeding 6144 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 6144 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 201078.86 examples/s]
+Filtering spoken-digits/validation rows exceeding 8192 expanded tokens:   0%|          | 0/1000 [00:00<?, ? examples/s]Filtering spoken-digits/validation rows exceeding 8192 expanded tokens: 100%|██████████| 1000/1000 [00:00<00:00, 199481.78 examples/s]
+  spoken-digits/validation   b=  280  2048:1000/1000(100.00%)  4096:1000/1000(100.00%)  6144:1000/1000(100.00%)  8192:1000/1000(100.00%)
+  spoken-digits/validation   b=  560  2048:1000/1000(100.00%)  4096:1000/1000(100.00%)  6144:1000/1000(100.00%)  8192:1000/1000(100.00%)
+  spoken-digits/validation   b= 1120  2048:1000/1000(100.00%)  4096:1000/1000(100.00%)  6144:1000/1000(100.00%)  8192:1000/1000(100.00%)
+
+EVAL SELECTION (exact: filters + shuffle(seed=42).select(N))
+  librispeech      b=  280  n= 64  seq max   839 mean   360.6  pages/row {'1': 48, '2': 13, '3': 3}
+  librispeech      b=  560  n= 64  seq max  1625 mean   700.4  pages/row {'1': 48, '2': 13, '3': 3}
+  librispeech      b= 1120  n= 64  seq max  3317 mean  1431.9  pages/row {'1': 48, '2': 13, '3': 3}
+  spoken-digits    b=  280  n= 64  seq max   272 mean   272.0  pages/row {'1': 64}
+  spoken-digits    b=  560  n= 64  seq max   534 mean   534.0  pages/row {'1': 64}
+  spoken-digits    b= 1120  n= 64  seq max  1098 mean  1098.0  pages/row {'1': 64}
+  librispeech/train          pages=187497  padded silence 31.0%  => trimming would recover 1.45x effective budget
+  librispeech/validation     pages=3340  padded silence 44.4%  => trimming would recover 1.80x effective budget
+
+TRIM ANALYSIS (crop pages to the utterance)
+  budget   280:  169.5 ->  141.1 ms/col (1.20x), tokens   236 ->  252.9, mel bins/cell 20.0 -> 15.3
+  budget   560:  120.5 ->   99.5 ms/col (1.21x), tokens   498 ->  518.5, mel bins/cell 13.3 -> 10.6
+  budget  1120:   84.7 ->   70.2 ms/col (1.21x), tokens  1062 -> 1062.8, mel bins/cell  8.9 ->  7.3
+
+VRAM (H17's calibrated model, H20's measured sequence lengths)
+  leg1 (budget 560): train seq max 1666, eval seq max 1625
+    train GiB by per-device batch: {'1': 14.07, '2': 17.2, '4': 23.46, '8': 35.97}
+    eval  GiB by per-device batch: {'1': 13.99, '2': 17.04, '4': 23.15}
+  leg2 (budget 1120): train seq max 3358, eval seq max 3317
+    train GiB by per-device batch: {'1': 17.25, '2': 23.55, '4': 36.17, '8': 61.4}
+    eval  GiB by per-device batch: {'1': 17.17, '2': 23.4, '4': 35.86}
+
+CONFIG CHECK
+  configs/h20_leg1_wide_560.yaml: OK
+  configs/h20_leg2_wide_1120.yaml: OK
+
+wrote data/eval/h20-wide-verify.json

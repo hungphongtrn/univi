@@ -2,10 +2,14 @@ import numpy as np
 
 from PIL import Image
 from data.preprocessing.render_utils import (
+    TEXT_MARGIN,
+    fill_boxes,
     render_text_page,
     render_text_pages,
+    render_text_pages_with_boxes,
     render_log_mel_spectrogram,
     tile_spectrogram_image,
+    word_boxes_for_pages,
 )
 
 
@@ -44,6 +48,76 @@ def test_render_text_pages_preserves_readable_size_across_fixed_pages():
 
     assert len(pages) > 1
     assert all(page.size == (256, 128) for page in pages)
+
+
+def _randstr_text(n_words: int = 80, seed: int = 0) -> str:
+    """The H14/H13 staged geometry: ``n_words`` groups of 5 lowercase letters."""
+    import random
+
+    rng = random.Random(seed)
+    return " ".join(
+        "".join(rng.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(5))
+        for _ in range(n_words)
+    )
+
+
+def test_render_text_pages_with_boxes_matches_render_text_pages():
+    """The paired helper must not perturb a single pixel of the plain renderer."""
+    text = _randstr_text()
+    pages_only = render_text_pages(text)
+    pages, boxes = render_text_pages_with_boxes(text)
+    assert [p.tobytes() for p in pages] == [p.tobytes() for p in pages_only]
+    assert [b.word for b in boxes] == text.split(" ")
+
+
+def test_word_boxes_cover_every_glyph():
+    """Boxes and pixels must not drift: blanking every box must erase all ink.
+
+    This is the invariant the H14 masked-region lane depends on — an occlusion
+    that leaves part of a word visible would silently make the target wrong.
+    Boxes are *advance* boxes, so a 1 px dilation (``LaneSpec.mask_pad``, whose
+    default is 1) is required to swallow the antialiasing on the ``x1`` column.
+    """
+    for seed in range(5):
+        pages, boxes = render_text_pages_with_boxes(_randstr_text(seed=seed))
+        assert len(pages) == 1
+        page = pages[0].convert("L")
+        array = np.array(page)
+        assert (array < 250).sum() > 0, "nothing was drawn"
+
+        padded = [(b.x0 - 1, b.y0 - 1, b.x1 + 1, b.y1 + 1) for b in boxes]
+        blanked = fill_boxes(page, padded, fill_color=255)
+        assert int((np.array(blanked) < 250).sum()) == 0
+
+        # ...and every box individually contains ink (no phantom/empty boxes).
+        assert all((array[b.y0 : b.y1, b.x0 : b.x1] < 128).sum() > 0 for b in boxes)
+
+
+def test_word_boxes_page_coordinates_and_paging():
+    """Boxes are page-local, ordered, and start at the drawing margin."""
+    text = "\n".join(f"line{i} word{i}" for i in range(120))
+    pages, boxes = render_text_pages_with_boxes(text, canvas_height=256)
+    assert len(pages) > 1
+    assert [b.index for b in boxes] == list(range(len(boxes)))
+    assert {b.page for b in boxes} == set(range(len(pages)))
+    for box in boxes:
+        assert box.y0 >= TEXT_MARGIN and box.y1 <= pages[0].height
+        assert box.x0 >= TEXT_MARGIN and box.x1 <= pages[0].width
+    # the first word of every line starts exactly at the left margin
+    assert all(b.x0 == TEXT_MARGIN for b in boxes if b.word.startswith("line"))
+
+
+def test_fill_boxes_changes_only_inside_rects():
+    pages, boxes = render_text_pages_with_boxes(_randstr_text(seed=2))
+    clean = np.array(pages[0].convert("L"))
+    rects = [b.rect for b in boxes[3:9]]
+    masked = np.array(fill_boxes(pages[0], rects, fill_color="black").convert("L"))
+
+    covered = np.zeros(clean.shape, dtype=bool)
+    for x0, y0, x1, y1 in rects:
+        covered[y0:y1, x0:x1] = True
+    assert (masked[covered] == 0).all(), "occluded rects are not solid fill"
+    assert (masked[~covered] == clean[~covered]).all(), "pixels changed outside the rects"
 
 
 def test_render_log_mel_spectrogram_creates_image():

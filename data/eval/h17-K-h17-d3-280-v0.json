@@ -1,0 +1,860 @@
+{
+  "meta": {
+    "checkpoint": "data/checkpoints/h17-d3-280-v0/final",
+    "n_per_rung": 150,
+    "seed": 3407,
+    "max_soft_tokens": 280,
+    "max_length": 4096,
+    "char_bin_width": 25,
+    "baseline_chars": 100,
+    "min_bin_tokens": 50,
+    "bootstrap": 300,
+    "skip_perm": false,
+    "data_root": "data/materialized/h13-density-v0",
+    "token_bins": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        10
+      ],
+      [
+        10,
+        20
+      ],
+      [
+        20,
+        40
+      ],
+      [
+        40,
+        80
+      ],
+      [
+        80,
+        160
+      ],
+      [
+        160,
+        320
+      ],
+      [
+        320,
+        640
+      ],
+      [
+        640,
+        null
+      ]
+    ]
+  },
+  "rungs": {
+    "randstr-d3": {
+      "n_rows": 150,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 80,
+        "font_size": 14,
+        "n_random_letters": 400
+      },
+      "floor_nats": 5.60855983753472,
+      "target_tokens_mean": 234.27333333333334,
+      "target_content_tokens_mean": 232.27333333333334,
+      "target_chars_mean": 479.0,
+      "target_chars_max": 479,
+      "chars_per_token_realized": 2.062225538876611,
+      "n_tokens_scored": 34841,
+      "n_format_tokens_scored": 24,
+      "n_truncated_rows": 0,
+      "n_charlen_mismatch_rows": 0,
+      "ce_all_tokens": {
+        "aligned": 5.529080565770467,
+        "permuted": 5.935881071090698,
+        "blank": 5.852679080963135
+      },
+      "ce_vs_floor": -0.07947927176425296,
+      "below_floor": true,
+      "acc_all_tokens": {
+        "aligned": 0.0636677286401391,
+        "permuted": 0.0497146908318003,
+        "blank": 0.04280865530483425
+      },
+      "delta_perm_rel": 0.07357471110814673,
+      "delta_blank_rel": 0.058526641336356586,
+      "delta_perm_ce_paired": {
+        "mean": 0.4068005053202311,
+        "se": 0.005064610822560796,
+        "ci95": [
+          0.3968740505099707,
+          0.4167269601304915
+        ]
+      },
+      "delta_blank_ce_paired": {
+        "mean": 0.32359851519266764,
+        "se": 0.0020351225527216084,
+        "ci95": [
+          0.319609748284272,
+          0.32758728210106325
+        ]
+      },
+      "baseline_gain_pts": 6.506710044733631,
+      "baseline_gain_se_pts": 0.26362709631470965,
+      "baseline_gain_n_rows": 150,
+      "baseline_gain_significant": true,
+      "pos0_gain": {
+        "n_tokens": 150,
+        "n_rows": 150,
+        "gain_pts": 64.66666666666666,
+        "se_pts": 3.915970474562283,
+        "ci95": [
+          56.99150557020123,
+          72.34182776313209
+        ],
+        "acc_aligned": 0.6466666666666666,
+        "acc_blank": 0.0,
+        "significant": true,
+        "status": "ok"
+      },
+      "pos0_4_gain": {
+        "n_tokens": 750,
+        "n_rows": 150,
+        "gain_pts": 58.266666666666666,
+        "se_pts": 1.7842128128870716,
+        "ci95": [
+          54.76967381183246,
+          61.76365952150087
+        ],
+        "acc_aligned": 0.608,
+        "acc_blank": 0.025333333333333333,
+        "significant": true,
+        "status": "ok"
+      },
+      "row_sanity": {
+        "n_rows": 150,
+        "n_rows_aligned_gt_blank": 133,
+        "n_rows_aligned_lt_blank": 4,
+        "n_rows_tied": 13,
+        "frac_rows_aligned_gt_blank": 0.8866666666666667,
+        "sign_test_p": 1.6613665736354485e-34,
+        "mean_row_gain_pts": 1.2861640241557777
+      },
+      "token_bins": [
+        {
+          "bin": "0-0",
+          "lo": 0,
+          "hi": 1,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.6466666666666666,
+          "acc_blank": 0.0,
+          "gain_pts": 64.66666666666666,
+          "gain_pts_rowmean": 64.66666666666666,
+          "se_naive_pts": 3.915970474562283,
+          "se_cluster_pts": 3.915970474562283,
+          "ci95_lo_pts": 56.99150557020123,
+          "ci95_hi_pts": 72.34182776313209,
+          "ce_aligned": 1.0230907456064597,
+          "ce_blank": 33.225120340983075,
+          "underpowered": false
+        },
+        {
+          "bin": "1-1",
+          "lo": 1,
+          "hi": 2,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.6,
+          "acc_blank": 0.02,
+          "gain_pts": 57.99999999999999,
+          "gain_pts_rowmean": 57.99999999999999,
+          "se_naive_pts": 4.258955559858558,
+          "se_cluster_pts": 4.258955559858558,
+          "ci95_lo_pts": 49.65260048896171,
+          "ci95_hi_pts": 66.34739951103828,
+          "ce_aligned": 1.0751529306483765,
+          "ce_blank": 6.957784078915914,
+          "underpowered": false
+        },
+        {
+          "bin": "2-2",
+          "lo": 2,
+          "hi": 3,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.8333333333333334,
+          "acc_blank": 0.05333333333333334,
+          "gain_pts": 78.0,
+          "gain_pts_rowmean": 78.0,
+          "se_naive_pts": 3.3936379482039523,
+          "se_cluster_pts": 3.3936379482039523,
+          "ci95_lo_pts": 71.34859184339096,
+          "ci95_hi_pts": 84.65140815660904,
+          "ce_aligned": 0.5857548785229104,
+          "ce_blank": 6.511876563231151,
+          "underpowered": false
+        },
+        {
+          "bin": "3-3",
+          "lo": 3,
+          "hi": 4,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.58,
+          "acc_blank": 0.02666666666666667,
+          "gain_pts": 55.333333333333336,
+          "gain_pts_rowmean": 55.333333333333336,
+          "se_naive_pts": 4.072790343023466,
+          "se_cluster_pts": 4.072790343023466,
+          "ci95_lo_pts": 47.35081094255155,
+          "ci95_hi_pts": 63.315855724115124,
+          "ce_aligned": 1.2319002045739285,
+          "ce_blank": 9.96165545096,
+          "underpowered": false
+        },
+        {
+          "bin": "4-4",
+          "lo": 4,
+          "hi": 5,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.38,
+          "acc_blank": 0.02666666666666667,
+          "gain_pts": 35.333333333333336,
+          "gain_pts_rowmean": 35.333333333333336,
+          "se_naive_pts": 4.028607618492189,
+          "se_cluster_pts": 4.028607618492189,
+          "ci95_lo_pts": 27.437407491392026,
+          "ci95_hi_pts": 43.22925917527465,
+          "ce_aligned": 2.3544760741262385,
+          "ce_blank": 6.692370336055756,
+          "underpowered": false
+        },
+        {
+          "bin": "5-9",
+          "lo": 5,
+          "hi": 10,
+          "n_tokens": 750,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.12933333333333333,
+          "acc_blank": 0.05333333333333334,
+          "gain_pts": 7.6,
+          "gain_pts_rowmean": 7.600000000000001,
+          "se_naive_pts": 1.270443856431818,
+          "se_cluster_pts": 1.2644865260241582,
+          "ci95_lo_pts": 5.1216519494748844,
+          "ci95_hi_pts": 10.078348050525115,
+          "ce_aligned": 4.927167620224878,
+          "ce_blank": 5.621521018664042,
+          "underpowered": false
+        },
+        {
+          "bin": "10-19",
+          "lo": 10,
+          "hi": 20,
+          "n_tokens": 1500,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04066666666666666,
+          "acc_blank": 0.04733333333333333,
+          "gain_pts": -0.6666666666666667,
+          "gain_pts_rowmean": -0.6666666666666667,
+          "se_naive_pts": 0.35246413830914886,
+          "se_cluster_pts": 0.3861896309089949,
+          "ci95_lo_pts": -1.4235844346287394,
+          "ci95_hi_pts": 0.09025110129540592,
+          "ce_aligned": 5.653536598853922,
+          "ce_blank": 5.655719352567568,
+          "underpowered": false
+        },
+        {
+          "bin": "20-39",
+          "lo": 20,
+          "hi": 40,
+          "n_tokens": 3000,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.03666666666666667,
+          "acc_blank": 0.03766666666666667,
+          "gain_pts": -0.1,
+          "gain_pts_rowmean": -0.10000000000000002,
+          "se_naive_pts": 0.22363661994239614,
+          "se_cluster_pts": 0.21916048893565318,
+          "ci95_lo_pts": -0.5295466652488712,
+          "ci95_hi_pts": 0.3295466652488712,
+          "ce_aligned": 5.677501560849371,
+          "ce_blank": 5.679615268002109,
+          "underpowered": false
+        },
+        {
+          "bin": "40-79",
+          "lo": 40,
+          "hi": 80,
+          "n_tokens": 6000,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04,
+          "acc_blank": 0.041,
+          "gain_pts": -0.1,
+          "gain_pts_rowmean": -0.10000000000000002,
+          "se_naive_pts": 0.1453030050331251,
+          "se_cluster_pts": 0.13352893929270668,
+          "ci95_lo_pts": -0.36171191196895647,
+          "ci95_hi_pts": 0.16171191196895648,
+          "ce_aligned": 5.660463688743514,
+          "ce_blank": 5.659555147377968,
+          "underpowered": false
+        },
+        {
+          "bin": "80-159",
+          "lo": 80,
+          "hi": 160,
+          "n_tokens": 12000,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04475,
+          "acc_blank": 0.046,
+          "gain_pts": -0.125,
+          "gain_pts_rowmean": -0.12500000000000003,
+          "se_naive_pts": 0.09824601799113984,
+          "se_cluster_pts": 0.10085623364855449,
+          "ci95_lo_pts": -0.32267458561391194,
+          "ci95_hi_pts": 0.07267458561391194,
+          "ce_aligned": 5.673970529941862,
+          "ce_blank": 5.675193391772433,
+          "underpowered": false
+        },
+        {
+          "bin": "160-319",
+          "lo": 160,
+          "hi": 320,
+          "n_tokens": 10841,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.041140116225440455,
+          "acc_blank": 0.042247025182178766,
+          "gain_pts": -0.11069089567383084,
+          "gain_pts_rowmean": -0.11576275884387648,
+          "se_naive_pts": 0.10188422788246615,
+          "se_cluster_pts": 0.10043967865462303,
+          "ci95_lo_pts": -0.30754904850186526,
+          "ci95_hi_pts": 0.08616725715420356,
+          "ce_aligned": 5.7068757880996905,
+          "ce_blank": 5.696829116385567,
+          "underpowered": false
+        },
+        {
+          "bin": "320-639",
+          "lo": 320,
+          "hi": 640,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        },
+        {
+          "bin": "640+",
+          "lo": 640,
+          "hi": null,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        }
+      ],
+      "char_bins": [
+        {
+          "bin": "0-9",
+          "lo": 0,
+          "hi": 10,
+          "n_tokens": 819,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.57997557997558,
+          "acc_blank": 0.0231990231990232,
+          "gain_pts": 55.67765567765568,
+          "gain_pts_rowmean": 55.16984126984126,
+          "se_naive_pts": 1.7624944464932044,
+          "se_cluster_pts": 1.6115108178209703,
+          "ci95_lo_pts": 52.51915251328868,
+          "ci95_hi_pts": 58.83615884202268,
+          "ce_aligned": 1.3483678839561084,
+          "ce_blank": 12.149397050995967,
+          "underpowered": false
+        },
+        {
+          "bin": "10-24",
+          "lo": 10,
+          "hi": 25,
+          "n_tokens": 1067,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.08434864104967198,
+          "acc_blank": 0.05435801312089972,
+          "gain_pts": 2.999062792877226,
+          "gain_pts_rowmean": 2.68968253968254,
+          "se_naive_pts": 0.8747810717301938,
+          "se_cluster_pts": 0.8104333206994454,
+          "ci95_lo_pts": 1.410642672062358,
+          "ci95_hi_pts": 4.587482913692094,
+          "ce_aligned": 5.364010487106824,
+          "ce_blank": 5.586401864166189,
+          "underpowered": false
+        },
+        {
+          "bin": "25-49",
+          "lo": 25,
+          "hi": 50,
+          "n_tokens": 1818,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.0374037403740374,
+          "acc_blank": 0.0429042904290429,
+          "gain_pts": -0.5500550055005501,
+          "gain_pts_rowmean": -0.5138750138750138,
+          "se_naive_pts": 0.280254366849433,
+          "se_cluster_pts": 0.2817222862920519,
+          "ci95_lo_pts": -1.102220540404831,
+          "ci95_hi_pts": 0.0021105294037307987,
+          "ce_aligned": 5.690268173039255,
+          "ce_blank": 5.692540423401577,
+          "underpowered": false
+        },
+        {
+          "bin": "50-99",
+          "lo": 50,
+          "hi": 100,
+          "n_tokens": 3673,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.039205009528995374,
+          "acc_blank": 0.038660495507759324,
+          "gain_pts": 0.054451402123604685,
+          "gain_pts_rowmean": 0.04989670018655531,
+          "se_naive_pts": 0.19635199746374063,
+          "se_cluster_pts": 0.19385712077518896,
+          "ci95_lo_pts": -0.32550157283156095,
+          "ci95_hi_pts": 0.4344043770787703,
+          "ce_aligned": 5.661354673863395,
+          "ce_blank": 5.66227136436901,
+          "underpowered": false
+        },
+        {
+          "bin": "100-199",
+          "lo": 100,
+          "hi": 200,
+          "n_tokens": 7205,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04038861901457321,
+          "acc_blank": 0.041637751561415685,
+          "gain_pts": -0.12491325468424704,
+          "gain_pts_rowmean": -0.11969469652637424,
+          "se_naive_pts": 0.12491325468424704,
+          "se_cluster_pts": 0.1145143872786873,
+          "ci95_lo_pts": -0.34935732951481635,
+          "ci95_hi_pts": 0.09953082014632227,
+          "ce_aligned": 5.693524997162382,
+          "ce_blank": 5.69324063159694,
+          "underpowered": false
+        },
+        {
+          "bin": "200-399",
+          "lo": 200,
+          "hi": 400,
+          "n_tokens": 14545,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04372636644895153,
+          "acc_blank": 0.04393262289446545,
+          "gain_pts": -0.020625644551392232,
+          "gain_pts_rowmean": -0.018979587474110438,
+          "se_naive_pts": 0.08777971817145534,
+          "se_cluster_pts": 0.0845629582575165,
+          "ci95_lo_pts": -0.18636599720118294,
+          "ci95_hi_pts": 0.14511470809839846,
+          "ce_aligned": 5.682765010036653,
+          "ce_blank": 5.6842100568044955,
+          "underpowered": false
+        },
+        {
+          "bin": "400-799",
+          "lo": 400,
+          "hi": 800,
+          "n_tokens": 5714,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.042527126356317814,
+          "acc_blank": 0.04602730136506825,
+          "gain_pts": -0.35001750087504374,
+          "gain_pts_rowmean": -0.3503671278382446,
+          "se_naive_pts": 0.15251215576062108,
+          "se_cluster_pts": 0.13683363883246563,
+          "ci95_lo_pts": -0.6182065049231739,
+          "ci95_hi_pts": -0.08182849682691362,
+          "ce_aligned": 5.674303467561215,
+          "ce_blank": 5.653766264765616,
+          "underpowered": false
+        },
+        {
+          "bin": "800-1599",
+          "lo": 800,
+          "hi": 1600,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        },
+        {
+          "bin": "1600+",
+          "lo": 1600,
+          "hi": null,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        }
+      ],
+      "char_bins_fine": [
+        {
+          "lo": 0,
+          "hi": 25,
+          "n_tokens": 1886,
+          "gain_pts": 25.874867444326615,
+          "se_cluster_pts": 0.8957210168816244,
+          "underpowered": false
+        },
+        {
+          "lo": 25,
+          "hi": 50,
+          "n_tokens": 1818,
+          "gain_pts": -0.5500550055005501,
+          "se_cluster_pts": 0.2817222862920519,
+          "underpowered": false
+        },
+        {
+          "lo": 50,
+          "hi": 75,
+          "n_tokens": 1830,
+          "gain_pts": 0.1092896174863388,
+          "se_cluster_pts": 0.2628439141685744,
+          "underpowered": false
+        },
+        {
+          "lo": 75,
+          "hi": 100,
+          "n_tokens": 1843,
+          "gain_pts": 0.0,
+          "se_cluster_pts": 0.27419681502449644,
+          "underpowered": false
+        },
+        {
+          "lo": 100,
+          "hi": 125,
+          "n_tokens": 1807,
+          "gain_pts": 0.05534034311012728,
+          "se_cluster_pts": 0.23591822099122833,
+          "underpowered": false
+        },
+        {
+          "lo": 125,
+          "hi": 150,
+          "n_tokens": 1882,
+          "gain_pts": -0.1594048884165781,
+          "se_cluster_pts": 0.2283029343121127,
+          "underpowered": false
+        },
+        {
+          "lo": 150,
+          "hi": 175,
+          "n_tokens": 1741,
+          "gain_pts": -0.17231476163124643,
+          "se_cluster_pts": 0.23697971276932633,
+          "underpowered": false
+        },
+        {
+          "lo": 175,
+          "hi": 200,
+          "n_tokens": 1775,
+          "gain_pts": -0.22535211267605634,
+          "se_cluster_pts": 0.22473892396153256,
+          "underpowered": false
+        },
+        {
+          "lo": 200,
+          "hi": 225,
+          "n_tokens": 1867,
+          "gain_pts": -0.32137118371719336,
+          "se_cluster_pts": 0.30104813288461746,
+          "underpowered": false
+        },
+        {
+          "lo": 225,
+          "hi": 250,
+          "n_tokens": 1817,
+          "gain_pts": -0.2201430930104568,
+          "se_cluster_pts": 0.2866552498029633,
+          "underpowered": false
+        },
+        {
+          "lo": 250,
+          "hi": 275,
+          "n_tokens": 1796,
+          "gain_pts": -0.11135857461024498,
+          "se_cluster_pts": 0.2186515802886798,
+          "underpowered": false
+        },
+        {
+          "lo": 275,
+          "hi": 300,
+          "n_tokens": 1894,
+          "gain_pts": -0.21119324181626187,
+          "se_cluster_pts": 0.2341003947280369,
+          "underpowered": false
+        },
+        {
+          "lo": 300,
+          "hi": 325,
+          "n_tokens": 1760,
+          "gain_pts": 0.056818181818181816,
+          "se_cluster_pts": 0.2280587694116171,
+          "underpowered": false
+        },
+        {
+          "lo": 325,
+          "hi": 350,
+          "n_tokens": 1791,
+          "gain_pts": 0.16750418760469013,
+          "se_cluster_pts": 0.19543930402034934,
+          "underpowered": false
+        },
+        {
+          "lo": 350,
+          "hi": 375,
+          "n_tokens": 1804,
+          "gain_pts": 0.5543237250554324,
+          "se_cluster_pts": 0.28073196597195604,
+          "underpowered": false
+        },
+        {
+          "lo": 375,
+          "hi": 400,
+          "n_tokens": 1816,
+          "gain_pts": -0.05506607929515419,
+          "se_cluster_pts": 0.19533206468601502,
+          "underpowered": false
+        },
+        {
+          "lo": 400,
+          "hi": 425,
+          "n_tokens": 1798,
+          "gain_pts": -0.389321468298109,
+          "se_cluster_pts": 0.2557273074442803,
+          "underpowered": false
+        },
+        {
+          "lo": 425,
+          "hi": 450,
+          "n_tokens": 1886,
+          "gain_pts": 0.10604453870625664,
+          "se_cluster_pts": 0.23601249093981283,
+          "underpowered": false
+        },
+        {
+          "lo": 450,
+          "hi": 475,
+          "n_tokens": 1749,
+          "gain_pts": -0.9719839908519153,
+          "se_cluster_pts": 0.2864278771105614,
+          "underpowered": false
+        },
+        {
+          "lo": 475,
+          "hi": 500,
+          "n_tokens": 281,
+          "gain_pts": 0.7117437722419928,
+          "se_cluster_pts": 0.6190421559308015,
+          "underpowered": false
+        }
+      ],
+      "char_bin_width": 25,
+      "K": {
+        "k_chars": 100,
+        "k_bucket": 4,
+        "status": "ok",
+        "baseline_gain_pts": 6.506710044733631,
+        "threshold_pts": 3.2533550223668155,
+        "baseline_n_tokens": 7377,
+        "k_chars_first_crossing": 100,
+        "k_lower_bound_chars": null,
+        "n_eligible_buckets_past_baseline": 16,
+        "baseline_gain_ci95_pts": [
+          5.990010430486674,
+          7.023409658980588
+        ],
+        "baseline_gain_significant": true,
+        "baseline_window_chars": 100,
+        "bootstrap": {
+          "n_boot": 300,
+          "status_counts": {
+            "ok": 300
+          },
+          "n_resolved": 300,
+          "ci_lo_chars": 100.0,
+          "ci_hi_chars": 100.0,
+          "median_chars": 100.0
+        },
+        "k_tokens_from_ratio": 48.49130132219902,
+        "k_tokens_empirical_median": 55.0
+      },
+      "K_alt_baseline25": {
+        "k_chars": 25,
+        "k_bucket": 1,
+        "status": "ok",
+        "baseline_gain_pts": 25.874867444326615,
+        "threshold_pts": 12.937433722163307,
+        "baseline_n_tokens": 1886,
+        "k_chars_first_crossing": 25,
+        "k_lower_bound_chars": null,
+        "n_eligible_buckets_past_baseline": 19,
+        "baseline_window_chars": 25,
+        "preregistered": false
+      }
+    }
+  },
+  "pos0_profile": {
+    "per_rung": {
+      "randstr-d3": {
+        "chars_per_page": 479.0,
+        "gain_pts": 64.66666666666666,
+        "se_pts": 3.915970474562283,
+        "ci95": [
+          56.99150557020123,
+          72.34182776313209
+        ],
+        "n_rows": 150,
+        "significant": true,
+        "pos0_4_gain_pts": 58.266666666666666,
+        "pos0_4_se_pts": 1.7842128128870716,
+        "pos0_4_significant": true
+      }
+    },
+    "vs_reference": {},
+    "vs_reference_pos0_4": {},
+    "reference": "randstr-d3",
+    "d5_vs_d3": null
+  },
+  "d5_vs_d3": {
+    "available": false,
+    "reason": "both d3 and d5 must be in --rungs"
+  },
+  "verdict": {
+    "final": "(C) SCAN FAILURE \u2014 the start of the page is read at every density; what fails is keeping place afterwards. H18 becomes the main line; more soft tokens will not help. NOTE: K could not corroborate this (see step 5) \u2014 the call rests on the position-0 profile alone.",
+    "checks": {
+      "rungs_with_significant_baseline_gain": [
+        "randstr-d3"
+      ],
+      "rungs_with_significant_pos0_gain": [
+        "randstr-d3"
+      ],
+      "pos0_monotone_decreasing_in_density": false,
+      "pos0_densest_vs_sparsest_significant_drop": false,
+      "pos0_4_densest_vs_sparsest_significant_drop": false,
+      "pos0_pattern": "C",
+      "rungs_with_measurable_K": [
+        "randstr-d3"
+      ],
+      "d5_gg_d3": null,
+      "K_trend": null,
+      "rungs_with_K_ge_400": [],
+      "primary_vs_K_conflict": false,
+      "final": "(C) SCAN FAILURE \u2014 the start of the page is read at every density; what fails is keeping place afterwards. H18 becomes the main line; more soft tokens will not help. NOTE: K could not corroborate this (see step 5) \u2014 the call rests on the position-0 profile alone."
+    },
+    "lines": [
+      "1. Does each rung read ANYTHING? (gate to pass before any K is interpreted)",
+      "     randstr-d3: 0-100-char gain +6.51 pts (95% CI [+5.99, +7.02]) -> READS | rows aligned>blank 133/150 (89%, sign p 1.7e-34) | Dperm +7.36% | CE-floor -0.079",
+      "2. PRIMARY DISCRIMINATOR \u2014 position-0 reading gain vs chars/page",
+      "     (C) scan predicts it STAYS HIGH at every density; (A) bandwidth predicts it DEGRADES as density rises.",
+      "     randstr-d3 (479 chars/page): pos-0 gain +64.67 +/- 3.92 pts 95% CI [+56.99, +72.34] n=150 -> significant",
+      "     => position-0 gain SURVIVES at the densest rung (randstr-d3: +64.67 pts) and is not significantly below the sparsest (randstr-d3: +64.67 pts) => the start of a dense page IS encoded; what fails is keeping place afterwards => (C) SCAN FAILURE.",
+      "3. SECONDARY \u2014 K, measurable on: randstr-d3",
+      "     randstr-d3: status ok, K = 100 chars, ~token 48.5",
+      "4. d5 vs d3 (same 400 chars/page, font 40 vs 14 => ~1.0 vs ~2.8 text lines per 48px patch):",
+      "     not evaluated (both d3 and d5 must be in --rungs)",
+      "5. Does K move with chars/page?",
+      "     UNDECIDABLE / UNDERPOWERED: K resolved on 1 rung(s) (randstr-d3), and the pre-registered discriminator is a comparison ACROSS rungs. A trend cannot be drawn through one point \u2014 falling back to the position-0 profile above.",
+      "6. K >= 400 chars anywhere (capacity not binding at mixture density)?",
+      "     no rung reaches K >= 400 chars (or K is unmeasurable there)"
+    ],
+    "caveats": [
+      "chars/token is ~constant across ALL rungs (see chars_per_token_realized), so within a target 'character position' and 'token index' are proportional. A K that is constant across rungs is therefore equally consistent with (C) a fixed token-index scan AND with a fixed-ABSOLUTE-CAPACITY reading of (A) bandwidth. The pre-registered mapping calls it (C); what the data strictly supports is 'the collapse point is invariant to page density', which rules out a density-proportional bandwidth account but not a fixed-capacity one. Extra leverage: if a short rung whose ENTIRE page fits inside the implied capacity still collapses at the same position, fixed-capacity is excluded.",
+      "The position-0 profile is the primary discriminator here BECAUSE K is undefined on any rung that never reads. It is not itself pre-registered; it is the pre-registered logic (does the collapse point move with density?) evaluated at the one position every rung can supply. Its weakness is the mirror image of K's: it says nothing about what happens deeper in the page, so a rung that reads position 0 and nothing else scores the same as one that reads throughout. Read it together with the per-position tables.",
+      "The pre-registered 0-100-char reference window is wider than d1's whole target (~29 chars) and covers ~84% of d2's (~119 chars): K is structurally UNMEASURABLE on those rungs, not merely null. Only d3/d4/d5 can carry the trend. K_alt_baseline25 is reported as a non-pre-registered sensitivity.",
+      "d1..d4 vary chars/page and target LENGTH together; only d3-vs-d5 varies one factor (font/lines-per-patch) at fixed density. A K trend across d1..d4 cannot separate 'denser page' from 'longer target'.",
+      "d3 and d5 draw byte-identical targets (same spec, same RNG stream), so that comparison is run PAIRED and is the sharpest in the ladder. Rungs of DIFFERENT density do not share targets beyond row 0 \u2014 each consumes a different number of letters from the one shared stream \u2014 so cross-density comparisons are unpaired and correspondingly less powerful; the printed MDE is the number to judge a null against."
+    ]
+  }
+}

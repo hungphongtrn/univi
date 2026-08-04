@@ -1,0 +1,19 @@
+{
+  "tag": "h3",
+  "checkpoint": "data/checkpoints/h3-randstr-v0/best",
+  "n_samples": 200,
+  "answer_only_ce_nats": {
+    "aligned": 4.02330823302269,
+    "permuted": 4.023327666521072,
+    "blank": 4.023368713855743
+  },
+  "teacher_forced_tok_acc": {
+    "aligned": 0.32066123947501185,
+    "permuted": 0.32089933469891546,
+    "blank": 0.32066123947501185
+  },
+  "delta_perm_rel": 4.8302285722390935e-06,
+  "delta_blank_rel": 1.5032612355290362e-05,
+  "no_reading_floor_nats": 5.613536419747557,
+  "mean_answer_tokens": 20.585
+}

@@ -15,3 +15,16 @@ data/validation/
 data/eval/decodability/LibriSpeech/
 data/eval/decodability/test-clean.tar.gz
 data/eval/decodability/whisper-tiny.en/
+
+# issue #6 hybrid: curled Qwen3-1.7B config+tokenizer (no weights); see docs/plans/2026-07-22-issue-6-*
+data/hybrid/
+
+# Raw downloaded corpora (FSDD wavs etc.) — re-fetchable, not source
+data/raw/
+
+# Scratchpad run artifacts (stdout/nohup logs); the probe scripts themselves ARE tracked
+scratchpad/*.out
+scratchpad/*.log
+
+# Stray training stdout capture
+tmp_training_output.txt

@@ -1,0 +1,121 @@
+# configs/h17_density_1120.yaml
+# H17 LADDER, LEG 2 — the H13 density ladder rerun at 1120 soft tokens.
+#
+# This is the OPTICALLY CONTROLLED leg. Measured (scratchpad/h17_render_resolution.py
+# -> data/eval/h17-render-resolution.json): the processor resizes a SQUARE page to a
+# side fixed by the budget alone -- 768 px at 280, 1104 px at 560, 1584 px at 1120 --
+# never by the canvas. Against H13's 1024 render, BOTH 560 and 1120 are upsamples,
+# so both carry exactly the optical content of the 1024 source and differ ONLY in
+# token count (529 -> 1089, 2.06x). Whatever K does between leg 1 and leg 2 is
+# attributable to the number of soft tokens and to nothing else.
+#
+#   leg 1  280 -> 560   2.07x tokens  +  lost resolution recovered  (h17_density_560)
+#   leg 2  560 -> 1120  2.06x tokens  +  IDENTICAL optical content  (this file)
+#
+# DO NOT "fix" this by re-rendering H13's data at canvas 1584. That would supply
+# real pixels to the extra cells, but it would (a) re-confound the leg it was built
+# to control, (b) change chars/page by +5-8% (integer font metrics do not scale
+# exactly), and (c) break comparability with H13's own K values, which are the
+# 280-token baseline this whole ladder is measured against. A raised canvas is a
+# SEPARATE one-rung diagnostic, and only worth materializing if leg 2 shows a gain
+# -- see the H17 doc's "conditional third arm".
+#
+#   Launch SOLO, and only AFTER configs/h17_randstr_1120.yaml has passed its
+#   >= +100% Dperm gate:
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h17_density_1120.yaml \
+#       > data/checkpoints/h17-density-1120-v0-run.log 2>&1 &
+#
+#   Read-out is PER-POSITION reading gain, not aggregate eval CE:
+#     uv run python scratchpad/hybrid_4lane_position_decay.py \
+#       --checkpoint data/checkpoints/h17-density-1120-v0/final \
+#       --val-path data/materialized/h13-density-v0/randstr-d{1,2,3,4,5}/validation
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  # ---- THE CHANGED VARIABLE vs configs/h13_density.yaml -----------------------
+  max_soft_tokens: 1120
+  # ---------------------------------------------------------------------------
+
+dataset:
+  num_proc: 4
+  source: "local"
+  # H13's data UNCHANGED (canvas 1024) -- see the header: re-rendering would
+  # re-confound leg 2 and break comparability with H13's 280-token K values.
+  path: "data/materialized/h13-density-v0"
+  max_train_images: 4
+  subsets:
+    - "randstr-d1"
+    - "randstr-d2"
+    - "randstr-d3"
+    - "randstr-d4"
+    - "randstr-d5"
+  train_splits:
+    randstr-d1: ["train"]
+    randstr-d2: ["train"]
+    randstr-d3: ["train"]
+    randstr-d4: ["train"]
+    randstr-d5: ["train"]
+  validation_splits:
+    randstr-d1: ["validation"]
+    randstr-d2: ["validation"]
+    randstr-d3: ["validation"]
+    randstr-d4: ["validation"]
+    randstr-d5: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h17-density-1120-v0"
+
+  # d4 is the binding rung: ~900 answer tokens + 1089 image placeholders ~= 2010
+  # sequence (vs ~1200 at 280). H13's per-device 4 is halved to 2 with accum 32 so
+  # the EFFECTIVE BATCH STAYS 64 (H07 exposure -- the invariant). Confirm over the
+  # first ~20 steps that peak VRAM stays under 26 GB; if not, 1 x accum 64.
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 32    # effective batch 64
+  num_train_epochs: 20
+  max_steps: 1000                    # H13's budget verbatim
+
+  # 3-group LR (adapter > vision > decoder), NO freeze -- H07's recipe verbatim.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  # 2048 -> 4096 is REQUIRED here, not cosmetic, and this is MEASURED on the real
+  # splits. `_filter_training_tokens` estimates a row as
+  # original_token_length + n_images*image_token_budget(max_soft_tokens) + 256,
+  # and image_token_budget(1120) = 1122. A median d4 row is then
+  # 929 + 1122 + 256 = 2307 > 2048, so at max_length 2048 the filter silently drops
+  # ALL 20,000 d4 TRAIN ROWS -- the densest rung, i.e. exactly the one K is
+  # measured on -- while d1-d3/d5 are unaffected. At 4096 every rung retains
+  # 20000/20000 at all three budgets, so leg 1 and leg 2 see identical data.
+  # Costs nothing: HybridCollator pads to the BATCH max, not to max_length.
+  max_length: 4096
+
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "randstr-d1"
+    - "randstr-d2"
+    - "randstr-d3"
+    - "randstr-d4"
+    - "randstr-d5"
+  max_eval_samples_per_subset: 128
+  eval_steps: 100
+  logging_steps: 10
+  save_steps: 250
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h17-density-ladder-1120"
+  tags: ["hybrid", "pretrained-vision", "density-ladder", "soft-token-budget", "h17"]

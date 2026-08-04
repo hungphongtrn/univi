@@ -1,0 +1,138 @@
+{
+  "mix": "B",
+  "total_rows": 128000,
+  "max_length": 1024,
+  "max_soft_tokens": 280,
+  "per_image_tokens": 282,
+  "stats": {
+    "fineweb-edu": {
+      "rows_passing_filter": 155577,
+      "sup_tokens_mean": 298.3833333333333,
+      "readable_tokens_mean": 48.0
+    },
+    "densefusion": {
+      "rows_passing_filter": 399820,
+      "sup_tokens_mean": 238.42666666666668,
+      "readable_tokens_mean": 48.0
+    },
+    "smoltalk": {
+      "rows_passing_filter": 350960,
+      "sup_tokens_mean": 198.03333333333333,
+      "readable_tokens_mean": 44.06333333333333
+    },
+    "librispeech": {
+      "rows_passing_filter": 103997,
+      "sup_tokens_mean": 59.096666666666664,
+      "readable_tokens_mean": 44.343333333333334
+    },
+    "random-strings": {
+      "rows_passing_filter": 100000,
+      "sup_tokens_mean": 16.49,
+      "readable_tokens_mean": 16.49
+    },
+    "spoken-digits": {
+      "rows_passing_filter": 30000,
+      "sup_tokens_mean": 17.0,
+      "readable_tokens_mean": 17.0
+    }
+  },
+  "plan": {
+    "target_token_share": {
+      "fineweb-edu": 0.175,
+      "densefusion": 0.175,
+      "smoltalk": 0.175,
+      "librispeech": 0.175,
+      "random-strings": 0.15,
+      "spoken-digits": 0.15
+    },
+    "rows_wanted": {
+      "fineweb-edu": 3252,
+      "densefusion": 4070,
+      "smoltalk": 4900,
+      "librispeech": 16419,
+      "random-strings": 50436,
+      "spoken-digits": 48923
+    },
+    "rows_built": {
+      "fineweb-edu": 3252,
+      "densefusion": 4070,
+      "smoltalk": 4900,
+      "librispeech": 16419,
+      "random-strings": 50436,
+      "spoken-digits": 30000
+    },
+    "clamped": {
+      "spoken-digits": {
+        "wanted": 48923,
+        "available": 30000,
+        "epochs_if_repeated": 1.63
+      }
+    },
+    "realised": {
+      "per_lane": {
+        "fineweb-edu": {
+          "rows": 3252,
+          "row_share": 0.029813801259660606,
+          "sup_tokens_mean": 298.3833333333333,
+          "supervised_tokens": 970342.6,
+          "token_share": 0.18577904857290306,
+          "readable_tokens_mean": 48.0,
+          "readable_fraction_within_lane": 0.16086689381667876
+        },
+        "densefusion": {
+          "rows": 4070,
+          "row_share": 0.037313090752404264,
+          "sup_tokens_mean": 238.42666666666668,
+          "supervised_tokens": 970396.5333333333,
+          "token_share": 0.18578937449629654,
+          "readable_tokens_mean": 48.0,
+          "readable_fraction_within_lane": 0.20131976289005704
+        },
+        "smoltalk": {
+          "rows": 4900,
+          "row_share": 0.04492239427193634,
+          "sup_tokens_mean": 198.03333333333333,
+          "supervised_tokens": 970363.3333333334,
+          "token_share": 0.18578301811823728,
+          "readable_tokens_mean": 44.06333333333333,
+          "readable_fraction_within_lane": 0.2225046288503619
+        },
+        "librispeech": {
+          "rows": 16419,
+          "row_share": 0.15052669215324954,
+          "sup_tokens_mean": 59.096666666666664,
+          "supervised_tokens": 970308.1699999999,
+          "token_share": 0.1857724567025241,
+          "readable_tokens_mean": 44.343333333333334,
+          "readable_fraction_within_lane": 0.7503525297535112
+        },
+        "random-strings": {
+          "rows": 50436,
+          "row_share": 0.4623889545917104,
+          "sup_tokens_mean": 16.49,
+          "supervised_tokens": 831689.6399999999,
+          "token_share": 0.1592329451753847,
+          "readable_tokens_mean": 16.49,
+          "readable_fraction_within_lane": 1.0
+        },
+        "spoken-digits": {
+          "rows": 30000,
+          "row_share": 0.2750350669710388,
+          "sup_tokens_mean": 17.0,
+          "supervised_tokens": 510000.0,
+          "token_share": 0.09764315693465438,
+          "readable_tokens_mean": 17.0,
+          "readable_fraction_within_lane": 1.0
+        }
+      },
+      "total_rows": 109077,
+      "total_supervised_tokens": 5223100.276666666,
+      "readable_fraction_overall": 0.5048972877496283,
+      "reference_points": {
+        "H13_died_at": 0.142,
+        "H14_confirmed_at": 0.752,
+        "H07_succeeded_at": 1.0
+      }
+    }
+  }
+}

@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+import math
+from dataclasses import dataclass
+
 import librosa
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 _SPECTROGRAM_UPSCALE = 4
 _PIXEL_MAX = 255
+
+# The page margin :func:`render_text_pages` draws with, hoisted to a constant so
+# the geometry helpers below (:func:`word_boxes_for_pages`) cannot drift away
+# from the pixels.  Changing it changes every rendered text lane.
+TEXT_MARGIN = 20
 
 
 def _find_font(font_path: str | None = None) -> str | None:
@@ -81,15 +89,20 @@ def render_text_page(
     return img
 
 
-def render_text_pages(
+def wrap_text_pages(
     text: str,
     canvas_width: int = 1024,
     canvas_height: int = 1024,
     font_size: int = 14,
     font_path: str | None = None,
-    background_color: str = "white",
-    text_color: str = "black",
-) -> list[Image.Image]:
+) -> tuple[list[str], int, int]:
+    """Return ``(wrapped_lines, lines_per_page, line_height)`` for *text*.
+
+    This is the exact layout pass :func:`render_text_pages` performs before it
+    draws anything, exposed so callers can reason about *which characters land
+    on which page* without rasterising.  ``poisoned_text.py`` needs it to build
+    a transcription target that matches the rendered pixels exactly.
+    """
     font_size = max(font_size, 14)
     font_file = _find_font(font_path)
     font = (
@@ -104,7 +117,7 @@ def render_text_pages(
     except AttributeError:
         line_height = font_size + 4
 
-    margin = 20
+    margin = TEXT_MARGIN
     usable_width = canvas_width - 2 * margin
     lines_per_page = max(1, (canvas_height - 2 * margin) // line_height)
     wrapped_lines: list[str] = []
@@ -136,6 +149,35 @@ def render_text_pages(
     if not wrapped_lines:
         wrapped_lines = [""]
 
+    return wrapped_lines, lines_per_page, line_height
+
+
+def render_text_pages(
+    text: str,
+    canvas_width: int = 1024,
+    canvas_height: int = 1024,
+    font_size: int = 14,
+    font_path: str | None = None,
+    background_color: str = "white",
+    text_color: str = "black",
+) -> list[Image.Image]:
+    font_size = max(font_size, 14)
+    font_file = _find_font(font_path)
+    font = (
+        ImageFont.truetype(font_file, font_size)
+        if font_file is not None
+        else ImageFont.load_default()
+    )
+
+    wrapped_lines, lines_per_page, line_height = wrap_text_pages(
+        text,
+        canvas_width=canvas_width,
+        canvas_height=canvas_height,
+        font_size=font_size,
+        font_path=font_path,
+    )
+    margin = TEXT_MARGIN
+
     pages = []
     for start in range(0, len(wrapped_lines), lines_per_page):
         page = Image.new(
@@ -153,6 +195,176 @@ def render_text_pages(
             )
         pages.append(page)
     return pages
+
+
+# ---------------------------------------------------------------------------
+# Per-word geometry (H14 masked-region targets)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class WordBox:
+    """Where one whitespace-delimited word landed on a rendered page.
+
+    Coordinates are **page pixel coordinates** (origin = top-left of the page
+    the word is on, not of the document), so ``pages[box.page].crop(box.rect)``
+    is exactly that word.  ``x0``/``x1`` come from the same
+    ``TEXT_MARGIN + font.getlength(prefix)`` pen positions
+    :func:`render_text_pages` draws with, floored/ceiled to whole pixels.
+    ``y0``/``y1`` span the full ``line_height`` (ascent+descent), i.e. the whole
+    text line the word sits on.
+
+    This is the **advance** box, not the inked box.  Glyph antialiasing can
+    bleed ~1 px past the advance on the right edge (measured: 41 stray subpixels
+    over 100 pages of a-z randstr text, every one of them on the ``x1`` column),
+    and accents on capitals overshoot the ascent.  Anything that must *erase* a
+    word — the H14 occlusion — should dilate the rect by >=1 px (>=2 for
+    accented real text); see ``masked_regions.LaneSpec.mask_pad_x``.
+    """
+
+    word: str
+    index: int  # running index over all words of the document, reading order
+    page: int
+    line: int  # line index *within* the page
+    x0: int
+    y0: int
+    x1: int
+    y1: int
+
+    @property
+    def rect(self) -> tuple[int, int, int, int]:
+        return (self.x0, self.y0, self.x1, self.y1)
+
+
+def _word_spans(line: str) -> list[tuple[int, int]]:
+    """Character ``[start, end)`` spans of the maximal non-space runs in *line*."""
+    spans: list[tuple[int, int]] = []
+    start: int | None = None
+    for i, ch in enumerate(line):
+        if ch == " ":
+            if start is not None:
+                spans.append((start, i))
+                start = None
+        elif start is None:
+            start = i
+    if start is not None:
+        spans.append((start, len(line)))
+    return spans
+
+
+def word_boxes_for_pages(
+    text: str,
+    canvas_width: int = 1024,
+    canvas_height: int = 1024,
+    font_size: int = 14,
+    font_path: str | None = None,
+) -> list[WordBox]:
+    """Per-word bounding boxes for the pages :func:`render_text_pages` would draw.
+
+    Reuses the renderer's own layout pass (:func:`wrap_text_pages`) and the same
+    font, margin and ``line_height``, so boxes and pixels are derived from one
+    source of truth.  Words are taken from the *wrapped* lines, i.e. from what
+    is physically on the page: a word longer than the usable width is
+    hard-wrapped by :func:`wrap_text_pages` and therefore appears here as two
+    boxes with two (partial) ``word`` strings.  Callers that need
+    ``[b.word for b in boxes] == text.split()`` must assert it.
+    """
+    font_size = max(font_size, 14)
+    font_file = _find_font(font_path)
+    font = (
+        ImageFont.truetype(font_file, font_size)
+        if font_file is not None
+        else ImageFont.load_default()
+    )
+
+    wrapped_lines, lines_per_page, line_height = wrap_text_pages(
+        text,
+        canvas_width=canvas_width,
+        canvas_height=canvas_height,
+        font_size=font_size,
+        font_path=font_path,
+    )
+
+    boxes: list[WordBox] = []
+    for global_line, line in enumerate(wrapped_lines):
+        page, line_in_page = divmod(global_line, lines_per_page)
+        y0 = TEXT_MARGIN + line_in_page * line_height
+        for start, end in _word_spans(line):
+            x0 = TEXT_MARGIN + font.getlength(line[:start])
+            x1 = TEXT_MARGIN + font.getlength(line[:end])
+            boxes.append(
+                WordBox(
+                    word=line[start:end],
+                    index=len(boxes),
+                    page=page,
+                    line=line_in_page,
+                    x0=int(math.floor(x0)),
+                    y0=y0,
+                    x1=int(math.ceil(x1)),
+                    y1=y0 + line_height,
+                )
+            )
+    return boxes
+
+
+def render_text_pages_with_boxes(
+    text: str,
+    canvas_width: int = 1024,
+    canvas_height: int = 1024,
+    font_size: int = 14,
+    font_path: str | None = None,
+    background_color: str = "white",
+    text_color: str = "black",
+) -> tuple[list[Image.Image], list[WordBox]]:
+    """``(pages, word_boxes)`` — :func:`render_text_pages` plus per-word geometry.
+
+    The pixels come from :func:`render_text_pages` **unchanged**; this is only a
+    convenience pairing so a caller cannot accidentally rasterise one string and
+    measure another.
+    """
+    pages = render_text_pages(
+        text,
+        canvas_width=canvas_width,
+        canvas_height=canvas_height,
+        font_size=font_size,
+        font_path=font_path,
+        background_color=background_color,
+        text_color=text_color,
+    )
+    boxes = word_boxes_for_pages(
+        text,
+        canvas_width=canvas_width,
+        canvas_height=canvas_height,
+        font_size=font_size,
+        font_path=font_path,
+    )
+    return pages, boxes
+
+
+def fill_boxes(
+    image: Image.Image,
+    rects: list[tuple[int, int, int, int]],
+    fill_color: str | int | tuple[int, ...] = "black",
+) -> Image.Image:
+    """Return a copy of *image* with each ``(x0, y0, x1, y1)`` rect solid-filled.
+
+    Half-open in the PIL sense is *not* what ``ImageDraw.rectangle`` does — it
+    paints the ``x1``/``y1`` row and column too — so the rect is shrunk by one
+    pixel on the far edges here.  That keeps the filled region exactly the
+    ``[x0, x1) x [y0, y1)`` slice a numpy crop of the same rect would take,
+    which is what the H14 verification compares.
+
+    ``fill_color`` is interpreted in *image*'s mode: on an ``RGB`` page (what
+    :func:`render_text_pages` returns) an integer is an RGB triple, so pass a
+    name like ``"white"`` rather than ``255`` unless the image is ``L``.
+    """
+    occluded = image.copy()
+    draw = ImageDraw.Draw(occluded)
+    for x0, y0, x1, y1 in rects:
+        if x1 <= x0 or y1 <= y0:
+            continue
+        draw.rectangle([x0, y0, x1 - 1, y1 - 1], fill=fill_color)
+    return occluded
 
 
 def _load_audio_samples(

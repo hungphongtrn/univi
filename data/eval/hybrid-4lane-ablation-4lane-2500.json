@@ -1,0 +1,79 @@
+{
+  "tag": "4lane-2500",
+  "checkpoint": "data/checkpoints/hybrid-4lane-v0/checkpoint-2500",
+  "seed": 42,
+  "lanes": {
+    "fineweb-edu": {
+      "n_samples": 200,
+      "mean_images_per_row": 1.04,
+      "mean_target_tokens": 564.41,
+      "response_ce": {
+        "aligned": 2.507845568656921,
+        "permuted": 2.5645733749866486,
+        "blank": 2.589368079304695
+      },
+      "tok_acc": {
+        "aligned": 0.46747439429163934,
+        "permuted": 0.46248393729329107,
+        "blank": 0.45576453566551206
+      },
+      "delta_perm_rel": 0.022620135401761613,
+      "delta_blank_rel": 0.0325069899305775,
+      "reading_gain_pts": 1.1709858626127279
+    },
+    "densefusion": {
+      "n_samples": 200,
+      "mean_images_per_row": 1.0,
+      "mean_target_tokens": 245.125,
+      "response_ce": {
+        "aligned": 1.5601122748851777,
+        "permuted": 1.5700500681996346,
+        "blank": 1.587866088449955
+      },
+      "tok_acc": {
+        "aligned": 0.6244207543134689,
+        "permuted": 0.6224050831794739,
+        "blank": 0.6205712845921516
+      },
+      "delta_perm_rel": 0.006369921879621316,
+      "delta_blank_rel": 0.01778962579268206,
+      "reading_gain_pts": 0.3849469721317278
+    },
+    "smoltalk": {
+      "n_samples": 200,
+      "mean_images_per_row": 1.015,
+      "mean_target_tokens": 244.795,
+      "response_ce": {
+        "aligned": 1.3118051039427518,
+        "permuted": 1.441286917924881,
+        "blank": 1.3955349715054035
+      },
+      "tok_acc": {
+        "aligned": 0.6774855750799179,
+        "permuted": 0.6631567077338696,
+        "blank": 0.6643631926178932
+      },
+      "delta_perm_rel": 0.09870506952058626,
+      "delta_blank_rel": 0.0638279781889808,
+      "reading_gain_pts": 1.3122382462024684
+    },
+    "librispeech": {
+      "n_samples": 200,
+      "mean_images_per_row": 1.265,
+      "mean_target_tokens": 34.03,
+      "response_ce": {
+        "aligned": 2.8939038079977037,
+        "permuted": 3.2546204775571823,
+        "blank": 3.0908498430252074
+      },
+      "tok_acc": {
+        "aligned": 0.4272907279804349,
+        "permuted": 0.3951012526080012,
+        "blank": 0.41082330845296383
+      },
+      "delta_perm_rel": 0.1246470834872217,
+      "delta_blank_rel": 0.0680554877059894,
+      "reading_gain_pts": 1.646741952747105
+    }
+  }
+}

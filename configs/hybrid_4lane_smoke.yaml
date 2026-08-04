@@ -1,0 +1,70 @@
+# configs/hybrid_4lane_smoke.yaml
+# Plumbing smoke for the 4-lane mixture: validates data load + per-subset balancing,
+# per-lane dict-eval (eval_<lane>_loss), model build, and one train/eval/save cycle.
+# NOT a research run. Run first, then launch configs/hybrid_4lane.yaml.
+
+model:
+  vision_source: "google/gemma-4-12B-it"
+  text_source: "unsloth/Qwen3-1.7B"
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  max_train_rows_per_subset: 200      # tiny balanced mixture
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+    librispeech: ["train"]
+  validation_splits:
+    fineweb-edu: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+    librispeech: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/hybrid-4lane-smoke"
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 1
+  num_train_epochs: 1
+  max_steps: 6
+
+  freeze_vision: false
+  lr_adapter: 3.0e-4
+  lr_vision:  1.0e-4
+  lr_decoder: 2.0e-5
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  max_eval_samples_per_subset: 8
+  eval_steps: 3
+  logging_steps: 1
+  save_steps: 1000
+  save_total_limit: 1
+  report_to: []
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "hybrid-4lane-smoke"
+  tags: ["smoke"]

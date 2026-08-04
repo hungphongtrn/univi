@@ -1,0 +1,131 @@
+# configs/h17_density_560.yaml
+# H17 LADDER, LEG 1 — the H13 density ladder rerun at 560 soft tokens.
+#
+# H13 (configs/h13_density.yaml) measures K = the character position beyond which
+# positional reading gain drops below 50% of the 0-100-char gain, at the default
+# 280-token budget. H17 asks whether K moves when the budget rises. This file is
+# H13's config VERBATIM except for `max_soft_tokens` (and the batch/length
+# bookkeeping that budget forces -- see below).
+#
+# WHY 560 AND NOT JUST 1120 (measured, scratchpad/h17_render_resolution.py ->
+# data/eval/h17-render-resolution.json). The processor resizes a SQUARE page to a
+# side fixed by the BUDGET ALONE, never by the canvas: 768 px at 280, 1104 px at
+# 560, 1584 px at 1120. Against a 1024 render that makes 280 a 0.75x DOWNSAMPLE,
+# 560 a 1.08x upsample (source resolution exactly recovered) and 1120 a 1.55x
+# upsample of interpolated pixels. So the ladder decomposes:
+#
+#   leg 1  280 -> 560   2.07x tokens  +  lost resolution recovered   (this file)
+#   leg 2  560 -> 1120  2.06x tokens  +  IDENTICAL optical content   (h17_density_1120)
+#
+# Leg 2 is optically controlled by construction. Without leg 1 a null at 1120 is
+# ambiguous between "the budget is not the binding constraint" and "the rungs past
+# 560 never supplied more information". WITH leg 1, it is not.
+#
+# HOW BIG IS THE OPTICAL PART OF LEG 1? Bounded, and small: at 280 the model-visible
+# x-height is 6.0 px and leave-one-out 1-NN letter identity over real page crops is
+# 99.26%, rising to 99.92% at 560 and 100.00% at 1120. So the downsample at 280
+# costs < 1 pp of single-glyph legibility -- it does not destroy glyphs. Leg 1 is
+# therefore only MILDLY confounded. Caveat: that number assumes perfect glyph
+# segmentation, which the model does not get; a 48px cell multiplexes ~28.6
+# character slots at 280, 13.8 at 560 and 6.7 at 1120 (a 4.25x reduction, exactly
+# the token ratio), and cell-internal demultiplexing is NOT measured here.
+#
+#   Launch SOLO (never alongside another GPU job -- the encoder-free host-RAM OOM),
+#   and only AFTER configs/h17_randstr_560.yaml has passed its >= +100% Dperm gate:
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h17_density_560.yaml \
+#       > data/checkpoints/h17-density-560-v0-run.log 2>&1 &
+#
+#   Read-out is PER-POSITION reading gain, not aggregate eval CE (H13's lesson:
+#   eval CE is not a grounding monitor):
+#     uv run python scratchpad/hybrid_4lane_position_decay.py \
+#       --checkpoint data/checkpoints/h17-density-560-v0/final \
+#       --val-path data/materialized/h13-density-v0/randstr-d{1,2,3,4,5}/validation
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  # ---- THE CHANGED VARIABLE vs configs/h13_density.yaml -----------------------
+  max_soft_tokens: 560
+  # ---------------------------------------------------------------------------
+
+dataset:
+  num_proc: 4
+  source: "local"
+  # H13's data UNCHANGED (canvas 1024). Re-rendering at a larger canvas would make
+  # this a two-variable change and break comparability with H13's own K values.
+  path: "data/materialized/h13-density-v0"
+  max_train_images: 4
+  subsets:
+    - "randstr-d1"
+    - "randstr-d2"
+    - "randstr-d3"
+    - "randstr-d4"
+    - "randstr-d5"
+  train_splits:
+    randstr-d1: ["train"]
+    randstr-d2: ["train"]
+    randstr-d3: ["train"]
+    randstr-d4: ["train"]
+    randstr-d5: ["train"]
+  validation_splits:
+    randstr-d1: ["validation"]
+    randstr-d2: ["validation"]
+    randstr-d3: ["validation"]
+    randstr-d4: ["validation"]
+    randstr-d5: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h17-density-560-v0"
+
+  # d4 is the binding rung: ~900 answer tokens + 529 image placeholders ~= 1450
+  # sequence (vs ~1200 at 280), so H13's per-device 4 / accum 16 is expected to
+  # hold. Confirm over the first ~20 steps; if peak VRAM exceeds 26 GB, halve to
+  # 2 x accum 32. THE EFFECTIVE BATCH OF 64 IS THE INVARIANT (H07 exposure).
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16    # effective batch 64
+  num_train_epochs: 20
+  max_steps: 1000                    # H13's budget verbatim
+
+  # 3-group LR (adapter > vision > decoder), NO freeze -- H07's recipe verbatim.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  # 2048 -> 4096, for PARITY WITH LEG 2, not because this leg needs it. Measured on
+  # the real splits: `_filter_training_tokens` estimates a row as
+  # original_token_length + n_images*image_token_budget(max_soft_tokens) + 256, so a
+  # median d4 row is 929 + 562 + 256 = 1747 here and every rung retains 20000/20000
+  # even at 2048. At 1120 the same row is 2307 and max_length 2048 would drop ALL
+  # 20,000 d4 rows. Both legs therefore use 4096 so the two legs train and evaluate
+  # on identical data. Costs nothing: HybridCollator pads to the BATCH max, not to
+  # max_length.
+  max_length: 4096
+
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "randstr-d1"
+    - "randstr-d2"
+    - "randstr-d3"
+    - "randstr-d4"
+    - "randstr-d5"
+  max_eval_samples_per_subset: 128
+  eval_steps: 100
+  logging_steps: 10
+  save_steps: 250
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h17-density-ladder-560"
+  tags: ["hybrid", "pretrained-vision", "density-ladder", "soft-token-budget", "h17"]

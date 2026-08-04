@@ -1,0 +1,123 @@
+# configs/h17_randstr_560.yaml
+# H17 SANITY GATE, RUNG 1 OF 2 — random-string OCR at 560 soft tokens.
+#
+# WHY 560 EXISTS AT ALL (measured, scratchpad/h17_render_resolution.py ->
+# data/eval/h17-render-resolution.json):
+#
+#   Gemma4UnifiedImageProcessor resizes a SQUARE page to a side that depends ONLY
+#   on the budget -- 768 px at 280, 1104 px at 560, 1584 px at 1120 -- and NOT on
+#   the render canvas. Univi renders text at 1024x1024, so:
+#
+#     280  -> 768 px   DOWNSAMPLE 0.75x   (source detail is thrown away)
+#     560  -> 1104 px  upsample   1.08x   (source resolution fully recovered)
+#     1120 -> 1584 px  upsample   1.55x   (subdivides INTERPOLATED pixels)
+#
+#   560 is therefore the exactly-native rung. Running only 280 -> 1120 bundles
+#   "recover lost resolution" (real, complete by 560) with "more grid cells over
+#   the same optical information" (everything past 560), and a null would not say
+#   which one failed. With 560 in the ladder the second leg (560 -> 1120) is
+#   OPTICALLY CONTROLLED BY CONSTRUCTION: both rungs are upsamples of the same
+#   1024 render, so they carry identical optical content and differ only in token
+#   count (529 -> 1089, 2.06x).
+#
+# THIS FILE IS THE CHEAP EARLY KILL. It is H07's recipe VERBATIM (the run that
+# read at +115% Dperm on this exact lane) with a SINGLE changed variable:
+# max_soft_tokens 280 -> 560. 560 is a 1.08x resize, i.e. very nearly the identity
+# -- so if Dperm does not survive HERE, the pretrained Gemma embedder is hard-tied
+# to the 280 budget, and the 1120 rung (configs/h17_randstr_1120.yaml) must not be
+# launched. Run this one FIRST; it is ~2x cheaper than the 1120 gate.
+#
+#   Pre-registered bar: >= +100% Dperm (H07 measured +114.7%).
+#
+#   Launch SOLO (never alongside another GPU job -- the encoder-free host-RAM OOM):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h17_randstr_560.yaml \
+#       > data/checkpoints/h17-randstr-560-v0-run.log 2>&1 &
+#
+#   Read-out (the decisive measurement is the ablation, NOT eval CE):
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/hybrid_pretrained_ablation.py \
+#       --checkpoint data/checkpoints/h17-randstr-560-v0/final \
+#       --tag h17-560-final --max-length 4096
+#     (--max-soft-tokens is inferred from the checkpoint's config; do NOT override
+#      it, or the probe reads pixels at a geometry the model never trained on.)
+#
+#   Secondary read-out at zero training cost -- ablate the SAME checkpoint on a
+#   DENSER page, because this lane's 25-letter page inks only ~1.1% of the 529
+#   cells and a Dperm drop could be blank-token dilution rather than a budget
+#   effect (measured inked cells: d1 6/529 at 560 vs 5/256 at 280):
+#     ... --val-dataset data/materialized/h13-density-v0/randstr-d3/validation \
+#         --floor data/materialized/h13-density-v0/randstr-d3/floor.json \
+#         --tag h17-560-final-d3
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  # ---- THE ONLY CHANGED VARIABLE vs configs/hybrid_pretrained_randstr.yaml ----
+  # 280 -> 560. Measured CPU-side: a 1024x1024 randstr page yields 529 soft tokens
+  # at 560 (vs 256 at 280) on a 23x23 grid, max position id 22 -- far inside the
+  # pretrained factorized position table's 1120 rows, so nothing is extrapolated.
+  max_soft_tokens: 560
+  # ---------------------------------------------------------------------------
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h3-randstr-v0"         # H07's data, unchanged, canvas 1024
+  max_train_images: 4
+  subsets:
+    - "random-strings"
+  train_splits:
+    random-strings: ["train"]
+  validation_splits:
+    random-strings: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h17-randstr-560-v0"
+
+  # 529 soft tokens/row instead of 256 -> ~2x the image sequence. H07's per-device
+  # 16 is halved to 8 with accum 4 -> 8 so the EFFECTIVE BATCH STAYS 64 (H07's
+  # exposure is the invariant; per-device size is free). Confirm peak VRAM stays
+  # under 26 GB over the first ~20 steps; if not, halve again (4 x accum 16).
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 8     # effective batch 64 (matches H07 exposure)
+  num_train_epochs: 20
+  max_steps: 600                     # H07's budget verbatim
+
+  # 3-group LR (adapter > vision > decoder), NO freeze -- H07's recipe verbatim.
+  # (Not `freeze_vision: true`: "frozen" in the H07 notes describes the OBSERVED
+  # ~0 weight rel-delta of the vision tower, not a freeze flag. Using the literal
+  # frozen recipe would compare the >= +100% bar against a run never measured.)
+  lr_adapter: 3.0e-4                 # from-scratch bridge -- fastest
+  lr_vision:  5.0e-5                 # pretrained Gemma embedder -- moderate
+  lr_decoder: 2.0e-5                 # pretrained Qwen3 -- slowest
+
+  # 2048 -> 4096: one page is now ~529 placeholders (was ~256). randstr rows are
+  # single-image with ~15 answer tokens so 2048 would do, but 4096 is set to match
+  # the 1120 gate and the ladder configs -- HybridCollator pads to the BATCH max,
+  # not to max_length, so this costs nothing and removes a silent-truncation
+  # failure mode (truncated placeholders => soft-token mismatch at forward).
+  max_length: 4096
+
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "random-strings"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h17-randstr-560-sanity-gate"
+  tags: ["hybrid", "pretrained-vision", "soft-token-budget", "prior-proof", "h17"]

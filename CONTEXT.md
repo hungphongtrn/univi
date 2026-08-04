@@ -180,6 +180,24 @@ _Avoid_: vibe check, full-scale benchmark, competitive retention when only parti
 A held-out evaluation condition that deterministically reassigns rendered inputs across examples while leaving targets and non-answer-bearing instructions fixed, testing whether predictions depend on the presented modality content.
 _Avoid_: shuffled training, random split, synthetic dataset when only the input-target alignment is changed
 
+**Reading Gain**:
+The teacher-forced token-accuracy difference `acc(aligned) − acc(blank)` at a **stated answer-token position or character bucket** — the programme's primary grounding readout. It is position-resolved by construction and therefore comparable across lanes of different target length. Reported as `pos0_gain` (position 0), `pos0_4_gain` (positions 0–4), and `char_bins` (per-character-bucket curve).
+_Avoid_: reading gain without naming the position window; an unqualified "gain" is not interpretable
+
+**Δperm / Δblank**:
+The relative increase in target cross-entropy when the aligned image is replaced by a donor image (**Δperm**, the [Modality-Permutation Control](#modality-permutation-control) — isolates *content*) or by a blank one (**Δblank** — confounds ink-presence with content).
+⚠️ **Aggregate Δperm is a function of target length and must never carry a criterion.** Reading is concentrated in roughly the **first 5–12 answer tokens**, so averaging over all supervised tokens dilutes it as targets lengthen. Measured on one checkpoint that unambiguously reads: **+113.84% at 17 supervised tokens/row, +14.31% at 60, +3.05% at 234, +0.63% at 932** — identical reading, a 180× spread. The largest aggregate Δperm ever recorded at ~60 tokens is **25.80%**, by a model reading at +57.3 pts at position 0, so a "≥ +30%" bar is above the observed ceiling there and unreachable at ≥ 234 tokens. **Four pre-registered criteria in this programme were broken this way and three would have published a wrong verdict.** If a Δ statistic is needed as a bar, **prefix-match it to the first 5–10 answer tokens** (not 48) and anchor it to a lane of the **same target length**.
+_Avoid_: aggregate Δperm as a threshold; Δblank as evidence of content reading; comparing Δperm across lanes of different target length
+
+**Scalar Depth Statistic (K, D50) — RETIRED**:
+Any single number claiming to locate "the depth at which reading collapses". **K** was defined as the first character bucket past a 100-char baseline window, which structurally guarantees `k_chars ≥ 100`. **Every K that a verdict was ever stated on sat on that floor** — it returned an identical 48.4913 tokens at two soft-token budgets whose real reading differed 2.8×, and `K_alt_baseline25` was at *its* floor too, so shrinking the window does not rescue it. The only unfloored K values in the repo come from a run that read **nothing** (Δperm ≈ 0 on every rung), and the same rung carries 48.5 tok in one artifact and ~218 tok in another. **Where K was floored it measured the window; where it was unfloored it measured noise.** **D50** is degenerate once depth is 0–1 bins. The retired "48-token scan depth" also inflated every token-weighted readable-fraction gate by ~4–10×.
+_Avoid_: K, D50, "the 48-token scan depth", and any criterion stated in a scalar depth — report the full `char_bins` curve instead
+
+**Blank Control**:
+The non-informative image condition for [Reading Gain](#reading-gain) and Δblank. Must be **true gray in every band** (`univi.hybrid.data.blank_like`).
+⚠️ Pre-2026-07-28 RGB-lane figures used a **dark red (128, 0, 0)** blank, so those magnitudes are not comparable with L-mode lanes or with current measurements and must be re-measured before being quoted quantitatively.
+_Avoid_: blank without stating which blank; comparing RGB-lane and L-lane Δblank magnitudes
+
 ## Relationships
 
 - **Text-as-Image**, **Audio-as-Image**, and **Natural Image** are input forms under **Visual Modality Unification**.

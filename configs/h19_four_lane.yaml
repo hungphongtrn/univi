@@ -1,0 +1,333 @@
+# configs/h19_four_lane.yaml
+# H19 — THE FOUR-LANE REMATCH.  Integration run.  RUNS LAST.  Launch SOLO.
+#
+# Spec: docs/hypothesis/todo/H19-four-lane-rematch.md
+#
+# =============================================================================
+# !! THIS CONFIG IS NOT FINAL.  Four fields depend on runs that have not
+# !! reported.  They are marked  <<< PENDING >>>  below and carry safe
+# !! placeholders, NOT guesses dressed up as decisions.  Do not launch until
+# !! H15/H16 and H17 have verdicts and those four lines have been revisited.
+# =============================================================================
+#
+# =============================================================================
+# THE BLOCKER THIS CONFIG EXISTS TO FIX — measured 2026-07-29, CPU only
+# =============================================================================
+# H19's doc specifies the mixture as ROW shares: four real lanes at 17.5% each,
+# anchors randstr + spoken-digits at 15% each.  Measured with the real Qwen3
+# tokenizer over 400 rows/lane (scratchpad/h19_mixture_audit.py ->
+# data/eval/h19-mixture-audit.json), that mixture is H13's death configuration:
+#
+#   lane            rows   row %   sup tok/row   TOKEN %   lane readable %
+#   fineweb-edu   28,000   17.5%         993.3     63.2%              4.8%
+#   smoltalk      28,000   17.5%         249.4     15.9%             18.0%
+#   densefusion   28,000   17.5%         239.6     15.3%             20.0%
+#   librispeech   28,000   17.5%          59.4      3.8%             74.9%
+#   spoken-digits 24,000   15.0%          17.0      0.9%            100.0%
+#   random-strings24,000   15.0%          16.5      0.9%            100.0%
+#   ---------------------------------------------------------------------
+#   TOKEN-WEIGHTED READABLE FRACTION: 13.6%
+#
+# H13 died at 14.2% readable with its d4 rung holding 63.04% of the gradient.
+# H19-as-written is 13.6% readable with fineweb holding 63.2%.  That is not an
+# analogy, it is the same number twice.  The two prior-proof anchors — the lanes
+# whose entire job is to stop reading decaying to zero (H05) — would have carried
+# 0.9% of the gradient EACH.  H13's d1 got 1.13% and lost the bootstrap race by
+# step 110.  This run would have burned ~16 h to reproduce a known failure.
+#
+# =============================================================================
+# THE REPAIR: the doc's OWN numbers, read as TOKEN shares
+# =============================================================================
+# Loss is normalised per SUPERVISED TOKEN (transformers' ForCausalLMLoss), so a
+# lane's gradient share is rows x tokens/row, not rows.  Nothing about the design
+# changes — the same six lanes at the same 17.5/17.5/17.5/17.5/15/15 — only which
+# quantity those numbers balance.  Row counts are then a consequence, not a
+# choice, and they are computed by scratchpad/h19_build_mixture.py.
+#
+# Realised plan at 2000 steps x eff-batch 64 = 128,000 rows, max_length 1024
+# (data/eval/h19-mixture-build-planB.json; lanes measured on the rows that
+# SURVIVE the length filter, i.e. the rows the run actually trains on):
+#
+#   lane             rows   row %   sup tok/row   TOKEN %   lane readable %
+#   librispeech    16,419   15.1%          59.1     18.6%             75.0%
+#   densefusion     4,070    3.7%         238.4     18.6%             20.1%
+#   smoltalk        4,900    4.5%         198.0     18.6%             22.3%
+#   fineweb-edu     3,252    3.0%         298.4     18.6%             16.1%
+#   random-strings 50,436   46.2%          16.5     15.9%            100.0%
+#   spoken-digits  30,000   27.5%          17.0      9.8%            100.0%
+#   ---------------------------------------------------------------------
+#   TOKEN-WEIGHTED READABLE FRACTION: 50.5%   (13.6% -> 50.5%, a 3.7x repair)
+#
+# THREE THINGS THIS COSTS, all recorded before the run:
+#
+# 1. EXPOSURE.  densefusion sees 4,070 distinct natural images instead of 28,000,
+#    and smoltalk 4,900 instructions.  Equal gradient and equal example variety
+#    are in direct conflict when target lengths differ 18x, and H13's lesson
+#    picks gradient.  If the captioning lane needs variety more than it needs
+#    gradient, the fix is SHORTER densefusion targets (a materializer change),
+#    not more rows — more rows would put the token share back where it killed H13.
+# 2. spoken-digits is CLAMPED.  The token target asks for 48,923 rows and only
+#    30,000 are materialized, so its realised token share is 9.8%, not 15%, and
+#    the readable fraction lands at 50.5% instead of 53.3%.  PREP STEP (CPU,
+#    ~28 min, FSDD source is already at data/raw/fsdd):
+#      CUDA_VISIBLE_DEVICES="" HF_HUB_OFFLINE=1 uv run python -m \
+#        data.preprocessing.spoken_digits --out data/materialized/spoken-digits-v1 \
+#        --train-rows 60000 --val-rows 1000
+#    Do this, or accept 9.8% — but do not let it repeat 1.63 epochs silently.
+# 3. 50.5% is BETWEEN the only two calibration points this programme has (H13
+#    died at 14.2%, H14 confirmed at 75.2%).  Nobody knows where the threshold
+#    is.  densefusion and smoltalk cap it: their targets are ~20% readable and
+#    no row count can change that.  The honest statement is "3.7x clear of the
+#    known failure, 0.67x of the known success".
+#    NOTE ALSO an assumption this inherits: H13's scan-depth rule was measured on
+#    TRANSCRIPTION lanes, where answer-token position maps to page position.  A
+#    densefusion caption token at position 200 still depends on the image (a
+#    photo is not scanned left-to-right), so the rule may be over-conservative
+#    for densefusion and smoltalk.  It has never been tested on them.  Treat
+#    50.5% as a lower bound on the true readable fraction, and say so in the
+#    write-up rather than quoting it as if it were measured on those lanes.
+#
+# Alternative "mixture C" (higher readable fraction, bigger design change): split
+# the text lane into H15's two length arms — 13% token share to the readable
+# short arm (h15-poisoned-p00/poisoned-text, 54.8 tok/row, 86.0% readable) and
+# 4.5% to the dense full page.  Measured 62.4% readable.  It is a better number
+# but it trains mostly on SPARSE pages (poisoned_text.py renders exactly the
+# target, so a 64-token cap renders a nearly-empty page), which is a different
+# lane from the one H19's criterion is about.  Build it with
+# `scratchpad/h19_build_mixture.py --mix C` if that trade is wanted.
+#
+# =============================================================================
+# INTEGRATION HAZARD 1 — `remove_columns`.  The doc's claim is WRONG, and the
+# truth is worse
+# =============================================================================
+# H19's doc says the `poisoned-text` / `masked-randstr` extra columns "break
+# concatenate_datasets".  Measured on datasets 4.3.0 they do NOT break it:
+# concatenate_datasets ALIGNS BY NAME and NULL-FILLS, silently returning a 13-
+# column (poisoned-text: poison_mask / poison_rate / source_row_id) or 22-column
+# (masked-randstr: words / mask_* / visible_words / sentinel_* / mask_b_*) table.
+# Row payloads are preserved — messages, row_id and image geometry were checked
+# on both sides of the join — and the standard lane's rows simply get None in the
+# extra columns.  So the failure mode is SILENCE, not an exception, and it is
+# version-dependent: nothing in the repo pins datasets, and an older version
+# raising here would look like "H19 crashed at startup" instead.
+# Column ORDER also differs (smoltalk stores `messages` before `images`) and IS
+# tolerated.
+# HANDLED: scratchpad/h19_build_mixture.py strips every non-base column before
+# writing each lane and then ASSERTS that all lanes' Features are identical and
+# that the merged table carries exactly the 10 base columns.  With mixture B no
+# extra-column lane is used at all, so this is belt-and-braces; with mixture C
+# (poisoned-text) it is load-bearing.
+#
+# =============================================================================
+# INTEGRATION HAZARD 2 — one root, and 100.00% retention
+# =============================================================================
+# `univi.trainer._load_local` reads ONE `dataset.path`, but H19's lanes live in
+# three different materialization roots.  And `_filter_training_tokens` SILENTLY
+# DROPS overflowing rows: at max_length 1024 it keeps
+#     fineweb-edu 38.96% | smoltalk 87.73% | densefusion 99.96% | librispeech
+#     99.98% | random-strings, spoken-digits, poisoned-text, masked-randstr 100%
+# and fineweb-edu can NEVER reach 100% at any practical budget (79.91% at 2048,
+# 95.07% at 4096; its longest row estimates at 168,616 tokens).  Retention was
+# computed on the FULL splits via the same arrow predicate the filter uses, and
+# cross-checked against the real `_filter_training_tokens` on 2,000 rows per
+# lane: identical row counts on 9/9 lanes.
+# HANDLED: the build script selects rows from the PASSING set, so retention
+# through the trainer's own filter is 100.00% BY CONSTRUCTION on every lane, and
+# the per-lane token statistics above are measured on those same rows.
+# Build (AFTER the pending fields below are settled, because the row counts
+# depend on max_steps and max_length):
+#   CUDA_VISIBLE_DEVICES="" HF_HUB_OFFLINE=1 uv run python \
+#     scratchpad/h19_build_mixture.py --out data/materialized/h19-mix-v0 \
+#     --mix B --total-rows 128000 --max-length 1024
+#
+# =============================================================================
+# VRAM — 16.54 GB (17.39 GB pessimistic) at bs4, max assembled sequence 752
+# =============================================================================
+# Max assembled sequence over the built lanes, through the REAL HybridCollator:
+#   fineweb 752 | densefusion 639 | smoltalk 692 | librispeech 576 |
+#   randstr 292 | spoken-digits 282     (mean over the mixture ~354)
+# Same accounting as scratchpad/h17_config_verify.estimate_vram, calibrated
+# against H13 (estimate 20.05 GB, measured ~21 GB):
+#   bs1 12.26 | bs2 13.69 | bs4 16.54 | bs8 22.24 | bs16 33.65   (GB)
+#   pessimistic 14 B/logit:                    bs4 17.39 | bs8 23.94
+# Budget ceiling 26 GB: bs4 and bs8 both FIT.
+# TOTAL-CARD FEASIBILITY: the 40 GB A100 currently shows ~16 GB held by another
+# container => ~24 GB free.  bs8 at 23.94 GB pessimistic leaves ~0 GB of headroom
+# and would very likely OOM; bs4 at 17.39 GB leaves ~6.6 GB.  bs4 is chosen for
+# that reason alone — the EFFECTIVE batch is 64 either way.  Note that the 26 GB
+# budget and the other container's 16 GB do NOT both fit on a 40 GB card
+# (26 + 16 = 42): any config written to the full 26 GB ceiling is only launchable
+# once that container releases.
+# `log_blank_ce` adds ONE no-grad forward per EVAL batch (no training-path cost,
+# no extra retained activations); `per_device_eval_batch_size: 4` covers it.
+#
+# =============================================================================
+#   Launch SOLO — never alongside another GPU job (the encoder-free host-RAM OOM
+#   killed a run when a probe piled on):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h19_four_lane.yaml \
+#       > data/checkpoints/h19-four-lane-v0-run.log 2>&1 &
+#
+#   Read-out (NOT while training holds the card).  Criteria are Delta-perm /
+#   Delta-blank / per-position reading gain — NEVER eval CE (H12 proved eval CE
+#   is orthogonal to grounding; H13 §7 proved the published floors are inflated
+#   by T/(T-2)):
+#     per lane:   scratchpad/hybrid_pretrained_ablation.py --val-dataset <lane>/validation
+#     positional: scratchpad/hybrid_4lane_position_decay.py --val-path <lane>/validation
+#     fineweb DEPTH, on a split that is never trained on:
+#       --val-path data/materialized/h15-deepval-p00/poisoned-text/validation
+#       (500 rows, 923 target tokens/row — this is where "does it read DEEP into a
+#        dense real page" is measured, exactly H13 §4's move of measuring K on
+#        rows far longer than anything the model trained on)
+# =============================================================================
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+  # <<< PENDING H15 / H16 >>> --------------------------------------------------
+  # The doc requires warm-starting from "the best H15/H16 checkpoint".  Neither
+  # has reported, so this cannot be chosen yet.  The placeholder is H07's
+  # checkpoint — the ONLY checkpoint that currently exists, reads (Delta-perm
+  # +114.7%), and is prior-proof.  Candidates once the queue clears, in the
+  # order the doc's logic prefers them:
+  #   1. data/checkpoints/h16-gap-weighted-v0/final     (if H16 confirms)
+  #   2. data/checkpoints/h15-poisoned-p{00,15,50}-v0/final (best arm, if H15 confirms)
+  #   3. data/checkpoints/h14-masked-short-v0/final     (CONFIRMED 2026-07-29:
+  #      Delta-perm +23.90%, localizes masks at 95.65% — reads, but on a masked
+  #      lane, and its visible-word accuracy is 0.86%)
+  #   4. data/checkpoints/hybrid-pretrained-randstr-v0/final   <- placeholder
+  # The choice matters: H19's whole premise is that a warm start supplies the
+  # grad_norm dip-then-rise recruitment H09's cold start never got.  Picking the
+  # wrong init does not invalidate the run, but it does change what "warm" means
+  # and must be stated in the write-up.
+  init_from: "data/checkpoints/hybrid-pretrained-randstr-v0/final"
+  # ---------------------------------------------------------------------------
+
+  # <<< PENDING H17 >>> --------------------------------------------------------
+  # The doc says "2000-2500 steps at 280 soft tokens, or 1120 if H17 passed".
+  # 280 is the placeholder.  If H17 CONFIRMS, this becomes 1120 AND:
+  #   * image_token_budget rises 282 -> 1122, so max_length must rise to >= 2048
+  #     and every lane's retention must be RE-MEASURED (fineweb's would fall
+  #     further; the build script must be re-run at the new max_length);
+  #   * the assembled sequences grow by ~840 tokens each, so the VRAM table above
+  #     is void — expect to drop to bs1-2;
+  #   * max_steps drops to ~1120, so --total-rows becomes ~71,680 and EVERY row
+  #     count in the mixture changes (re-run scratchpad/h19_build_mixture.py).
+  # Changing this is not a one-line edit; it invalidates the data build.
+  max_soft_tokens: 280
+  # ---------------------------------------------------------------------------
+
+dataset:
+  num_proc: 4
+  source: "local"
+  # <<< PENDING THE BUILD >>>  This root does not exist yet: its per-lane row
+  # counts are a function of max_steps and max_length, both of which are pending
+  # above.  Build it with scratchpad/h19_build_mixture.py once they are settled.
+  path: "data/materialized/h19-mix-v0"
+  max_train_images: 4        # librispeech averages 1.92 pages/row (max 2);
+                             # fineweb rows needing >4 pages are already excluded
+                             # by the length pre-filter
+  # NO `max_train_rows_per_subset:` — it is a single GLOBAL cap and therefore
+  # cannot express per-lane row counts, which is exactly what balancing TOKEN
+  # share requires.  The counts are baked into the built root instead.
+  # No `train_splits:` — inert for `source: local` (read only by _load_hub).
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+    - "random-strings"       # prior-proof anchor (H05: remove the pressure and
+    - "spoken-digits"        # reading decays to zero); replay share, in TOKENS
+  validation_splits:
+    fineweb-edu: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+    librispeech: ["validation"]
+    random-strings: ["validation"]
+    spoken-digits: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h19-four-lane-v0"
+
+  # bs4 x 16 = effective batch 64, matching H07/H13/H14/H15 exposure.  bs8 x 8
+  # fits the 26 GB budget (23.94 GB pessimistic) and would roughly halve the
+  # wall-clock, but not alongside the other container's 16 GB — see the VRAM note.
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16
+  num_train_epochs: 20               # inert ceiling; max_steps governs
+
+  # <<< PENDING H17 >>>  2000 x 64 = 128,000 rows, which is the --total-rows the
+  # built mixture is sized for.  CHANGING THIS CHANGES THE DATA BUILD.
+  # Wall clock: mean assembled sequence ~354 tokens = 0.72x H14's 493, and H14
+  # measured 14.5 s/step at this exact 4 x 16 geometry => ~10.5 s/step => ~5.8 h,
+  # inside the doc's 16 h budget with room for a longer run if the lanes are
+  # re-materialized larger.
+  max_steps: 2000
+
+  # 3-group LR (adapter > vision > decoder), NO freeze — H07's recipe verbatim.
+  # Vision TRAINABLE is not optional here: H08 showed spectrograms are OOD for
+  # Gemma's vision tower and the librispeech lane does not ground without it.
+  freeze_vision: false
+  lr_adapter: 3.0e-4
+  lr_vision:  1.0e-4                 # 1e-4, not 5e-5: the audio lane needs the
+                                     # tower to adapt (H08); this matches the
+                                     # earlier 4-lane run, not the single-lane
+                                     # text runs
+  lr_decoder: 2.0e-5
+
+  # MEASURED.  _filter_training_tokens charges otl + image_token_budget(280)=282
+  # per image + 256 template.  The built root is PRE-FILTERED at this value, so
+  # retention is 100.00% on every lane by construction and the real assembled
+  # sequence maxes at 752 — 1024 can never truncate a target.
+  # Do NOT raise it without re-running the build: a larger max_length readmits
+  # the long fineweb/smoltalk tail and re-creates the unreadable-token majority
+  # this whole config exists to avoid.
+  max_length: 1024
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  # MANDATORY per the doc: eval CE is proven orthogonal to grounding (H09 ran
+  # 4000 steps of a silently-dead objective), so this run must not be able to
+  # fail invisibly for hours.  One extra no-grad blank-image forward per EVAL
+  # batch; the training path is untouched while gap_weighted_loss is off.
+  # READ IT AS AN ALARM, NOT AS GROUNDING: prior_gap_ce is a Delta-BLANK
+  # quantity, and H13 §1 showed a fully dead run (Delta-perm = 0) still had
+  # Delta-blank +1% to +8.7% from mere ink-presence.
+  # Every lane here has >= 1 image on every row (verified), so the doc's
+  # "imageless microbatches fall through unweighted" caveat cannot bite.
+  log_blank_ce: true
+
+  # <<< PENDING H16 >>>  The doc's design point 3 wants H16's grounding-aware
+  # loss on all lanes.  Left OFF until H16 reports: turning on an unvalidated
+  # objective in the expensive integration run is how H09 lost 27 hours.
+  # gap_weighted_loss: true
+  # gap_beta: 1.0
+
+  do_eval: true
+  validation_subsets:                # per-lane eval_<lane>_loss = the live
+    - "fineweb-edu"                  # drowning monitor.  TRAJECTORY ONLY —
+    - "densefusion"                  # eval CE is NOT a grounding criterion.
+    - "smoltalk"
+    - "librispeech"
+    - "random-strings"
+    - "spoken-digits"
+  max_eval_samples_per_subset: 64
+  eval_steps: 200
+  logging_steps: 10
+  save_steps: 250                    # 8 checkpoints over 2000 steps, so the
+  save_total_limit: 9                # grounding-growth curve can be ablated at
+                                     # several points and a collapse can be
+                                     # located rather than merely observed
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h19-four-lane-rematch"
+  tags: ["hybrid", "pretrained-vision", "trainable-vision", "4-lane", "mixture",
+         "anchors", "token-balanced", "warm-start", "h19"]

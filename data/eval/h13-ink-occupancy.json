@@ -1,0 +1,3646 @@
+{
+  "meta": {
+    "root": "data/materialized/h13-density-v0",
+    "n": 30,
+    "max_soft_tokens": 280,
+    "ink_threshold": 0.03137254901960784,
+    "seed": 0,
+    "rungs": [
+      "d1",
+      "d2",
+      "d3",
+      "d4",
+      "d5",
+      "masked",
+      "fineweb"
+    ],
+    "cell_area_px": 2304,
+    "device": "cpu (no model weights loaded; a training run holds the GPU)"
+  },
+  "self_test": {
+    "checks": {
+      "T0 geometry 768 -> 256 tokens, 16x16": true,
+      "T1 exact raster identity (all 256)": true,
+      "T2 index order m == y*grid_w + x": true,
+      "T3 asymmetric ink -> expected cells": true,
+      "T4 mutation (shift 1 cell) must FAIL": true,
+      "T5 resize path: ink centroid x scale": true
+    },
+    "failures": [],
+    "all_passed": true,
+    "note": "T1 compares against the synthetic source directly on a 768x768 input, which the processor does NOT resize, so the mapping proof does not depend on reimplementing aspect_ratio_preserving_resize. T5 covers the resized (1024) path separately."
+  },
+  "rungs": {
+    "randstr-d1": {
+      "name": "randstr-d1",
+      "lane_spec": {
+        "group_len": 5,
+        "n_groups": 5,
+        "font_size": 14,
+        "n_random_letters": 25
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 30,
+        "n_mismatch": 0,
+        "note": "re-render of the stored target vs the stored PNG, byte-compared"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 4.0,
+          "sd": 0.0,
+          "min": 4.0,
+          "max": 4.0,
+          "median": 4.0,
+          "se": 0.0,
+          "ci95": [
+            4.0,
+            4.0
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 4.966666666666667,
+          "sd": 0.18257418583505536,
+          "min": 4.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.03333333333333333,
+          "ci95": [
+            4.901334533833333,
+            5.0319987995
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 4.0,
+          "sd": 0.0,
+          "min": 4.0,
+          "max": 4.0,
+          "median": 4.0,
+          "se": 0.0,
+          "ci95": [
+            4.0,
+            4.0
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.01953125,
+        "sd": 0.0,
+        "min": 0.01953125,
+        "max": 0.01953125,
+        "median": 0.01953125,
+        "se": 0.0,
+        "ci95": [
+          0.01953125,
+          0.01953125
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 0,
+          "10-49": 30,
+          "50-99": 0,
+          "100-249": 118,
+          "250-499": 2,
+          "500-999": 0,
+          "1000-2304": 0,
+          "0": 7530
+        },
+        "nonzero_cells": {
+          "n": 150,
+          "mean": 167.76,
+          "sd": 72.05904365041269,
+          "min": 21.0,
+          "max": 256.0,
+          "median": 198.0,
+          "se": 5.8835962765483725,
+          "ci95": [
+            156.2283631956851,
+            179.2916368043149
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 25.0,
+          "5": 28.0,
+          "25": 159.0,
+          "50": 198.0,
+          "75": 217.75,
+          "95": 237.0,
+          "99": 250.1199999999999
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 838.8,
+          "sd": 31.36481666035896,
+          "min": 773.0,
+          "max": 889.0,
+          "median": 836.5,
+          "se": 5.726405865630817,
+          "ci95": [
+            827.5764507398708,
+            850.0235492601291
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 346.37290585835774,
+          "sd": 14.60792961682199,
+          "min": 320.0744800567627,
+          "max": 372.5568380355835,
+          "median": 348.429368019104,
+          "se": 2.667030856527067,
+          "ci95": [
+            341.14562143268097,
+            351.6001902840345
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.001422119140625,
+          "sd": 5.317656904493368e-05,
+          "min": 0.0013105604383680555,
+          "max": 0.001507229275173611,
+          "median": 0.0014182196723090278,
+          "se": 9.708668798880374e-06,
+          "ci95": [
+            0.0014030904994369014,
+            0.0014411477818130987
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 29.0,
+          "sd": 0.0,
+          "min": 29.0,
+          "max": 29.0,
+          "median": 29.0,
+          "se": 0.0,
+          "ci95": [
+            29.0,
+            29.0
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 25.0,
+          "sd": 0.0,
+          "min": 25.0,
+          "max": 25.0,
+          "median": 25.0,
+          "se": 0.0,
+          "ci95": [
+            25.0,
+            25.0
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 0.10357142857142859,
+          "sd": 1.4115032135209254e-17,
+          "min": 0.10357142857142858,
+          "max": 0.10357142857142858,
+          "median": 0.10357142857142858,
+          "se": 2.5770405001214727e-18,
+          "ci95": [
+            0.10357142857142859,
+            0.10357142857142859
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 0.11328125,
+          "sd": 0.0,
+          "min": 0.11328125,
+          "max": 0.11328125,
+          "median": 0.11328125,
+          "se": 0.0,
+          "ci95": [
+            0.11328125,
+            0.11328125
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 5.800000000000002,
+          "sd": 1.8067241133067846e-15,
+          "min": 5.8,
+          "max": 5.8,
+          "median": 5.8,
+          "se": 3.298611840155485e-16,
+          "ci95": [
+            5.800000000000001,
+            5.8000000000000025
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 5.8483333333333345,
+          "sd": 0.26473256946083035,
+          "min": 5.8,
+          "max": 7.25,
+          "median": 5.8,
+          "se": 0.048333333333333346,
+          "ci95": [
+            5.753601740725001,
+            5.943064925941668
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 1.0,
+          "sd": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "median": 1.0,
+          "se": 0.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "line_height_px_original_canvas": 17,
+        "line_pitch_px_resized": 12.75,
+        "lines_per_cell_geometric_original_canvas": 2.823529411764706,
+        "lines_per_cell_geometric_resized": 3.764705882352941,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 1.0,
+          "sd": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "median": 1.0,
+          "se": 0.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 1.0,
+          "sd": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "median": 1.0,
+          "se": 0.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 1.0,
+          "sd": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "median": 1.0,
+          "se": 0.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 1.0,
+          "sd": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "median": 1.0,
+          "se": 0.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 1.6000000000000005,
+          "sd": 4.516810283266961e-16,
+          "min": 1.6,
+          "max": 1.6,
+          "median": 1.6,
+          "se": 8.246529600388713e-17,
+          "ci95": [
+            1.6000000000000003,
+            1.6000000000000008
+          ]
+        }
+      },
+      "_per_row_inked_ge1": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "_per_row_inked_ge1pct": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        5
+      ],
+      "_per_row_page_ink_px": [
+        878,
+        829,
+        830,
+        802,
+        809,
+        847,
+        845,
+        824,
+        880,
+        773,
+        791,
+        828,
+        864,
+        879,
+        872,
+        835,
+        852,
+        808,
+        792,
+        838,
+        868,
+        849,
+        831,
+        859,
+        889,
+        815,
+        825,
+        799,
+        874,
+        879
+      ]
+    },
+    "randstr-d2": {
+      "name": "randstr-d2",
+      "lane_spec": {
+        "group_len": 5,
+        "n_groups": 20,
+        "font_size": 14,
+        "n_random_letters": 100
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 30,
+        "n_mismatch": 0,
+        "note": "re-render of the stored target vs the stored PNG, byte-compared"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 15.333333333333334,
+          "sd": 0.47946330148538413,
+          "min": 15.0,
+          "max": 16.0,
+          "median": 15.0,
+          "se": 0.0875376219064817,
+          "ci95": [
+            15.161762747064083,
+            15.504903919602585
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 15.0,
+          "sd": 0.0,
+          "min": 15.0,
+          "max": 15.0,
+          "median": 15.0,
+          "se": 0.0,
+          "ci95": [
+            15.0,
+            15.0
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.0625,
+        "sd": 0.0,
+        "min": 0.0625,
+        "max": 0.0625,
+        "median": 0.0625,
+        "se": 0.0,
+        "ci95": [
+          0.0625,
+          0.0625
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 0,
+          "10-49": 20,
+          "50-99": 10,
+          "100-249": 417,
+          "250-499": 33,
+          "500-999": 0,
+          "1000-2304": 0,
+          "0": 7200
+        },
+        "nonzero_cells": {
+          "n": 480,
+          "mean": 210.22708333333333,
+          "sd": 55.978825550878355,
+          "min": 32.0,
+          "max": 367.0,
+          "median": 215.0,
+          "se": 2.555072124738553,
+          "ci95": [
+            205.21923398976833,
+            215.23493267689832
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 39.79,
+          "5": 50.95,
+          "25": 196.0,
+          "50": 215.0,
+          "75": 231.0,
+          "95": 329.0,
+          "99": 352.21
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 3363.633333333333,
+          "sd": 66.03211514017295,
+          "min": 3252.0,
+          "max": 3484.0,
+          "median": 3360.0,
+          "se": 12.055759660683709,
+          "ci95": [
+            3340.0044785865775,
+            3387.262188080089
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 1388.6052114168804,
+          "sd": 29.736613886134265,
+          "min": 1334.729266166687,
+          "max": 1443.8037567138672,
+          "median": 1388.1626043319702,
+          "se": 5.429138069752366,
+          "ci95": [
+            1377.9642963305732,
+            1399.2461265031875
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.005702774612991898,
+          "sd": 0.00011195223514162347,
+          "min": 0.005513509114583333,
+          "max": 0.005906846788194444,
+          "median": 0.005696614583333333,
+          "se": 2.043958818339658e-05,
+          "ci95": [
+            0.0056627137562842095,
+            0.005742835469699587
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 119.0,
+          "sd": 0.0,
+          "min": 119.0,
+          "max": 119.0,
+          "median": 119.0,
+          "se": 0.0,
+          "ci95": [
+            119.0,
+            119.0
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 100.0,
+          "sd": 0.0,
+          "min": 100.0,
+          "max": 100.0,
+          "median": 100.0,
+          "se": 0.0,
+          "ci95": [
+            100.0,
+            100.0
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 0.4250000000000001,
+          "sd": 1.1292025708167404e-16,
+          "min": 0.425,
+          "max": 0.425,
+          "median": 0.425,
+          "se": 2.0616324000971782e-17,
+          "ci95": [
+            0.42500000000000004,
+            0.42500000000000016
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 0.46484375,
+          "sd": 0.0,
+          "min": 0.46484375,
+          "max": 0.46484375,
+          "median": 0.46484375,
+          "se": 0.0,
+          "ci95": [
+            0.46484375,
+            0.46484375
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 7.4375,
+          "sd": 0.0,
+          "min": 7.4375,
+          "max": 7.4375,
+          "median": 7.4375,
+          "se": 0.0,
+          "ci95": [
+            7.4375,
+            7.4375
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 7.4375,
+          "sd": 0.0,
+          "min": 7.4375,
+          "max": 7.4375,
+          "median": 7.4375,
+          "se": 0.0,
+          "ci95": [
+            7.4375,
+            7.4375
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 6.25,
+          "sd": 0.0,
+          "min": 6.25,
+          "max": 6.25,
+          "median": 6.25,
+          "se": 0.0,
+          "ci95": [
+            6.25,
+            6.25
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 2.0,
+          "sd": 0.0,
+          "min": 2.0,
+          "max": 2.0,
+          "median": 2.0,
+          "se": 0.0,
+          "ci95": [
+            2.0,
+            2.0
+          ]
+        },
+        "line_height_px_original_canvas": 17,
+        "line_pitch_px_resized": 12.75,
+        "lines_per_cell_geometric_original_canvas": 2.823529411764706,
+        "lines_per_cell_geometric_resized": 3.764705882352941,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 1.0,
+          "sd": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "median": 1.0,
+          "se": 0.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 2.0,
+          "sd": 0.0,
+          "min": 2.0,
+          "max": 2.0,
+          "median": 2.0,
+          "se": 0.0,
+          "ci95": [
+            2.0,
+            2.0
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 1.0625,
+          "sd": 0.0,
+          "min": 1.0625,
+          "max": 1.0625,
+          "median": 1.0625,
+          "se": 0.0,
+          "ci95": [
+            1.0625,
+            1.0625
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 20.0,
+          "sd": 0.0,
+          "min": 20.0,
+          "max": 20.0,
+          "median": 20.0,
+          "se": 0.0,
+          "ci95": [
+            20.0,
+            20.0
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 1.25,
+          "sd": 0.0,
+          "min": 1.25,
+          "max": 1.25,
+          "median": 1.25,
+          "se": 0.0,
+          "ci95": [
+            1.25,
+            1.25
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 2.0625,
+          "sd": 0.0,
+          "min": 2.0625,
+          "max": 2.0625,
+          "median": 2.0625,
+          "se": 0.0,
+          "ci95": [
+            2.0625,
+            2.0625
+          ]
+        }
+      },
+      "_per_row_inked_ge1": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "_per_row_inked_ge1pct": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "_per_row_page_ink_px": [
+        3389,
+        3320,
+        3274,
+        3469,
+        3259,
+        3414,
+        3341,
+        3468,
+        3374,
+        3325,
+        3334,
+        3369,
+        3331,
+        3422,
+        3282,
+        3252,
+        3376,
+        3343,
+        3305,
+        3467,
+        3264,
+        3383,
+        3384,
+        3350,
+        3459,
+        3351,
+        3373,
+        3484,
+        3328,
+        3419
+      ]
+    },
+    "randstr-d3": {
+      "name": "randstr-d3",
+      "lane_spec": {
+        "group_len": 5,
+        "n_groups": 80,
+        "font_size": 14,
+        "n_random_letters": 400
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 30,
+        "n_mismatch": 0,
+        "note": "re-render of the stored target vs the stored PNG, byte-compared"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 32.0,
+          "sd": 0.0,
+          "min": 32.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.0,
+          "ci95": [
+            32.0,
+            32.0
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 32.0,
+          "sd": 0.0,
+          "min": 32.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.0,
+          "ci95": [
+            32.0,
+            32.0
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 32.0,
+          "sd": 0.0,
+          "min": 32.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.0,
+          "ci95": [
+            32.0,
+            32.0
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 32.0,
+          "sd": 0.0,
+          "min": 32.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.0,
+          "ci95": [
+            32.0,
+            32.0
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 30.6,
+          "sd": 0.4982728791224399,
+          "min": 30.0,
+          "max": 31.0,
+          "median": 31.0,
+          "se": 0.09097176522946843,
+          "ci95": [
+            30.421698616498368,
+            30.778301383501635
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.125,
+        "sd": 0.0,
+        "min": 0.125,
+        "max": 0.125,
+        "median": 0.125,
+        "se": 0.0,
+        "ci95": [
+          0.125,
+          0.125
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 0,
+          "10-49": 0,
+          "50-99": 30,
+          "100-249": 53,
+          "250-499": 500,
+          "500-999": 377,
+          "1000-2304": 0,
+          "0": 6720
+        },
+        "nonzero_cells": {
+          "n": 960,
+          "mean": 416.828125,
+          "sd": 144.8645141736314,
+          "min": 54.0,
+          "max": 639.0,
+          "median": 447.5,
+          "se": 4.675482090424189,
+          "ci95": [
+            407.6643484902561,
+            425.9919015097439
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 60.59,
+          "5": 118.0,
+          "25": 304.0,
+          "50": 447.5,
+          "75": 552.25,
+          "95": 593.0,
+          "99": 617.41
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 13338.5,
+          "sd": 104.69784110016062,
+          "min": 13152.0,
+          "max": 13624.0,
+          "median": 13338.0,
+          "se": 19.115123097549823,
+          "ci95": [
+            13301.035047159961,
+            13375.964952840039
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 5545.655878829956,
+          "sd": 50.532420563319256,
+          "min": 5436.132749557495,
+          "max": 5679.124921798706,
+          "median": 5537.568037033081,
+          "se": 9.225915542622623,
+          "ci95": [
+            5527.573416637764,
+            5563.738341022148
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.02261437310112847,
+          "sd": 0.0001775069191829437,
+          "min": 0.022298177083333332,
+          "max": 0.023098415798611112,
+          "median": 0.022613525390625,
+          "se": 3.240818124991492e-05,
+          "ci95": [
+            0.022550854233059286,
+            0.022677891969197655
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 479.0,
+          "sd": 0.0,
+          "min": 479.0,
+          "max": 479.0,
+          "median": 479.0,
+          "se": 0.0,
+          "ci95": [
+            479.0,
+            479.0
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 400.0,
+          "sd": 0.0,
+          "min": 400.0,
+          "max": 400.0,
+          "median": 400.0,
+          "se": 0.0,
+          "ci95": [
+            400.0,
+            400.0
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 1.7107142857142863,
+          "sd": 6.775215424900442e-16,
+          "min": 1.7107142857142856,
+          "max": 1.7107142857142856,
+          "median": 1.7107142857142856,
+          "se": 1.236979440058307e-16,
+          "ci95": [
+            1.710714285714286,
+            1.7107142857142865
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 1.87109375,
+          "sd": 0.0,
+          "min": 1.87109375,
+          "max": 1.87109375,
+          "median": 1.87109375,
+          "se": 0.0,
+          "ci95": [
+            1.87109375,
+            1.87109375
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 14.96875,
+          "sd": 0.0,
+          "min": 14.96875,
+          "max": 14.96875,
+          "median": 14.96875,
+          "se": 0.0,
+          "ci95": [
+            14.96875,
+            14.96875
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 14.96875,
+          "sd": 0.0,
+          "min": 14.96875,
+          "max": 14.96875,
+          "median": 14.96875,
+          "se": 0.0,
+          "ci95": [
+            14.96875,
+            14.96875
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 12.5,
+          "sd": 0.0,
+          "min": 12.5,
+          "max": 12.5,
+          "median": 12.5,
+          "se": 0.0,
+          "ci95": [
+            12.5,
+            12.5
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        },
+        "line_height_px_original_canvas": 17,
+        "line_pitch_px_resized": 12.75,
+        "lines_per_cell_geometric_original_canvas": 2.823529411764706,
+        "lines_per_cell_geometric_resized": 3.764705882352941,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 2.0,
+          "sd": 0.0,
+          "min": 2.0,
+          "max": 2.0,
+          "median": 2.0,
+          "se": 0.0,
+          "ci95": [
+            2.0,
+            2.0
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 2.5,
+          "sd": 0.0,
+          "min": 2.5,
+          "max": 2.5,
+          "median": 2.5,
+          "se": 0.0,
+          "ci95": [
+            2.5,
+            2.5
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 2.625,
+          "sd": 0.0,
+          "min": 2.625,
+          "max": 2.625,
+          "median": 2.625,
+          "se": 0.0,
+          "ci95": [
+            2.625,
+            2.625
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 2.5,
+          "sd": 0.0,
+          "min": 2.5,
+          "max": 2.5,
+          "median": 2.5,
+          "se": 0.0,
+          "ci95": [
+            2.5,
+            2.5
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 5.1875,
+          "sd": 0.0,
+          "min": 5.1875,
+          "max": 5.1875,
+          "median": 5.1875,
+          "se": 0.0,
+          "ci95": [
+            5.1875,
+            5.1875
+          ]
+        }
+      },
+      "_per_row_inked_ge1": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32
+      ],
+      "_per_row_inked_ge1pct": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32
+      ],
+      "_per_row_page_ink_px": [
+        13359,
+        13351,
+        13311,
+        13217,
+        13396,
+        13318,
+        13624,
+        13365,
+        13333,
+        13364,
+        13457,
+        13376,
+        13608,
+        13265,
+        13323,
+        13245,
+        13354,
+        13343,
+        13222,
+        13296,
+        13405,
+        13304,
+        13184,
+        13229,
+        13152,
+        13312,
+        13393,
+        13428,
+        13372,
+        13249
+      ]
+    },
+    "randstr-d4": {
+      "name": "randstr-d4",
+      "lane_spec": {
+        "group_len": 5,
+        "n_groups": 320,
+        "font_size": 14,
+        "n_random_letters": 1600
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 30,
+        "n_mismatch": 0,
+        "note": "re-render of the stored target vs the stored PNG, byte-compared"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 78.5,
+          "sd": 0.5085476277156078,
+          "min": 78.0,
+          "max": 79.0,
+          "median": 78.5,
+          "se": 0.09284766908852593,
+          "ci95": [
+            78.3180219124953,
+            78.6819780875047
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.3125,
+        "sd": 0.0,
+        "min": 0.3125,
+        "max": 0.3125,
+        "median": 0.3125,
+        "se": 0.0,
+        "ci95": [
+          0.3125,
+          0.3125
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 0,
+          "10-49": 0,
+          "50-99": 28,
+          "100-249": 122,
+          "250-499": 179,
+          "500-999": 2071,
+          "1000-2304": 0,
+          "0": 5280
+        },
+        "nonzero_cells": {
+          "n": 2400,
+          "mean": 668.4020833333333,
+          "sd": 188.0486165771367,
+          "min": 67.0,
+          "max": 964.0,
+          "median": 693.0,
+          "se": 3.8385263120855253,
+          "ci95": [
+            660.8787100061708,
+            675.9254566604958
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 97.0,
+          "5": 179.0,
+          "25": 568.0,
+          "50": 693.0,
+          "75": 815.0,
+          "95": 890.0,
+          "99": 926.0
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 53472.166666666664,
+          "sd": 211.31543399306676,
+          "min": 52945.0,
+          "max": 53807.0,
+          "median": 53479.5,
+          "se": 38.58074331566555,
+          "ci95": [
+            53396.54979925343,
+            53547.7835340799
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 22224.266864331563,
+          "sd": 105.7496646854706,
+          "min": 21932.099658966064,
+          "max": 22432.044773101807,
+          "median": 22226.54460334778,
+          "se": 19.307158932279904,
+          "ci95": [
+            22186.42552817162,
+            22262.108200491504
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.09065783465350116,
+          "sd": 0.00035826862588342806,
+          "min": 0.0897640652126736,
+          "max": 0.09122551812065972,
+          "median": 0.09067026774088542,
+          "se": 6.541060268091093e-05,
+          "ci95": [
+            0.09052963222800943,
+            0.0907860370789929
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 1919.0,
+          "sd": 0.0,
+          "min": 1919.0,
+          "max": 1919.0,
+          "median": 1919.0,
+          "se": 0.0,
+          "ci95": [
+            1919.0,
+            1919.0
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 1600.0,
+          "sd": 0.0,
+          "min": 1600.0,
+          "max": 1600.0,
+          "median": 1600.0,
+          "se": 0.0,
+          "ci95": [
+            1600.0,
+            1600.0
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 6.853571428571429,
+          "sd": 0.0,
+          "min": 6.853571428571429,
+          "max": 6.853571428571429,
+          "median": 6.853571428571429,
+          "se": 0.0,
+          "ci95": [
+            6.853571428571429,
+            6.853571428571429
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 7.49609375,
+          "sd": 0.0,
+          "min": 7.49609375,
+          "max": 7.49609375,
+          "median": 7.49609375,
+          "se": 0.0,
+          "ci95": [
+            7.49609375,
+            7.49609375
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 23.987499999999994,
+          "sd": 7.226896453227138e-15,
+          "min": 23.9875,
+          "max": 23.9875,
+          "median": 23.9875,
+          "se": 1.319444736062194e-15,
+          "ci95": [
+            23.98749999999999,
+            23.987499999999997
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 23.987499999999994,
+          "sd": 7.226896453227138e-15,
+          "min": 23.9875,
+          "max": 23.9875,
+          "median": 23.9875,
+          "se": 1.319444736062194e-15,
+          "ci95": [
+            23.98749999999999,
+            23.987499999999997
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 20.0,
+          "sd": 0.0,
+          "min": 20.0,
+          "max": 20.0,
+          "median": 20.0,
+          "se": 0.0,
+          "ci95": [
+            20.0,
+            20.0
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 17.0,
+          "sd": 0.0,
+          "min": 17.0,
+          "max": 17.0,
+          "median": 17.0,
+          "se": 0.0,
+          "ci95": [
+            17.0,
+            17.0
+          ]
+        },
+        "line_height_px_original_canvas": 17,
+        "line_pitch_px_resized": 12.75,
+        "lines_per_cell_geometric_original_canvas": 2.823529411764706,
+        "lines_per_cell_geometric_resized": 3.764705882352941,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 5.0,
+          "sd": 0.0,
+          "min": 5.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.0,
+          "ci95": [
+            5.0,
+            5.0
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 3.400000000000001,
+          "sd": 9.033620566533923e-16,
+          "min": 3.4,
+          "max": 3.4,
+          "median": 3.4,
+          "se": 1.6493059200777426e-16,
+          "ci95": [
+            3.4000000000000004,
+            3.4000000000000012
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 4.162499999999999,
+          "sd": 9.033620566533923e-16,
+          "min": 4.1625,
+          "max": 4.1625,
+          "median": 4.1625,
+          "se": 1.6493059200777426e-16,
+          "ci95": [
+            4.162499999999999,
+            4.162499999999999
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 320.0,
+          "sd": 0.0,
+          "min": 320.0,
+          "max": 320.0,
+          "median": 320.0,
+          "se": 0.0,
+          "ci95": [
+            320.0,
+            320.0
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 4.0,
+          "sd": 0.0,
+          "min": 4.0,
+          "max": 4.0,
+          "median": 4.0,
+          "se": 0.0,
+          "ci95": [
+            4.0,
+            4.0
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 8.324999999999998,
+          "sd": 1.8067241133067846e-15,
+          "min": 8.325,
+          "max": 8.325,
+          "median": 8.325,
+          "se": 3.298611840155485e-16,
+          "ci95": [
+            8.324999999999998,
+            8.324999999999998
+          ]
+        }
+      },
+      "_per_row_inked_ge1": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "_per_row_inked_ge1pct": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "_per_row_page_ink_px": [
+        53279,
+        53599,
+        53438,
+        53516,
+        53360,
+        53148,
+        53265,
+        53334,
+        53441,
+        53807,
+        53484,
+        53303,
+        53468,
+        53475,
+        52945,
+        53683,
+        53143,
+        53667,
+        53760,
+        53643,
+        53748,
+        53497,
+        53608,
+        53163,
+        53452,
+        53504,
+        53725,
+        53485,
+        53755,
+        53470
+      ]
+    },
+    "randstr-d5": {
+      "name": "randstr-d5",
+      "lane_spec": {
+        "group_len": 5,
+        "n_groups": 80,
+        "font_size": 40,
+        "n_random_letters": 400
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 30,
+        "n_mismatch": 0,
+        "note": "re-render of the stored target vs the stored PNG, byte-compared"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 148.4,
+          "sd": 1.8495106528950882,
+          "min": 145.0,
+          "max": 152.0,
+          "median": 149.0,
+          "se": 0.33767290164558245,
+          "ci95": [
+            147.73817327406422,
+            149.0618267259358
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 146.96666666666667,
+          "sd": 1.5196036990935664,
+          "min": 145.0,
+          "max": 151.0,
+          "median": 147.0,
+          "se": 0.2774404081539463,
+          "ci95": [
+            146.42289345870122,
+            147.5104398746321
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 145.0,
+          "sd": 0.0,
+          "min": 145.0,
+          "max": 145.0,
+          "median": 145.0,
+          "se": 0.0,
+          "ci95": [
+            145.0,
+            145.0
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 145.2,
+          "sd": 0.48423419811150237,
+          "min": 145.0,
+          "max": 147.0,
+          "median": 145.0,
+          "se": 0.08840866447369845,
+          "ci95": [
+            145.0267222016696,
+            145.37327779833038
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 145.0,
+          "sd": 0.0,
+          "min": 145.0,
+          "max": 145.0,
+          "median": 145.0,
+          "se": 0.0,
+          "ci95": [
+            145.0,
+            145.0
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.5796875,
+        "sd": 0.007224650987871438,
+        "min": 0.56640625,
+        "max": 0.59375,
+        "median": 0.58203125,
+        "se": 0.0013190347720530564,
+        "ci95": [
+          0.5771022393518134,
+          0.5822727606481867
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 43,
+          "10-49": 59,
+          "50-99": 0,
+          "100-249": 322,
+          "250-499": 2448,
+          "500-999": 1580,
+          "1000-2304": 0,
+          "0": 3228
+        },
+        "nonzero_cells": {
+          "n": 4452,
+          "mean": 446.9802336028751,
+          "sd": 161.0784218264744,
+          "min": 1.0,
+          "max": 882.0,
+          "median": 437.0,
+          "se": 2.414125192345847,
+          "ci95": [
+            442.24863517059606,
+            451.71183203515415
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 10.0,
+          "5": 210.0,
+          "25": 336.0,
+          "50": 437.0,
+          "75": 568.0,
+          "95": 711.4499999999998,
+          "99": 783.9799999999996
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 66331.86666666667,
+          "sd": 566.2992832071391,
+          "min": 65017.0,
+          "max": 67760.0,
+          "median": 66322.5,
+          "se": 103.39163057051886,
+          "ci95": [
+            66129.22279439803,
+            66534.51053893531
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 43224.691310491165,
+          "sd": 400.36670754619644,
+          "min": 42333.339582800865,
+          "max": 44293.35540270805,
+          "median": 43201.110317230225,
+          "se": 73.09662566570853,
+          "ci95": [
+            43081.42455676135,
+            43367.958064220984
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.11246044017650463,
+          "sd": 0.0009601157009669648,
+          "min": 0.11023118760850695,
+          "max": 0.11488172743055555,
+          "median": 0.11244455973307291,
+          "se": 0.0001752923424114971,
+          "ci95": [
+            0.1121168734985318,
+            0.11280400685447745
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 479.0,
+          "sd": 0.0,
+          "min": 479.0,
+          "max": 479.0,
+          "median": 479.0,
+          "se": 0.0,
+          "ci95": [
+            479.0,
+            479.0
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 400.0,
+          "sd": 0.0,
+          "min": 400.0,
+          "max": 400.0,
+          "median": 400.0,
+          "se": 0.0,
+          "ci95": [
+            400.0,
+            400.0
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 1.7107142857142863,
+          "sd": 6.775215424900442e-16,
+          "min": 1.7107142857142856,
+          "max": 1.7107142857142856,
+          "median": 1.7107142857142856,
+          "se": 1.236979440058307e-16,
+          "ci95": [
+            1.710714285714286,
+            1.7107142857142865
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 1.87109375,
+          "sd": 0.0,
+          "min": 1.87109375,
+          "max": 1.87109375,
+          "median": 1.87109375,
+          "se": 0.0,
+          "ci95": [
+            1.87109375,
+            1.87109375
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 3.228248435967933,
+          "sd": 0.04031334426747227,
+          "min": 3.151315789473684,
+          "max": 3.303448275862069,
+          "median": 3.214765100671141,
+          "se": 0.007360176007922046,
+          "ci95": [
+            3.213822756069145,
+            3.242674115866721
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 3.2989332656381714,
+          "sd": 0.010917070687412617,
+          "min": 3.258503401360544,
+          "max": 3.303448275862069,
+          "median": 3.303448275862069,
+          "se": 0.001993175292458107,
+          "ci95": [
+            3.2950267138491616,
+            3.302839817427181
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 2.695823328574473,
+          "sd": 0.03366458811479934,
+          "min": 2.6315789473684212,
+          "max": 2.7586206896551726,
+          "median": 2.684563758389262,
+          "se": 0.006146284766531971,
+          "ci95": [
+            2.683776831790516,
+            2.7078698253584297
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 14.0,
+          "sd": 0.0,
+          "min": 14.0,
+          "max": 14.0,
+          "median": 14.0,
+          "se": 0.0,
+          "ci95": [
+            14.0,
+            14.0
+          ]
+        },
+        "line_height_px_original_canvas": 48,
+        "line_pitch_px_resized": 36.0,
+        "lines_per_cell_geometric_original_canvas": 1.0,
+        "lines_per_cell_geometric_resized": 1.3333333333333333,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 11.0,
+          "sd": 0.0,
+          "min": 11.0,
+          "max": 11.0,
+          "median": 11.0,
+          "se": 0.0,
+          "ci95": [
+            11.0,
+            11.0
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 14.0,
+          "sd": 0.0,
+          "min": 14.0,
+          "max": 14.0,
+          "median": 14.0,
+          "se": 0.0,
+          "ci95": [
+            14.0,
+            14.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 1.272727272727273,
+          "sd": 2.2584051416334807e-16,
+          "min": 1.2727272727272727,
+          "max": 1.2727272727272727,
+          "median": 1.2727272727272727,
+          "se": 4.1232648001943564e-17,
+          "ci95": [
+            1.272727272727273,
+            1.272727272727273
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 2.16594358960846,
+          "sd": 0.014559934359650759,
+          "min": 2.138157894736842,
+          "max": 2.193103448275862,
+          "median": 2.161073825503356,
+          "se": 0.0026582681615250855,
+          "ci95": [
+            2.1607334797493984,
+            2.171153699467521
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 0.5391646657148946,
+          "sd": 0.006732917622959873,
+          "min": 0.5263157894736842,
+          "max": 0.5517241379310345,
+          "median": 0.5369127516778524,
+          "se": 0.001229256953306395,
+          "ci95": [
+            0.5367553663581033,
+            0.541573965071686
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 2.63275252167835,
+          "sd": 0.019100364472967347,
+          "min": 2.598684210526316,
+          "max": 2.668965517241379,
+          "median": 2.62751677852349,
+          "se": 0.00348723349280483,
+          "ci95": [
+            2.6259176696251667,
+            2.639587373731533
+          ]
+        }
+      },
+      "_per_row_inked_ge1": [
+        149,
+        149,
+        149,
+        147,
+        148,
+        148,
+        148,
+        148,
+        152,
+        149,
+        146,
+        151,
+        150,
+        149,
+        150,
+        147,
+        151,
+        150,
+        148,
+        151,
+        145,
+        149,
+        145,
+        150,
+        149,
+        149,
+        146,
+        146,
+        147,
+        146
+      ],
+      "_per_row_inked_ge1pct": [
+        145,
+        145,
+        145,
+        147,
+        145,
+        146,
+        145,
+        145,
+        145,
+        145,
+        145,
+        146,
+        146,
+        145,
+        145,
+        145,
+        145,
+        146,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145,
+        145
+      ],
+      "_per_row_page_ink_px": [
+        66188,
+        66440,
+        66219,
+        65719,
+        66401,
+        66025,
+        67721,
+        66631,
+        66376,
+        65893,
+        66885,
+        66627,
+        67760,
+        66050,
+        66420,
+        66302,
+        66343,
+        65970,
+        66158,
+        66501,
+        66823,
+        66445,
+        65945,
+        65433,
+        65017,
+        65896,
+        66496,
+        67092,
+        66134,
+        66046
+      ]
+    },
+    "masked-randstr": {
+      "name": "masked-randstr (rendered in memory, NOT materialized)",
+      "lane_spec": {
+        "group_len_min": 3,
+        "group_len_max": 7,
+        "n_groups": 80,
+        "font_size": 14
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 0,
+        "n_mismatch": 0,
+        "note": "n/a \u2014 rendered here, not stored"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 31.966666666666665,
+          "sd": 0.18257418583505536,
+          "min": 31.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.03333333333333333,
+          "ci95": [
+            31.90133453383333,
+            32.031998799499995
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 31.966666666666665,
+          "sd": 0.18257418583505536,
+          "min": 31.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.03333333333333333,
+          "ci95": [
+            31.90133453383333,
+            32.031998799499995
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 31.7,
+          "sd": 0.4660915996993991,
+          "min": 31.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.08509629433967633,
+          "ci95": [
+            31.533214327837275,
+            31.866785672162724
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 31.966666666666665,
+          "sd": 0.18257418583505536,
+          "min": 31.0,
+          "max": 32.0,
+          "median": 32.0,
+          "se": 0.03333333333333333,
+          "ci95": [
+            31.90133453383333,
+            32.031998799499995
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 31.366666666666667,
+          "sd": 0.6686751354593716,
+          "min": 30.0,
+          "max": 32.0,
+          "median": 31.0,
+          "se": 0.12208281844464014,
+          "ci95": [
+            31.127388739327877,
+            31.605944594005457
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.12486979166666666,
+        "sd": 0.000713180413418185,
+        "min": 0.12109375,
+        "max": 0.125,
+        "median": 0.125,
+        "se": 0.00013020833333333333,
+        "ci95": [
+          0.12461458802278645,
+          0.12512499531054685
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 0,
+          "10-49": 8,
+          "50-99": 6,
+          "100-249": 32,
+          "250-499": 316,
+          "500-999": 502,
+          "1000-2304": 95,
+          "0": 6721
+        },
+        "nonzero_cells": {
+          "n": 959,
+          "mean": 609.8759124087592,
+          "sd": 281.3879672893947,
+          "min": 24.0,
+          "max": 1632.0,
+          "median": 562.0,
+          "se": 9.086491373458447,
+          "ci95": [
+            592.0667165667675,
+            627.6851082507509
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 63.58,
+          "5": 253.70000000000002,
+          "25": 382.5,
+          "50": 562.0,
+          "75": 790.5,
+          "95": 1103.3999999999996,
+          "99": 1327.239999999999
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 19495.7,
+          "sd": 1364.9205142955498,
+          "min": 16744.0,
+          "max": 21950.0,
+          "median": 19844.5,
+          "se": 249.19925162707506,
+          "ci95": [
+            19007.27844172198,
+            19984.12155827802
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 12664.888466803233,
+          "sd": 1482.6284530633593,
+          "min": 9829.254119873047,
+          "max": 15283.391492843628,
+          "median": 12871.795490264893,
+          "se": 270.68968271393044,
+          "ci95": [
+            12134.346437572853,
+            13195.430496033614
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.033053419325086805,
+          "sd": 0.0023141149127460896,
+          "min": 0.028388129340277776,
+          "max": 0.03721449110243055,
+          "median": 0.033644782172309026,
+          "se": 0.0004224976461233775,
+          "ci95": [
+            0.03222533915493771,
+            0.0338814994952359
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 476.43333333333334,
+          "sd": 11.315791021257931,
+          "min": 451.0,
+          "max": 498.0,
+          "median": 479.5,
+          "se": 2.0659713327857965,
+          "ci95": [
+            472.3841039270307,
+            480.48256273963597
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 397.43333333333334,
+          "sd": 11.315791021257931,
+          "min": 372.0,
+          "max": 419.0,
+          "median": 400.5,
+          "se": 2.0659713327857965,
+          "ci95": [
+            393.3841039270307,
+            401.48256273963597
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 1.701547619047619,
+          "sd": 0.040413539361635456,
+          "min": 1.6107142857142858,
+          "max": 1.7785714285714285,
+          "median": 1.7125,
+          "se": 0.007378469045663557,
+          "ci95": [
+            1.687086085453681,
+            1.716009152641557
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 1.8610677083333333,
+          "sd": 0.044202308676788794,
+          "min": 1.76171875,
+          "max": 1.9453125,
+          "median": 1.873046875,
+          "se": 0.008070200518694517,
+          "ci95": [
+            1.8452504059649637,
+            1.876885010701703
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 14.904301075268817,
+          "sd": 0.3534441463352078,
+          "min": 14.09375,
+          "max": 15.5625,
+          "median": 15.015625,
+          "se": 0.06452977725531674,
+          "ci95": [
+            14.777825035888323,
+            15.030777114649311
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 14.904301075268817,
+          "sd": 0.3534441463352078,
+          "min": 14.09375,
+          "max": 15.5625,
+          "median": 15.015625,
+          "se": 0.06452977725531674,
+          "ci95": [
+            14.777825035888323,
+            15.030777114649311
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 12.432896505376343,
+          "sd": 0.35199416922180593,
+          "min": 11.625,
+          "max": 13.09375,
+          "median": 12.546875,
+          "se": 0.06426504886435792,
+          "ci95": [
+            12.306939324107937,
+            12.558853686644749
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 4.866666666666666,
+          "sd": 0.3457459036417604,
+          "min": 4.0,
+          "max": 5.0,
+          "median": 5.0,
+          "se": 0.06312427686319991,
+          "ci95": [
+            4.742945357435626,
+            4.990387975897707
+          ]
+        },
+        "line_height_px_original_canvas": 17,
+        "line_pitch_px_resized": 12.75,
+        "lines_per_cell_geometric_original_canvas": 2.823529411764706,
+        "lines_per_cell_geometric_resized": 3.764705882352941,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 2.0,
+          "sd": 0.0,
+          "min": 2.0,
+          "max": 2.0,
+          "median": 2.0,
+          "se": 0.0,
+          "ci95": [
+            2.0,
+            2.0
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 2.433333333333333,
+          "sd": 0.1728729518208802,
+          "min": 2.0,
+          "max": 2.5,
+          "median": 2.5,
+          "se": 0.031562138431599954,
+          "ci95": [
+            2.371472678717813,
+            2.4951939879488534
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 2.5756048387096775,
+          "sd": 0.05224660290888812,
+          "min": 2.46875,
+          "max": 2.65625,
+          "median": 2.59375,
+          "se": 0.009538880988737683,
+          "ci95": [
+            2.5569089755145504,
+            2.5943007019048046
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 80.0,
+          "sd": 0.0,
+          "min": 80.0,
+          "max": 80.0,
+          "median": 80.0,
+          "se": 0.0,
+          "ci95": [
+            80.0,
+            80.0
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 2.5026881720430105,
+          "sd": 0.014723724664117355,
+          "min": 2.5,
+          "max": 2.5806451612903225,
+          "median": 2.5,
+          "se": 0.0026881720430107503,
+          "ci95": [
+            2.4974194516532258,
+            2.5079568924327953
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 5.0824596774193544,
+          "sd": 0.13827115927808326,
+          "min": 4.8125,
+          "max": 5.3125,
+          "median": 5.125,
+          "se": 0.025244744329665312,
+          "ci95": [
+            5.032980887722678,
+            5.131938467116031
+          ]
+        }
+      },
+      "caveat": "black occlusion rectangles are pure ink and cover whole words, so inked-token counts here are an UPPER bound relative to the clean d3 page of the same geometry.",
+      "_per_row_inked_ge1": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        31,
+        32,
+        32
+      ]
+    },
+    "fineweb-edu": {
+      "name": "fineweb-edu (page 0 only)",
+      "lane_spec": {
+        "font_size": 14,
+        "source": "data/materialized/univi-3M-v0-split/fineweb-edu/validation"
+      },
+      "n_rows": 30,
+      "render_check": {
+        "n_checked": 30,
+        "n_mismatch": 0,
+        "note": "re-render of the full target, page 0, vs the stored PNG"
+      },
+      "ink_threshold_darkness": 0.03137254901960784,
+      "geometry": {
+        "canvas_px": 1024,
+        "resized_px": [
+          768,
+          768
+        ],
+        "resize_scale": 0.75,
+        "grid": [
+          16,
+          16
+        ],
+        "cell_px_resized": 48,
+        "cell_px_original": 64.0,
+        "soft_tokens_per_page": {
+          "n": 30,
+          "mean": 256.0,
+          "sd": 0.0,
+          "min": 256.0,
+          "max": 256.0,
+          "median": 256.0,
+          "se": 0.0,
+          "ci95": [
+            256.0,
+            256.0
+          ]
+        },
+        "max_image_position_id": {
+          "x": 15,
+          "y": 15
+        },
+        "resize_identical_across_rows": true
+      },
+      "inked_tokens": {
+        "ge1": {
+          "n": 30,
+          "mean": 148.46666666666667,
+          "sd": 66.80735729323341,
+          "min": 40.0,
+          "max": 255.0,
+          "median": 137.5,
+          "se": 12.197298865603738,
+          "ci95": [
+            124.56040017580199,
+            172.37293315753135
+          ]
+        },
+        "ge10": {
+          "n": 30,
+          "mean": 147.73333333333332,
+          "sd": 66.89050926615118,
+          "min": 39.0,
+          "max": 255.0,
+          "median": 136.5,
+          "se": 12.21248026935978,
+          "ci95": [
+            123.79731183786505,
+            171.6693548288016
+          ]
+        },
+        "ge50": {
+          "n": 30,
+          "mean": 146.26666666666668,
+          "sd": 66.52970989603499,
+          "min": 39.0,
+          "max": 254.0,
+          "median": 136.5,
+          "se": 12.146607618111014,
+          "ci95": [
+            122.45975319524246,
+            170.0735801380909
+          ]
+        },
+        "ge1pct": {
+          "n": 30,
+          "mean": 147.33333333333334,
+          "sd": 66.77978908236426,
+          "min": 39.0,
+          "max": 255.0,
+          "median": 136.5,
+          "se": 12.192265621949375,
+          "ci95": [
+            123.43693181875895,
+            171.22973484790774
+          ]
+        },
+        "ge5pct": {
+          "n": 30,
+          "mean": 142.1,
+          "sd": 65.06248985557573,
+          "min": 38.0,
+          "max": 248.0,
+          "median": 133.5,
+          "se": 11.878731113783289,
+          "ci95": [
+            118.81811482948581,
+            165.38188517051418
+          ]
+        }
+      },
+      "inked_fraction_ge1": {
+        "n": 30,
+        "mean": 0.5799479166666667,
+        "sd": 0.260966239426693,
+        "min": 0.15625,
+        "max": 0.99609375,
+        "median": 0.537109375,
+        "se": 0.0476456986937646,
+        "ci95": [
+          0.4865640631867265,
+          0.6733317701466068
+        ]
+      },
+      "per_cell_ink_px": {
+        "cutoffs": {
+          "ge1": 1,
+          "ge10": 10,
+          "ge50": 50,
+          "ge1pct": 23,
+          "ge5pct": 115
+        },
+        "cell_area_px": 2304,
+        "pooled_histogram_cells": {
+          "1-9": 22,
+          "10-49": 44,
+          "50-99": 76,
+          "100-249": 476,
+          "250-499": 1083,
+          "500-999": 2753,
+          "1000-2304": 0,
+          "0": 3226
+        },
+        "nonzero_cells": {
+          "n": 4454,
+          "mean": 529.0525370453524,
+          "sd": 212.9766155808305,
+          "min": 1.0,
+          "max": 935.0,
+          "median": 557.0,
+          "se": 3.1912205136078695,
+          "ci95": [
+            522.7978597704878,
+            535.3072143202171
+          ]
+        },
+        "nonzero_quantiles": {
+          "1": 34.0,
+          "5": 128.0,
+          "25": 384.25,
+          "50": 557.0,
+          "75": 711.0,
+          "95": 815.0,
+          "99": 866.4700000000003
+        },
+        "n_cells_pooled": 7680
+      },
+      "page_ink": {
+        "ink_px": {
+          "n": 30,
+          "mean": 78546.66666666667,
+          "sd": 40788.86344236059,
+          "min": 13912.0,
+          "max": 162347.0,
+          "median": 73334.0,
+          "se": 7446.993534126239,
+          "ci95": [
+            63950.82754325138,
+            93142.50579008197
+          ]
+        },
+        "ink_mass": {
+          "n": 30,
+          "mean": 32483.239745002986,
+          "sd": 16863.88417354833,
+          "min": 5751.093505382538,
+          "max": 67184.16952651739,
+          "median": 30370.20848914981,
+          "se": 3078.9099230022616,
+          "ci95": [
+            26448.68718285943,
+            38517.79230714654
+          ]
+        },
+        "page_ink_fraction": {
+          "n": 30,
+          "mean": 0.13316966869212962,
+          "sd": 0.06915429592956643,
+          "min": 0.023586697048611112,
+          "max": 0.2752465142144097,
+          "median": 0.1243320041232639,
+          "se": 0.012625789276337075,
+          "ci95": [
+            0.10842357642830974,
+            0.1579157609559495
+          ]
+        }
+      },
+      "chars": {
+        "chars_all_incl_spaces": {
+          "n": 30,
+          "mean": 2953.8333333333335,
+          "sd": 1528.1433197665478,
+          "min": 521.0,
+          "max": 5955.0,
+          "median": 2756.0,
+          "se": 278.99952244565617,
+          "ci95": [
+            2407.0043175076485,
+            3500.6623491590185
+          ]
+        },
+        "letters_only": {
+          "n": 30,
+          "mean": 2479.766666666667,
+          "sd": 1285.9310241418764,
+          "min": 437.0,
+          "max": 5084.0,
+          "median": 2316.5,
+          "se": 234.77780977274202,
+          "ci95": [
+            2019.6106150349115,
+            2939.9227182984223
+          ]
+        },
+        "chars_per_budget_280": {
+          "n": 30,
+          "mean": 10.549404761904762,
+          "sd": 5.457654713451957,
+          "min": 1.8607142857142858,
+          "max": 21.267857142857142,
+          "median": 9.842857142857142,
+          "se": 0.9964268658773434,
+          "ci95": [
+            8.596443991098743,
+            12.502365532710781
+          ]
+        },
+        "chars_per_soft_token": {
+          "n": 30,
+          "mean": 11.538411458333334,
+          "sd": 5.9693098428380775,
+          "min": 2.03515625,
+          "max": 23.26171875,
+          "median": 10.765625,
+          "se": 1.0898418845533444,
+          "ci95": [
+            9.402360615264252,
+            13.674462301402416
+          ]
+        },
+        "chars_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 19.15822477789912,
+          "sd": 2.7366380708172264,
+          "min": 12.428571428571429,
+          "max": 23.352941176470587,
+          "median": 19.924424424424423,
+          "se": 0.4996394677046717,
+          "ci95": [
+            18.178949415713394,
+            20.13750014008485
+          ]
+        },
+        "chars_per_inked_token_ge1pct": {
+          "n": 30,
+          "mean": 19.32434579923831,
+          "sd": 2.6896148826360426,
+          "min": 12.428571428571429,
+          "max": 23.444881889763778,
+          "median": 19.951037037037036,
+          "se": 0.4910542474071235,
+          "ci95": [
+            18.361897159639067,
+            20.28679443883755
+          ]
+        },
+        "letters_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 16.089563499502837,
+          "sd": 2.305920211335659,
+          "min": 10.404761904761905,
+          "max": 19.937254901960785,
+          "median": 16.68997154240182,
+          "se": 0.4210015051852068,
+          "ci95": [
+            15.264415711709042,
+            16.914711287296633
+          ]
+        }
+      },
+      "lines": {
+        "n_text_lines": {
+          "n": 30,
+          "mean": 34.666666666666664,
+          "sd": 15.713673670720196,
+          "min": 8.0,
+          "max": 57.0,
+          "median": 31.5,
+          "se": 2.8689111769094855,
+          "ci95": [
+            29.043704083760108,
+            40.28962924957322
+          ]
+        },
+        "line_height_px_original_canvas": 17,
+        "line_pitch_px_resized": 12.75,
+        "lines_per_cell_geometric_original_canvas": 2.823529411764706,
+        "lines_per_cell_geometric_resized": 3.764705882352941,
+        "grid_rows_with_ink": {
+          "n": 30,
+          "mean": 10.0,
+          "sd": 4.1522739926869985,
+          "min": 3.0,
+          "max": 16.0,
+          "median": 9.0,
+          "se": 0.7580980435789034,
+          "ci95": [
+            8.514155137486389,
+            11.485844862513611
+          ]
+        },
+        "grid_cols_with_ink": {
+          "n": 30,
+          "mean": 16.0,
+          "sd": 0.0,
+          "min": 16.0,
+          "max": 16.0,
+          "median": 16.0,
+          "se": 0.0,
+          "ci95": [
+            16.0,
+            16.0
+          ]
+        },
+        "lines_per_inked_grid_row": {
+          "n": 30,
+          "mean": 3.3840271302771305,
+          "sd": 0.28209568815806385,
+          "min": 2.6666666666666665,
+          "max": 3.6666666666666665,
+          "median": 3.5,
+          "se": 0.05150339059303818,
+          "ci95": [
+            3.283082339609388,
+            3.484971920944873
+          ]
+        },
+        "lines_per_inked_cell_boxes": {
+          "n": 30,
+          "mean": 3.371836257081307,
+          "sd": 0.4704932951075044,
+          "min": 2.0238095238095237,
+          "max": 4.047058823529412,
+          "median": 3.4567067067067065,
+          "se": 0.08589993029510505,
+          "ci95": [
+            3.2034754873888907,
+            3.5401970267737233
+          ]
+        },
+        "note": "lines_per_cell_geometric_ORIGINAL_CANVAS is the figure H13's deviation note quotes (48px patch on the 1024 page). The patch grid actually lives on the RESIZED image, where the same text line is scale x thinner, so ..._resized is the number the model sees; it is 1/scale times larger."
+      },
+      "words": {
+        "n_words": {
+          "n": 30,
+          "mean": 475.06666666666666,
+          "sd": 245.8186790878711,
+          "min": 79.0,
+          "max": 899.0,
+          "median": 441.5,
+          "se": 44.88014519751682,
+          "ci95": [
+            387.103198437963,
+            563.0301348953703
+          ]
+        },
+        "words_per_inked_token_ge1": {
+          "n": 30,
+          "mean": 3.077440023191578,
+          "sd": 0.48084930220822464,
+          "min": 1.975,
+          "max": 3.927536231884058,
+          "median": 3.178259933240013,
+          "se": 0.08779066986002111,
+          "ci95": [
+            2.9053734720469118,
+            3.2495065743362446
+          ]
+        },
+        "words_per_inked_cell_overlap": {
+          "n": 30,
+          "mean": 6.472810522580779,
+          "sd": 0.9676668976867988,
+          "min": 3.9761904761904763,
+          "max": 8.18840579710145,
+          "median": 6.6515830115830115,
+          "se": 0.17667099600470113,
+          "ci95": [
+            6.126541733217485,
+            6.819079311944072
+          ]
+        }
+      },
+      "pages_per_row": {
+        "n": 30,
+        "mean": 1.3,
+        "sd": 0.7022132498578065,
+        "min": 1.0,
+        "max": 4.0,
+        "median": 1.0,
+        "se": 0.12820601237537735,
+        "ci95": [
+          1.048720833083796,
+          1.551279166916204
+        ]
+      },
+      "caveat": "characters counted are PAGE-0 characters only; rows averaging 1.30 pages here.",
+      "_per_row_inked_ge1": [
+        129,
+        166,
+        128,
+        104,
+        144,
+        138,
+        87,
+        175,
+        148,
+        128,
+        111,
+        159,
+        233,
+        42,
+        75,
+        54,
+        40,
+        255,
+        254,
+        175,
+        128,
+        96,
+        61,
+        241,
+        251,
+        231,
+        198,
+        111,
+        255,
+        137
+      ]
+    }
+  },
+  "d3_vs_d5_paired": {
+    "n_compared": 30,
+    "n_targets_identical": 30,
+    "note": "rows are paired by validation-split INDEX and only index-matched rows whose target strings are byte-identical are used; d3 and d5 were materialized from the same RNG stream and differ only in font.",
+    "inked_ge1": {
+      "n_pairs": 30,
+      "d3_mean": 32.0,
+      "d5_mean": 148.4,
+      "diff": {
+        "n": 30,
+        "mean": 116.4,
+        "sd": 1.8495106528950882,
+        "min": 113.0,
+        "max": 120.0,
+        "median": 117.0,
+        "se": 0.33767290164558245,
+        "ci95": [
+          115.73817327406422,
+          117.06182672593579
+        ]
+      },
+      "ratio_per_row": {
+        "n": 30,
+        "mean": 4.6375,
+        "sd": 0.057797207902971506,
+        "min": 4.53125,
+        "max": 4.75,
+        "median": 4.65625,
+        "se": 0.010552278176424451,
+        "ci95": [
+          4.616817914814507,
+          4.658182085185493
+        ]
+      },
+      "ratio_of_totals": 4.6375,
+      "ratio_of_totals_ci95_bootstrap": [
+        4.617708333333334,
+        4.658333333333333
+      ],
+      "n_boot": 5000,
+      "n_rows_b_gt_a": 30,
+      "n_rows_b_eq_a": 0,
+      "n_rows_b_lt_a": 0
+    },
+    "inked_ge1pct": {
+      "n_pairs": 30,
+      "d3_mean": 32.0,
+      "d5_mean": 145.2,
+      "diff": {
+        "n": 30,
+        "mean": 113.2,
+        "sd": 0.48423419811150226,
+        "min": 113.0,
+        "max": 115.0,
+        "median": 113.0,
+        "se": 0.08840866447369843,
+        "ci95": [
+          113.0267222016696,
+          113.3732777983304
+        ]
+      },
+      "ratio_per_row": {
+        "n": 30,
+        "mean": 4.5375,
+        "sd": 0.015132318690984449,
+        "min": 4.53125,
+        "max": 4.59375,
+        "median": 4.53125,
+        "se": 0.0027627707648030767,
+        "ci95": [
+          4.532085068802175,
+          4.542914931197824
+        ]
+      },
+      "ratio_of_totals": 4.5375,
+      "ratio_of_totals_ci95_bootstrap": [
+        4.533333333333333,
+        4.54375
+      ],
+      "n_boot": 5000,
+      "n_rows_b_gt_a": 30,
+      "n_rows_b_eq_a": 0,
+      "n_rows_b_lt_a": 0
+    },
+    "page_ink_px": {
+      "n_pairs": 30,
+      "d3_mean": 13338.5,
+      "d5_mean": 66331.86666666667,
+      "diff": {
+        "n": 30,
+        "mean": 52993.36666666667,
+        "sd": 476.6826084465452,
+        "min": 51865.0,
+        "max": 54152.0,
+        "median": 52997.0,
+        "se": 87.02993913885848,
+        "ci95": [
+          52822.791120337766,
+          53163.94221299557
+        ]
+      },
+      "ratio_per_row": {
+        "n": 30,
+        "mean": 4.97297556669011,
+        "sd": 0.02024198706239282,
+        "min": 4.93063454055672,
+        "max": 5.005813514533786,
+        "median": 4.975581990441434,
+        "se": 0.0036956643076000934,
+        "ci95": [
+          4.965732197746564,
+          4.980218935633656
+        ]
+      },
+      "ratio_of_totals": 4.972962976846472,
+      "ratio_of_totals_ci95_bootstrap": [
+        4.966149877960779,
+        4.979984286798711
+      ],
+      "n_boot": 5000,
+      "n_rows_b_gt_a": 30,
+      "n_rows_b_eq_a": 0,
+      "n_rows_b_lt_a": 0
+    },
+    "chars_per_inked_d3": 14.96875,
+    "chars_per_inked_d5": 3.2277628032345014,
+    "chars_per_inked_ratio": 0.215633423180593
+  }
+}

@@ -1,0 +1,861 @@
+{
+  "meta": {
+    "checkpoint": "data/checkpoints/h17-d3-560-v0/final",
+    "n_per_rung": 150,
+    "seed": 3407,
+    "max_soft_tokens": 560,
+    "max_length": 4096,
+    "char_bin_width": 25,
+    "baseline_chars": 100,
+    "min_bin_tokens": 50,
+    "bootstrap": 300,
+    "skip_perm": false,
+    "data_root": "data/materialized/h13-density-v0",
+    "token_bins": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        10
+      ],
+      [
+        10,
+        20
+      ],
+      [
+        20,
+        40
+      ],
+      [
+        40,
+        80
+      ],
+      [
+        80,
+        160
+      ],
+      [
+        160,
+        320
+      ],
+      [
+        320,
+        640
+      ],
+      [
+        640,
+        null
+      ]
+    ]
+  },
+  "rungs": {
+    "randstr-d3": {
+      "n_rows": 150,
+      "spec": {
+        "group_len": 5,
+        "n_groups": 80,
+        "font_size": 14,
+        "n_random_letters": 400
+      },
+      "floor_nats": 5.60855983753472,
+      "target_tokens_mean": 234.27333333333334,
+      "target_content_tokens_mean": 232.27333333333334,
+      "target_chars_mean": 479.0,
+      "target_chars_max": 479,
+      "chars_per_token_realized": 2.062225538876611,
+      "n_tokens_scored": 34841,
+      "n_format_tokens_scored": 24,
+      "n_truncated_rows": 0,
+      "n_charlen_mismatch_rows": 0,
+      "ce_all_tokens": {
+        "aligned": 5.606008389790853,
+        "permuted": 5.734432903925578,
+        "blank": 5.722090209325154
+      },
+      "ce_vs_floor": -0.0025514477438672856,
+      "below_floor": true,
+      "acc_all_tokens": {
+        "aligned": 0.05438602781544129,
+        "permuted": 0.0495737314162155,
+        "blank": 0.05012180486693978
+      },
+      "delta_perm_rel": 0.02290836994974888,
+      "delta_blank_rel": 0.02070667959500359,
+      "delta_perm_ce_paired": {
+        "mean": 0.12842451413472494,
+        "se": 0.0024077318895275976,
+        "ci95": [
+          0.12370544634571486,
+          0.13314358192373504
+        ]
+      },
+      "delta_blank_ce_paired": {
+        "mean": 0.11608181953430176,
+        "se": 0.0021457416341968717,
+        "ci95": [
+          0.11187624321016085,
+          0.12028739585844267
+        ]
+      },
+      "baseline_gain_pts": 2.209570286024129,
+      "baseline_gain_se_pts": 0.16728817020934425,
+      "baseline_gain_n_rows": 150,
+      "baseline_gain_significant": true,
+      "pos0_gain": {
+        "n_tokens": 150,
+        "n_rows": 150,
+        "gain_pts": 68.0,
+        "se_pts": 3.821521535414603,
+        "ci95": [
+          60.50995542268548,
+          75.49004457731453
+        ],
+        "acc_aligned": 0.68,
+        "acc_blank": 0.0,
+        "significant": true,
+        "status": "ok"
+      },
+      "pos0_4_gain": {
+        "n_tokens": 750,
+        "n_rows": 150,
+        "gain_pts": 21.333333333333336,
+        "se_pts": 1.2212388424121863,
+        "ci95": [
+          18.93974918512236,
+          23.72691748154431
+        ],
+        "acc_aligned": 0.23733333333333334,
+        "acc_blank": 0.024,
+        "significant": true,
+        "status": "ok"
+      },
+      "row_sanity": {
+        "n_rows": 150,
+        "n_rows_aligned_gt_blank": 99,
+        "n_rows_aligned_lt_blank": 20,
+        "n_rows_tied": 31,
+        "frac_rows_aligned_gt_blank": 0.66,
+        "sign_test_p": 9.202543569552252e-14,
+        "mean_row_gain_pts": 0.4300915348859409
+      },
+      "token_bins": [
+        {
+          "bin": "0-0",
+          "lo": 0,
+          "hi": 1,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.68,
+          "acc_blank": 0.0,
+          "gain_pts": 68.0,
+          "gain_pts_rowmean": 68.0,
+          "se_naive_pts": 3.821521535414603,
+          "se_cluster_pts": 3.821521535414603,
+          "ci95_lo_pts": 60.50995542268548,
+          "ci95_hi_pts": 75.49004457731452,
+          "ce_aligned": 1.0130696046321341,
+          "ce_blank": 21.029238239924112,
+          "underpowered": false
+        },
+        {
+          "bin": "1-1",
+          "lo": 1,
+          "hi": 2,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.38666666666666666,
+          "acc_blank": 0.006666666666666667,
+          "gain_pts": 38.0,
+          "gain_pts_rowmean": 38.0,
+          "se_naive_pts": 3.976440686960231,
+          "se_cluster_pts": 3.976440686960231,
+          "ci95_lo_pts": 30.20631946506929,
+          "ci95_hi_pts": 45.79368053493071,
+          "ce_aligned": 3.3704572165912636,
+          "ce_blank": 10.31562801361084,
+          "underpowered": false
+        },
+        {
+          "bin": "2-2",
+          "lo": 2,
+          "hi": 3,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04,
+          "acc_blank": 0.03333333333333333,
+          "gain_pts": 0.6666666666666667,
+          "gain_pts_rowmean": 0.6666666666666667,
+          "se_naive_pts": 1.4947085390483161,
+          "se_cluster_pts": 1.4947085390483161,
+          "ci95_lo_pts": -2.2629082379399987,
+          "ci95_hi_pts": 3.5962415712733327,
+          "ce_aligned": 4.914953665335973,
+          "ce_blank": 5.09405025879542,
+          "underpowered": false
+        },
+        {
+          "bin": "3-3",
+          "lo": 3,
+          "hi": 4,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.05333333333333334,
+          "acc_blank": 0.06,
+          "gain_pts": -0.6666666666666667,
+          "gain_pts_rowmean": -0.6666666666666667,
+          "se_naive_pts": 1.1572808779955701,
+          "se_cluster_pts": 1.1572808779955701,
+          "ci95_lo_pts": -2.9348955080671635,
+          "ci95_hi_pts": 1.6015621747338298,
+          "ce_aligned": 5.402398733229687,
+          "ce_blank": 5.44489066918691,
+          "underpowered": false
+        },
+        {
+          "bin": "4-4",
+          "lo": 4,
+          "hi": 5,
+          "n_tokens": 150,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.02666666666666667,
+          "acc_blank": 0.02,
+          "gain_pts": 0.6666666666666667,
+          "gain_pts_rowmean": 0.6666666666666667,
+          "se_naive_pts": 1.1572808779955703,
+          "se_cluster_pts": 1.1572808779955703,
+          "ci95_lo_pts": -1.6015621747338302,
+          "ci95_hi_pts": 2.9348955080671635,
+          "ce_aligned": 6.151134756406148,
+          "ce_blank": 6.175158824920654,
+          "underpowered": false
+        },
+        {
+          "bin": "5-9",
+          "lo": 5,
+          "hi": 10,
+          "n_tokens": 750,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.044,
+          "acc_blank": 0.044,
+          "gain_pts": 0.0,
+          "gain_pts_rowmean": 0.0,
+          "se_naive_pts": 0.5660629261090032,
+          "se_cluster_pts": 0.5005589716670066,
+          "ci95_lo_pts": -0.9810775568359683,
+          "ci95_hi_pts": 0.9810775568359683,
+          "ce_aligned": 5.59745493777593,
+          "ce_blank": 5.606145396073659,
+          "underpowered": false
+        },
+        {
+          "bin": "10-19",
+          "lo": 10,
+          "hi": 20,
+          "n_tokens": 1500,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.05,
+          "acc_blank": 0.05,
+          "gain_pts": 0.0,
+          "gain_pts_rowmean": 0.0,
+          "se_naive_pts": 0.23101712622315604,
+          "se_cluster_pts": 0.2317137785453969,
+          "ci95_lo_pts": -0.45415066077724364,
+          "ci95_hi_pts": 0.45415066077724364,
+          "ce_aligned": 5.6538722518620395,
+          "ce_blank": 5.655390201676637,
+          "underpowered": false
+        },
+        {
+          "bin": "20-39",
+          "lo": 20,
+          "hi": 40,
+          "n_tokens": 3000,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.03933333333333333,
+          "acc_blank": 0.037,
+          "gain_pts": 0.23333333333333336,
+          "gain_pts_rowmean": 0.2333333333333333,
+          "se_naive_pts": 0.1794848526891773,
+          "se_cluster_pts": 0.18523017102115139,
+          "ci95_lo_pts": -0.129711130803514,
+          "ci95_hi_pts": 0.5963777974701807,
+          "ce_aligned": 5.677673865621289,
+          "ce_blank": 5.678683534407522,
+          "underpowered": false
+        },
+        {
+          "bin": "40-79",
+          "lo": 40,
+          "hi": 80,
+          "n_tokens": 6000,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.0385,
+          "acc_blank": 0.041,
+          "gain_pts": -0.25,
+          "gain_pts_rowmean": -0.25,
+          "se_naive_pts": 0.11663173498114437,
+          "se_cluster_pts": 0.10509929256440856,
+          "ci95_lo_pts": -0.4559908282752191,
+          "ci95_hi_pts": -0.04400917172478094,
+          "ce_aligned": 5.658948177589201,
+          "ce_blank": 5.659843888410988,
+          "underpowered": false
+        },
+        {
+          "bin": "80-159",
+          "lo": 80,
+          "hi": 160,
+          "n_tokens": 12000,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.0465,
+          "acc_blank": 0.04608333333333333,
+          "gain_pts": 0.04166666666666667,
+          "gain_pts_rowmean": 0.04166666666666667,
+          "se_naive_pts": 0.08291820232271345,
+          "se_cluster_pts": 0.06835461009946124,
+          "ci95_lo_pts": -0.0923059073369946,
+          "ci95_hi_pts": 0.17563924067032793,
+          "ce_aligned": 5.67515425643352,
+          "ce_blank": 5.6740870227373765,
+          "underpowered": false
+        },
+        {
+          "bin": "160-319",
+          "lo": 160,
+          "hi": 320,
+          "n_tokens": 10841,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.03929526796420994,
+          "acc_blank": 0.03994096485564062,
+          "gain_pts": -0.06456968914306797,
+          "gain_pts_rowmean": -0.07089128517151373,
+          "se_naive_pts": 0.07881314740504332,
+          "se_cluster_pts": 0.07757672169856161,
+          "ci95_lo_pts": -0.21661726974661677,
+          "ci95_hi_pts": 0.08747789146048081,
+          "ce_aligned": 5.707551595148973,
+          "ce_blank": 5.708844969607731,
+          "underpowered": false
+        },
+        {
+          "bin": "320-639",
+          "lo": 320,
+          "hi": 640,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        },
+        {
+          "bin": "640+",
+          "lo": 640,
+          "hi": null,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        }
+      ],
+      "char_bins": [
+        {
+          "bin": "0-9",
+          "lo": 0,
+          "hi": 10,
+          "n_tokens": 819,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.21978021978021978,
+          "acc_blank": 0.0231990231990232,
+          "gain_pts": 19.65811965811966,
+          "gain_pts_rowmean": 19.422222222222217,
+          "se_naive_pts": 1.4422334025926444,
+          "se_cluster_pts": 1.1034641053680234,
+          "ci95_lo_pts": 17.49536975285809,
+          "ci95_hi_pts": 21.82086956338123,
+          "ce_aligned": 4.357845353341283,
+          "ce_blank": 9.34173384065011,
+          "underpowered": false
+        },
+        {
+          "bin": "10-24",
+          "lo": 10,
+          "hi": 25,
+          "n_tokens": 1067,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04498594189315839,
+          "acc_blank": 0.04592314901593252,
+          "gain_pts": -0.09372071227741331,
+          "gain_pts_rowmean": -0.09920634920634923,
+          "se_naive_pts": 0.40870060161330385,
+          "se_cluster_pts": 0.3225231369763748,
+          "ci95_lo_pts": -0.7258544450803297,
+          "ci95_hi_pts": 0.5384130205255031,
+          "ce_aligned": 5.574949648903356,
+          "ce_blank": 5.581290223879256,
+          "underpowered": false
+        },
+        {
+          "bin": "25-49",
+          "lo": 25,
+          "hi": 50,
+          "n_tokens": 1818,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.048954895489548955,
+          "acc_blank": 0.0462046204620462,
+          "gain_pts": 0.27502750275027504,
+          "gain_pts_rowmean": 0.24114774114774115,
+          "se_naive_pts": 0.22676411802068147,
+          "se_cluster_pts": 0.2207671933421411,
+          "ci95_lo_pts": -0.1576682452698533,
+          "ci95_hi_pts": 0.7077232507704034,
+          "ce_aligned": 5.689976991796651,
+          "ce_blank": 5.690571638807753,
+          "underpowered": false
+        },
+        {
+          "bin": "50-99",
+          "lo": 50,
+          "hi": 100,
+          "n_tokens": 3673,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.037299210454669204,
+          "acc_blank": 0.037843724475905255,
+          "gain_pts": -0.054451402123604685,
+          "gain_pts_rowmean": -0.046286799620132955,
+          "se_naive_pts": 0.15877082545279042,
+          "se_cluster_pts": 0.16929094446399967,
+          "ci95_lo_pts": -0.3862555562596791,
+          "ci95_hi_pts": 0.2773527520124698,
+          "ce_aligned": 5.661206663660492,
+          "ce_blank": 5.662490084877893,
+          "underpowered": false
+        },
+        {
+          "bin": "100-199",
+          "lo": 100,
+          "hi": 200,
+          "n_tokens": 7205,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.03969465648854962,
+          "acc_blank": 0.040943789035392086,
+          "gain_pts": -0.12491325468424704,
+          "gain_pts_rowmean": -0.11507026177223542,
+          "se_naive_pts": 0.10660578703691292,
+          "se_cluster_pts": 0.09577377626699643,
+          "ci95_lo_pts": -0.31262640687500776,
+          "ci95_hi_pts": 0.0627998975065137,
+          "ce_aligned": 5.69280796278642,
+          "ce_blank": 5.693223540804309,
+          "underpowered": false
+        },
+        {
+          "bin": "200-399",
+          "lo": 200,
+          "hi": 400,
+          "n_tokens": 14545,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.044551392231007216,
+          "acc_blank": 0.04482640082502578,
+          "gain_pts": -0.02750085940185631,
+          "gain_pts_rowmean": -0.028646664169078285,
+          "se_naive_pts": 0.07011574890471539,
+          "se_cluster_pts": 0.06258195020713274,
+          "ci95_lo_pts": -0.15015922791889974,
+          "ci95_hi_pts": 0.09515750911518712,
+          "ce_aligned": 5.683642645463384,
+          "ce_blank": 5.682997251068349,
+          "underpowered": false
+        },
+        {
+          "bin": "400-799",
+          "lo": 400,
+          "hi": 800,
+          "n_tokens": 5714,
+          "n_rows": 150,
+          "status": "ok",
+          "acc_aligned": 0.04042702135106755,
+          "acc_blank": 0.04042702135106755,
+          "gain_pts": 0.0,
+          "gain_pts_rowmean": -0.013790834017403903,
+          "se_naive_pts": 0.11870709738507075,
+          "se_cluster_pts": 0.10815557876553705,
+          "ci95_lo_pts": -0.2119810391572834,
+          "ci95_hi_pts": 0.2119810391572834,
+          "ce_aligned": 5.675538982069803,
+          "ce_blank": 5.677548676728306,
+          "underpowered": false
+        },
+        {
+          "bin": "800-1599",
+          "lo": 800,
+          "hi": 1600,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        },
+        {
+          "bin": "1600+",
+          "lo": 1600,
+          "hi": null,
+          "n_tokens": 0,
+          "n_rows": 0,
+          "status": "empty",
+          "acc_aligned": null,
+          "acc_blank": null,
+          "gain_pts": null,
+          "gain_pts_rowmean": null,
+          "se_naive_pts": null,
+          "se_cluster_pts": null,
+          "ci95_lo_pts": null,
+          "ci95_hi_pts": null,
+          "ce_aligned": null,
+          "ce_blank": null,
+          "underpowered": true
+        }
+      ],
+      "char_bins_fine": [
+        {
+          "lo": 0,
+          "hi": 25,
+          "n_tokens": 1886,
+          "gain_pts": 8.48356309650053,
+          "se_cluster_pts": 0.5164441012528516,
+          "underpowered": false
+        },
+        {
+          "lo": 25,
+          "hi": 50,
+          "n_tokens": 1818,
+          "gain_pts": 0.27502750275027504,
+          "se_cluster_pts": 0.2207671933421411,
+          "underpowered": false
+        },
+        {
+          "lo": 50,
+          "hi": 75,
+          "n_tokens": 1830,
+          "gain_pts": 0.2185792349726776,
+          "se_cluster_pts": 0.23997289484677095,
+          "underpowered": false
+        },
+        {
+          "lo": 75,
+          "hi": 100,
+          "n_tokens": 1843,
+          "gain_pts": -0.32555615843733043,
+          "se_cluster_pts": 0.21507507785408397,
+          "underpowered": false
+        },
+        {
+          "lo": 100,
+          "hi": 125,
+          "n_tokens": 1807,
+          "gain_pts": -0.387382401770891,
+          "se_cluster_pts": 0.2172823537898026,
+          "underpowered": false
+        },
+        {
+          "lo": 125,
+          "hi": 150,
+          "n_tokens": 1882,
+          "gain_pts": -0.2656748140276302,
+          "se_cluster_pts": 0.17795883915906638,
+          "underpowered": false
+        },
+        {
+          "lo": 150,
+          "hi": 175,
+          "n_tokens": 1741,
+          "gain_pts": 0.11487650775416428,
+          "se_cluster_pts": 0.1620376550104523,
+          "underpowered": false
+        },
+        {
+          "lo": 175,
+          "hi": 200,
+          "n_tokens": 1775,
+          "gain_pts": 0.056338028169014086,
+          "se_cluster_pts": 0.22596049838041923,
+          "underpowered": false
+        },
+        {
+          "lo": 200,
+          "hi": 225,
+          "n_tokens": 1867,
+          "gain_pts": 0.0,
+          "se_cluster_pts": 0.18429265893637295,
+          "underpowered": false
+        },
+        {
+          "lo": 225,
+          "hi": 250,
+          "n_tokens": 1817,
+          "gain_pts": 0.0,
+          "se_cluster_pts": 0.23536613928397013,
+          "underpowered": false
+        },
+        {
+          "lo": 250,
+          "hi": 275,
+          "n_tokens": 1796,
+          "gain_pts": 0.16703786191536749,
+          "se_cluster_pts": 0.16987910012640342,
+          "underpowered": false
+        },
+        {
+          "lo": 275,
+          "hi": 300,
+          "n_tokens": 1894,
+          "gain_pts": -0.05279831045406547,
+          "se_cluster_pts": 0.20056998916724586,
+          "underpowered": false
+        },
+        {
+          "lo": 300,
+          "hi": 325,
+          "n_tokens": 1760,
+          "gain_pts": -0.056818181818181816,
+          "se_cluster_pts": 0.24129871583739426,
+          "underpowered": false
+        },
+        {
+          "lo": 325,
+          "hi": 350,
+          "n_tokens": 1791,
+          "gain_pts": 0.0,
+          "se_cluster_pts": 0.12821648313070588,
+          "underpowered": false
+        },
+        {
+          "lo": 350,
+          "hi": 375,
+          "n_tokens": 1804,
+          "gain_pts": -0.05543237250554324,
+          "se_cluster_pts": 0.16573417127493403,
+          "underpowered": false
+        },
+        {
+          "lo": 375,
+          "hi": 400,
+          "n_tokens": 1816,
+          "gain_pts": -0.22026431718061676,
+          "se_cluster_pts": 0.19732316193596086,
+          "underpowered": false
+        },
+        {
+          "lo": 400,
+          "hi": 425,
+          "n_tokens": 1798,
+          "gain_pts": 0.0,
+          "se_cluster_pts": 0.19516613928895996,
+          "underpowered": false
+        },
+        {
+          "lo": 425,
+          "hi": 450,
+          "n_tokens": 1886,
+          "gain_pts": 0.15906680805938495,
+          "se_cluster_pts": 0.18326194994181647,
+          "underpowered": false
+        },
+        {
+          "lo": 450,
+          "hi": 475,
+          "n_tokens": 1749,
+          "gain_pts": -0.17152658662092624,
+          "se_cluster_pts": 0.2274104491703507,
+          "underpowered": false
+        },
+        {
+          "lo": 475,
+          "hi": 500,
+          "n_tokens": 281,
+          "gain_pts": 0.0,
+          "se_cluster_pts": 0.4729837698404021,
+          "underpowered": false
+        }
+      ],
+      "char_bin_width": 25,
+      "K": {
+        "k_chars": 100,
+        "k_bucket": 4,
+        "status": "ok",
+        "baseline_gain_pts": 2.209570286024129,
+        "threshold_pts": 1.1047851430120645,
+        "baseline_n_tokens": 7377,
+        "k_chars_first_crossing": 100,
+        "k_lower_bound_chars": null,
+        "n_eligible_buckets_past_baseline": 16,
+        "baseline_gain_ci95_pts": [
+          1.8816914972972645,
+          2.5374490747509935
+        ],
+        "baseline_gain_significant": true,
+        "baseline_window_chars": 100,
+        "bootstrap": {
+          "n_boot": 300,
+          "status_counts": {
+            "ok": 296,
+            "censored_right": 4
+          },
+          "n_resolved": 296,
+          "ci_lo_chars": 100.0,
+          "ci_hi_chars": 100.0,
+          "median_chars": 100.0
+        },
+        "k_tokens_from_ratio": 48.49130132219902,
+        "k_tokens_empirical_median": 55.0
+      },
+      "K_alt_baseline25": {
+        "k_chars": 25,
+        "k_bucket": 1,
+        "status": "ok",
+        "baseline_gain_pts": 8.48356309650053,
+        "threshold_pts": 4.241781548250265,
+        "baseline_n_tokens": 1886,
+        "k_chars_first_crossing": 25,
+        "k_lower_bound_chars": null,
+        "n_eligible_buckets_past_baseline": 19,
+        "baseline_window_chars": 25,
+        "preregistered": false
+      }
+    }
+  },
+  "pos0_profile": {
+    "per_rung": {
+      "randstr-d3": {
+        "chars_per_page": 479.0,
+        "gain_pts": 68.0,
+        "se_pts": 3.821521535414603,
+        "ci95": [
+          60.50995542268548,
+          75.49004457731453
+        ],
+        "n_rows": 150,
+        "significant": true,
+        "pos0_4_gain_pts": 21.333333333333336,
+        "pos0_4_se_pts": 1.2212388424121863,
+        "pos0_4_significant": true
+      }
+    },
+    "vs_reference": {},
+    "vs_reference_pos0_4": {},
+    "reference": "randstr-d3",
+    "d5_vs_d3": null
+  },
+  "d5_vs_d3": {
+    "available": false,
+    "reason": "both d3 and d5 must be in --rungs"
+  },
+  "verdict": {
+    "final": "(C) SCAN FAILURE \u2014 the start of the page is read at every density; what fails is keeping place afterwards. H18 becomes the main line; more soft tokens will not help. NOTE: K could not corroborate this (see step 5) \u2014 the call rests on the position-0 profile alone.",
+    "checks": {
+      "rungs_with_significant_baseline_gain": [
+        "randstr-d3"
+      ],
+      "rungs_with_significant_pos0_gain": [
+        "randstr-d3"
+      ],
+      "pos0_monotone_decreasing_in_density": false,
+      "pos0_densest_vs_sparsest_significant_drop": false,
+      "pos0_4_densest_vs_sparsest_significant_drop": false,
+      "pos0_pattern": "C",
+      "rungs_with_measurable_K": [
+        "randstr-d3"
+      ],
+      "d5_gg_d3": null,
+      "K_trend": null,
+      "rungs_with_K_ge_400": [],
+      "primary_vs_K_conflict": false,
+      "final": "(C) SCAN FAILURE \u2014 the start of the page is read at every density; what fails is keeping place afterwards. H18 becomes the main line; more soft tokens will not help. NOTE: K could not corroborate this (see step 5) \u2014 the call rests on the position-0 profile alone."
+    },
+    "lines": [
+      "1. Does each rung read ANYTHING? (gate to pass before any K is interpreted)",
+      "     randstr-d3: 0-100-char gain +2.21 pts (95% CI [+1.88, +2.54]) -> READS | rows aligned>blank 99/150 (66%, sign p 9.2e-14) | Dperm +2.29% | CE-floor -0.003",
+      "2. PRIMARY DISCRIMINATOR \u2014 position-0 reading gain vs chars/page",
+      "     (C) scan predicts it STAYS HIGH at every density; (A) bandwidth predicts it DEGRADES as density rises.",
+      "     randstr-d3 (479 chars/page): pos-0 gain +68.00 +/- 3.82 pts 95% CI [+60.51, +75.49] n=150 -> significant",
+      "     => position-0 gain SURVIVES at the densest rung (randstr-d3: +68.00 pts) and is not significantly below the sparsest (randstr-d3: +68.00 pts) => the start of a dense page IS encoded; what fails is keeping place afterwards => (C) SCAN FAILURE.",
+      "3. SECONDARY \u2014 K, measurable on: randstr-d3",
+      "     randstr-d3: status ok, K = 100 chars, ~token 48.5",
+      "4. d5 vs d3 (same 400 chars/page, font 40 vs 14 => ~1.0 vs ~2.8 text lines per 48px patch):",
+      "     not evaluated (both d3 and d5 must be in --rungs)",
+      "5. Does K move with chars/page?",
+      "     UNDECIDABLE / UNDERPOWERED: K resolved on 1 rung(s) (randstr-d3), and the pre-registered discriminator is a comparison ACROSS rungs. A trend cannot be drawn through one point \u2014 falling back to the position-0 profile above.",
+      "6. K >= 400 chars anywhere (capacity not binding at mixture density)?",
+      "     no rung reaches K >= 400 chars (or K is unmeasurable there)"
+    ],
+    "caveats": [
+      "chars/token is ~constant across ALL rungs (see chars_per_token_realized), so within a target 'character position' and 'token index' are proportional. A K that is constant across rungs is therefore equally consistent with (C) a fixed token-index scan AND with a fixed-ABSOLUTE-CAPACITY reading of (A) bandwidth. The pre-registered mapping calls it (C); what the data strictly supports is 'the collapse point is invariant to page density', which rules out a density-proportional bandwidth account but not a fixed-capacity one. Extra leverage: if a short rung whose ENTIRE page fits inside the implied capacity still collapses at the same position, fixed-capacity is excluded.",
+      "The position-0 profile is the primary discriminator here BECAUSE K is undefined on any rung that never reads. It is not itself pre-registered; it is the pre-registered logic (does the collapse point move with density?) evaluated at the one position every rung can supply. Its weakness is the mirror image of K's: it says nothing about what happens deeper in the page, so a rung that reads position 0 and nothing else scores the same as one that reads throughout. Read it together with the per-position tables.",
+      "The pre-registered 0-100-char reference window is wider than d1's whole target (~29 chars) and covers ~84% of d2's (~119 chars): K is structurally UNMEASURABLE on those rungs, not merely null. Only d3/d4/d5 can carry the trend. K_alt_baseline25 is reported as a non-pre-registered sensitivity.",
+      "d1..d4 vary chars/page and target LENGTH together; only d3-vs-d5 varies one factor (font/lines-per-patch) at fixed density. A K trend across d1..d4 cannot separate 'denser page' from 'longer target'.",
+      "d3 and d5 draw byte-identical targets (same spec, same RNG stream), so that comparison is run PAIRED and is the sharpest in the ladder. Rungs of DIFFERENT density do not share targets beyond row 0 \u2014 each consumes a different number of letters from the one shared stream \u2014 so cross-density comparisons are unpaired and correspondingly less powerful; the printed MDE is the number to judge a null against."
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+[2026-07-29T06:00:44Z] waiting for in-flight PID 1468235 (H17 leg 280)
+[2026-07-29T06:02:42Z] [stage2] stage2 armed; waiting for stage 1
+[2026-07-29T07:00:27Z] [stage2] stage2 armed; waiting for stage 1
+[2026-07-29T07:09:57Z] [stage2] stage2 armed; waiting for stage 1
+[2026-07-29T07:59:45Z] PID 1468235 exited
+[2026-07-29T08:00:30Z] PROBE h17-d3-280-v0 budget=280 ckpt=data/checkpoints/h17-d3-280-v0/final
+[2026-07-29T08:02:13Z] PROBE h17-d3-280-v0 done rc=0
+[2026-07-29T08:02:13Z] TRAIN h17-d3-560-v0  (configs/h17_leg_560.yaml)
+[2026-07-29T11:09:32Z] TRAIN h17-d3-560-v0 done rc=0
+[2026-07-29T11:09:32Z] PROBE h17-d3-560-v0 budget=560 ckpt=data/checkpoints/h17-d3-560-v0/final
+[2026-07-29T11:11:51Z] PROBE h17-d3-560-v0 done rc=0
+[2026-07-29T11:11:51Z] TRAIN h17-d3-1120-v0  (configs/h17_leg_1120.yaml)
+[2026-07-29T15:10:30Z] TRAIN h17-d3-1120-v0 done rc=0
+[2026-07-29T15:10:30Z] PROBE h17-d3-1120-v0 budget=1120 ckpt=data/checkpoints/h17-d3-1120-v0/final
+[2026-07-29T15:13:46Z] PROBE h17-d3-1120-v0 done rc=0
+[2026-07-29T15:13:46Z] H17 THREE LEGS COMPLETE
+[2026-07-29T15:13:46Z] TRAIN h15-poisoned-p00-v0  (configs/h15_poisoned_p00.yaml)
+[2026-07-29T17:02:09Z] TRAIN h15-poisoned-p00-v0 done rc=0
+[2026-07-29T17:02:09Z] TRAIN h15-poisoned-p15-v0  (configs/h15_poisoned_p15.yaml)
+[2026-07-29T18:52:16Z] TRAIN h15-poisoned-p15-v0 done rc=0
+[2026-07-29T18:52:16Z] TRAIN h15-poisoned-p50-v0  (configs/h15_poisoned_p50.yaml)
+[2026-07-29T20:45:41Z] TRAIN h15-poisoned-p50-v0 done rc=0
+[2026-07-29T20:45:41Z] H15 THREE DOSES COMPLETE
+[2026-07-29T20:45:41Z] GPU_QUEUE_ALL_DONE
+[2026-07-29T20:46:00Z] [stage2] stage 1 complete, starting stage 2
+[2026-07-29T20:46:45Z] [stage2] TRAIN h16-gap-weighted-v0 (configs/h16_gap_weighted.yaml)
+[2026-07-30T03:00:13Z] [stage2] TRAIN h16-gap-weighted-v0 done rc=0
+[2026-07-30T03:00:13Z] [stage2] TRAIN h21-fontjitter-v0 (configs/h21_fontjitter.yaml)
+[2026-07-30T04:06:31Z] [stage3] stage3 armed (read-out queue); waiting for stage 2 to signal completion
+[2026-07-30T05:12:47Z] [stage2] TRAIN h21-fontjitter-v0 done rc=0
+[2026-07-30T05:12:47Z] [stage2] TRAIN h20-wide-560-v0 (configs/h20_leg1_wide_560.yaml)
+[2026-07-30T05:56:19Z] [stage2] TRAIN h20-wide-560-v0 done rc=1
+[2026-07-30T05:56:19Z] [stage2] TRAIN h20-wide-1120-v0 (configs/h20_leg2_wide_1120.yaml)
+[2026-07-30T06:00:57Z] [stage2] TRAIN h20-wide-1120-v0 done rc=1
+[2026-07-30T06:00:57Z] [stage2] GPU_QUEUE_STAGE2_DONE
+[2026-07-30T06:02:31Z] [stage3] gate cleared; free VRAM 17921 MiB. Settling 45 s.
+[2026-07-30T06:03:16Z] [stage3] RUN  blank-ce-guard -> data/eval/stage3-blank-ce-guard.json   (free VRAM 17921 MiB)
+[2026-07-30T06:03:30Z] [stage3] DONE blank-ce-guard rc=0 (wrote data/eval/stage3-blank-ce-guard.json)
+[2026-07-30T06:03:30Z] [stage3] H15 arm p00: checkpoint data/checkpoints/h15-poisoned-p00-v0/final
+[2026-07-30T06:03:31Z] [stage3] RUN  h15-p00-void-guard -> data/eval/h15-void-guard-p00.json   (free VRAM 17921 MiB)
+[2026-07-30T06:06:20Z] [stage3] DONE h15-p00-void-guard rc=0 (wrote data/eval/h15-void-guard-p00.json)
+[2026-07-30T06:06:20Z] [stage3] RUN  h15-p00-position-decay -> data/eval/hybrid-4lane-position-decay-h15-p00-deepval.json   (free VRAM 17921 MiB)
+[2026-07-30T06:08:50Z] [stage3] DONE h15-p00-position-decay rc=0 (wrote data/eval/hybrid-4lane-position-decay-h15-p00-deepval.json)
+[2026-07-30T06:08:50Z] [stage3] H15 arm p15: checkpoint data/checkpoints/h15-poisoned-p15-v0/final
+[2026-07-30T06:08:50Z] [stage3] RUN  h15-p15-void-guard -> data/eval/h15-void-guard-p15.json   (free VRAM 17921 MiB)
+[2026-07-30T06:11:47Z] [stage3] DONE h15-p15-void-guard rc=0 (wrote data/eval/h15-void-guard-p15.json)
+[2026-07-30T06:11:47Z] [stage3] RUN  h15-p15-position-decay -> data/eval/hybrid-4lane-position-decay-h15-p15-deepval.json   (free VRAM 17921 MiB)
+[2026-07-30T06:13:55Z] [stage3] DONE h15-p15-position-decay rc=0 (wrote data/eval/hybrid-4lane-position-decay-h15-p15-deepval.json)
+[2026-07-30T06:13:55Z] [stage3] H15 arm p50: checkpoint data/checkpoints/h15-poisoned-p50-v0/final
+[2026-07-30T06:13:55Z] [stage3] RUN  h15-p50-void-guard -> data/eval/h15-void-guard-p50.json   (free VRAM 17921 MiB)
+[2026-07-30T06:16:59Z] [stage3] DONE h15-p50-void-guard rc=0 (wrote data/eval/h15-void-guard-p50.json)
+[2026-07-30T06:16:59Z] [stage3] RUN  h15-p50-position-decay -> data/eval/hybrid-4lane-position-decay-h15-p50-deepval.json   (free VRAM 17921 MiB)
+[2026-07-30T06:19:12Z] [stage3] DONE h15-p50-position-decay rc=0 (wrote data/eval/hybrid-4lane-position-decay-h15-p50-deepval.json)
+[2026-07-30T06:19:12Z] [stage3] H16: checkpoint data/checkpoints/h16-gap-weighted-v0/final
+[2026-07-30T06:19:12Z] [stage3] RUN  h16-ablation -> data/eval/h16-ablation-gap-weighted.json   (free VRAM 17921 MiB)
+[2026-07-30T06:22:18Z] [stage3] DONE h16-ablation rc=0 (wrote data/eval/h16-ablation-gap-weighted.json)
+[2026-07-30T06:22:18Z] [stage3] RUN  h16-position-decay -> data/eval/hybrid-4lane-position-decay-h16-gap-weighted.json   (free VRAM 17921 MiB)
+[2026-07-30T06:24:24Z] [stage3] DONE h16-position-decay rc=0 (wrote data/eval/hybrid-4lane-position-decay-h16-gap-weighted.json)
+[2026-07-30T06:24:24Z] [stage3] RUN  h21-leg0 -> data/eval/h21-leg0.json   (free VRAM 17921 MiB)
+[2026-07-30T06:38:49Z] [stage3] DONE h21-leg0 rc=0 (wrote data/eval/h21-leg0.json)
+[2026-07-30T06:38:49Z] [stage3] H21 leg 1: checkpoint data/checkpoints/h21-fontmix-v0/final
+[2026-07-30T06:38:49Z] [stage3] RUN  h21-leg1 -> data/eval/h21-leg1.json   (free VRAM 8757 MiB)
+[2026-07-30T06:53:03Z] [stage3] DONE h21-leg1 rc=2 (wrote data/eval/h21-leg1.json)
+[2026-07-30T06:53:03Z] [stage3] SKIP h20-leg1-wide-560-v0 — no checkpoint under data/checkpoints/h20-leg1-wide-560-v0 (leg not trained)
+[2026-07-30T06:53:03Z] [stage3] SKIP h20-leg2-wide-1120-v0 — no checkpoint under data/checkpoints/h20-leg2-wide-1120-v0 (leg not trained)
+[2026-07-30T06:53:03Z] [stage3] H19 not probed — never trained (see gpu_queue_stage2.sh).
+[2026-07-30T06:53:03Z] [stage3] GPU_QUEUE_STAGE3_DONE  (free VRAM 17921 MiB)

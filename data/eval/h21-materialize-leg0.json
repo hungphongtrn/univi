@@ -1,0 +1,76 @@
+{
+  "mode": "leg0",
+  "root": "data/materialized/h21-fonts-v0",
+  "fonts": [
+    14,
+    18,
+    20,
+    24,
+    28,
+    31,
+    40,
+    52
+  ],
+  "val_rows": 300,
+  "seed": 1003407,
+  "targets_paired_rows_checked": 64,
+  "pixel_collisions": [],
+  "rungs": {
+    "randstr-f14": {
+      "font": 14,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f14/validation"
+    },
+    "randstr-f18": {
+      "font": 18,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f18/validation"
+    },
+    "randstr-f20": {
+      "font": 20,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f20/validation"
+    },
+    "randstr-f24": {
+      "font": 24,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f24/validation"
+    },
+    "randstr-f28": {
+      "font": 28,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f28/validation"
+    },
+    "randstr-f31": {
+      "font": 31,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f31/validation"
+    },
+    "randstr-f40": {
+      "font": 40,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f40/validation"
+    },
+    "randstr-f52": {
+      "font": 52,
+      "rows": 300,
+      "target_tokens_mean": 58.21,
+      "supervised_tokens_mean": 60.21,
+      "path": "data/materialized/h21-fonts-v0/randstr-f52/validation"
+    }
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "tokenizer_dir": "data/checkpoints/encoder-free-v0/best",
+  "max_length": 2048,
+  "soft_tokens_assumed": 280,
+  "rungs": {
+    "randstr-d1": {
+      "n_sampled": 64,
+      "target_chars": 29,
+      "target_letters": 25,
+      "original_token_length_stored": {
+        "min": 12,
+        "max": 16,
+        "mean": 14.65625
+      },
+      "original_token_length_recomputed": {
+        "min": 12,
+        "max": 16,
+        "mean": 14.65625
+      },
+      "stored_equals_recomputed": true,
+      "assembled_seq_len": {
+        "min": 311,
+        "max": 315,
+        "mean": 313.65625
+      },
+      "n_truncated_at_max_length": 0,
+      "supervised_tokens": {
+        "min": 14,
+        "max": 18,
+        "mean": 16.65625
+      },
+      "supervised_text_equals_target_plus_trailer": true,
+      "supervised_text_sample": "gbmdh qiavp zsnvn mjkvq nefrf<|im_end|>\n",
+      "floor_published_nats_per_tok": 5.597334624143558,
+      "floor_corrected_for_trailer_nats_per_tok": 4.890201182771455,
+      "observed_final_eval_loss": 4.994,
+      "obs_minus_published_floor": -0.6033346241435584,
+      "obs_minus_corrected_floor": 0.10379881722854467
+    },
+    "randstr-d2": {
+      "n_sampled": 64,
+      "target_chars": 119,
+      "target_letters": 100,
+      "original_token_length_stored": {
+        "min": 53,
+        "max": 63,
+        "mean": 58.625
+      },
+      "original_token_length_recomputed": {
+        "min": 53,
+        "max": 63,
+        "mean": 58.625
+      },
+      "stored_equals_recomputed": true,
+      "assembled_seq_len": {
+        "min": 352,
+        "max": 362,
+        "mean": 357.625
+      },
+      "n_truncated_at_max_length": 0,
+      "supervised_tokens": {
+        "min": 55,
+        "max": 65,
+        "mean": 60.625
+      },
+      "supervised_text_equals_target_plus_trailer": true,
+      "supervised_text_sample": "gbmdh qiavp zsnvn mjkvq nefrf qlupy hassm ankpv eefpy oltes uqsis qpaal zdxka tv",
+      "floor_published_nats_per_tok": 5.604652408349072,
+      "floor_corrected_for_trailer_nats_per_tok": 5.374179856530279,
+      "observed_final_eval_loss": 5.513,
+      "obs_minus_published_floor": -0.09165240834907173,
+      "obs_minus_corrected_floor": 0.1388201434697205
+    },
+    "randstr-d3": {
+      "n_sampled": 64,
+      "target_chars": 479,
+      "target_letters": 400,
+      "original_token_length_stored": {
+        "min": 223,
+        "max": 239,
+        "mean": 231.96875
+      },
+      "original_token_length_recomputed": {
+        "min": 223,
+        "max": 239,
+        "mean": 231.96875
+      },
+      "stored_equals_recomputed": true,
+      "assembled_seq_len": {
+        "min": 522,
+        "max": 538,
+        "mean": 530.96875
+      },
+      "n_truncated_at_max_length": 0,
+      "supervised_tokens": {
+        "min": 225,
+        "max": 241,
+        "mean": 233.96875
+      },
+      "supervised_text_equals_target_plus_trailer": true,
+      "supervised_text_sample": "gbmdh qiavp zsnvn mjkvq nefrf qlupy hassm ankpv eefpy oltes uqsis qpaal zdxka tv",
+      "floor_published_nats_per_tok": 5.60855983753472,
+      "floor_corrected_for_trailer_nats_per_tok": 5.570139666979427,
+      "observed_final_eval_loss": 5.634,
+      "obs_minus_published_floor": 0.025440162465280025,
+      "obs_minus_corrected_floor": 0.06386033302057292
+    },
+    "randstr-d4": {
+      "n_sampled": 64,
+      "target_chars": 1919,
+      "target_letters": 1600,
+      "original_token_length_stored": {
+        "min": 913,
+        "max": 945,
+        "mean": 928.046875
+      },
+      "original_token_length_recomputed": {
+        "min": 913,
+        "max": 945,
+        "mean": 928.046875
+      },
+      "stored_equals_recomputed": true,
+      "assembled_seq_len": {
+        "min": 1212,
+        "max": 1244,
+        "mean": 1227.046875
+      },
+      "n_truncated_at_max_length": 0,
+      "supervised_tokens": {
+        "min": 915,
+        "max": 947,
+        "mean": 930.046875
+      },
+      "supervised_text_equals_target_plus_trailer": true,
+      "supervised_text_sample": "gbmdh qiavp zsnvn mjkvq nefrf qlupy hassm ankpv eefpy oltes uqsis qpaal zdxka tv",
+      "floor_published_nats_per_tok": 5.611941019561086,
+      "floor_corrected_for_trailer_nats_per_tok": 5.605044864899279,
+      "observed_final_eval_loss": 5.658,
+      "obs_minus_published_floor": 0.04605898043891443,
+      "obs_minus_corrected_floor": 0.052955135100721584
+    },
+    "randstr-d5": {
+      "n_sampled": 64,
+      "target_chars": 479,
+      "target_letters": 400,
+      "original_token_length_stored": {
+        "min": 223,
+        "max": 239,
+        "mean": 231.96875
+      },
+      "original_token_length_recomputed": {
+        "min": 223,
+        "max": 239,
+        "mean": 231.96875
+      },
+      "stored_equals_recomputed": true,
+      "assembled_seq_len": {
+        "min": 522,
+        "max": 538,
+        "mean": 530.96875
+      },
+      "n_truncated_at_max_length": 0,
+      "supervised_tokens": {
+        "min": 225,
+        "max": 241,
+        "mean": 233.96875
+      },
+      "supervised_text_equals_target_plus_trailer": true,
+      "supervised_text_sample": "gbmdh qiavp zsnvn mjkvq nefrf qlupy hassm ankpv eefpy oltes uqsis qpaal zdxka tv",
+      "floor_published_nats_per_tok": 5.60855983753472,
+      "floor_corrected_for_trailer_nats_per_tok": 5.570139666979427,
+      "observed_final_eval_loss": 5.634,
+      "obs_minus_published_floor": 0.025440162465280025,
+      "obs_minus_corrected_floor": 0.06386033302057292
+    }
+  },
+  "trailer": {
+    "text": "<|im_end|>\\n",
+    "ids": [
+      151645,
+      198
+    ],
+    "n_tokens": 2
+  },
+  "shared_rng_stream": {
+    "randstr-d2_row0_equals_d1_rows_0_3_joined": true,
+    "randstr-d2_row0_prefix25_equals_d1_row0": true,
+    "randstr-d3_row0_equals_d1_rows_0_15_joined": true,
+    "randstr-d3_row0_prefix25_equals_d1_row0": true,
+    "randstr-d4_row0_equals_d1_rows_0_63_joined": true,
+    "randstr-d4_row0_prefix25_equals_d1_row0": true,
+    "d5_row0_equals_d3_row0": true
+  },
+  "duplicates_and_leakage": {
+    "randstr-d1": {
+      "n_train_checked": 2000,
+      "n_duplicate_targets_in_train_sample": 0,
+      "n_val": 500,
+      "n_duplicate_targets_in_val": 0,
+      "n_val_targets_seen_in_train_sample": 0
+    },
+    "randstr-d2": {
+      "n_train_checked": 2000,
+      "n_duplicate_targets_in_train_sample": 0,
+      "n_val": 500,
+      "n_duplicate_targets_in_val": 0,
+      "n_val_targets_seen_in_train_sample": 0
+    },
+    "randstr-d3": {
+      "n_train_checked": 2000,
+      "n_duplicate_targets_in_train_sample": 0,
+      "n_val": 500,
+      "n_duplicate_targets_in_val": 0,
+      "n_val_targets_seen_in_train_sample": 0
+    },
+    "randstr-d4": {
+      "n_train_checked": 2000,
+      "n_duplicate_targets_in_train_sample": 0,
+      "n_val": 500,
+      "n_duplicate_targets_in_val": 0,
+      "n_val_targets_seen_in_train_sample": 0
+    },
+    "randstr-d5": {
+      "n_train_checked": 2000,
+      "n_duplicate_targets_in_train_sample": 0,
+      "n_val": 500,
+      "n_duplicate_targets_in_val": 0,
+      "n_val_targets_seen_in_train_sample": 0
+    }
+  },
+  "d3_d5_eval_subsample": {
+    "n": 128,
+    "n_identical_targets": 128,
+    "note": "Trainer caps eval at 128 rows via shuffle(seed=42).select(range(128)); identical targets \u21d2 identical eval loss whenever the image is ignored."
+  }
+}

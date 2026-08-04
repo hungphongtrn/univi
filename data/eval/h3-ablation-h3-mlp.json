@@ -1,0 +1,19 @@
+{
+  "tag": "h3-mlp",
+  "checkpoint": "data/checkpoints/h3-randstr-mlp-v0/best",
+  "n_samples": 200,
+  "answer_only_ce_nats": {
+    "aligned": 4.031282140016556,
+    "permuted": 4.031264244318009,
+    "blank": 4.031285096406936
+  },
+  "teacher_forced_tok_acc": {
+    "aligned": 0.3231710688769817,
+    "permuted": 0.3229210689663887,
+    "blank": 0.3231710688769817
+  },
+  "delta_perm_rel": -4.439207657881778e-06,
+  "delta_blank_rel": 7.333623095137574e-07,
+  "no_reading_floor_nats": 5.613536419747557,
+  "mean_answer_tokens": 20.585
+}

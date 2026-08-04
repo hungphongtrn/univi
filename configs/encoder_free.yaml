@@ -1,0 +1,81 @@
+# configs/encoder_free.yaml — encoder-free VLM FULL run (A100-40GB).
+#
+# Qwen3-1.7B decoder (Unsloth FastModel, full_finetuning) reading images through
+# a from-scratch patch embedder — no pretrained vision encoder. Hand-written
+# PyTorch loop: bnb AdamW8bit, Liger fused-linear CE, Unsloth offloading
+# gradient checkpointing, FlashAttention-2, TF32 matmuls.
+#
+# Batch size chosen from the on-box probe (2026-07-22): micro-batch fits to B=96
+# (33.7 GiB); B=112 OOMs. BS=64 = 25.9 GiB leaves ~14 GiB headroom. Eval (no_grad)
+# is far lighter — B=64 = 15.5 GiB.
+#
+#   uv run python train_encoder_free.py --config configs/encoder_free.yaml
+#
+# Quick smoke first (recommended): add --max-steps 5
+
+model:
+  model_name: "unsloth/Qwen3-1.7B"
+  max_seq_length: 8192
+  load_in_4bit: true          # ignored under full_finetuning (loads bf16)
+  image_token: "<|image_pad|>"   # already in Qwen3 vocab → no embedding resize
+  chat_template: "auto"          # Qwen3's native template
+  image_size: 512             # resize-shorter + center-crop target (tutorial)
+  patch_size: 32              # 512 / 32 = 16 → 16×16 = 256 patches per image
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  subsets:                    # FULL train mixture (~2.96M rows)
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+    librispeech: ["train"]
+  validation_splits:          # held-out splits for the eval loop
+    fineweb-edu: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+    librispeech: ["validation"]
+
+training:
+  per_device_train_batch_size: 64   # knapsacks per micro-batch (probe: fits, 25.9 GiB)
+  per_device_eval_batch_size: 64    # eval is no_grad → lighter (15.5 GiB)
+  gradient_accumulation_steps: 1    # effective batch = 64 knapsacks (~131k tokens)
+  num_train_epochs: 1
+  max_steps: -1                     # 1 full epoch
+  max_length: 2048                  # knapsack length (tutorial's 2048)
+  learning_rate: 3.0e-4
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0                # gradient clipping cap
+  reset_position_ids: true          # restart RoPE positions per packed member
+  gradient_checkpointing: true      # Unsloth offload mode (set at model load)
+
+  # evaluation — small bounded held-out set from each subset validation split
+  validation_subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  max_eval_samples_per_subset: 128
+  eval_steps: 500                   # eval + best-checkpoint every 500 opt steps
+
+  logging_steps: 10
+  save_steps: 1000
+  output_dir: "data/checkpoints/encoder-free-v0"
+  seed: 3407
+
+  report_to: ["wandb"]
+
+wandb:
+  project: "univi-encoder-free"
+  entity: "yuuart"
+  run_name: "encoder-free-full-bs64"
+  tags: ["encoder-free", "qwen3-1.7b", "full", "bs64"]
+  mode: "online"

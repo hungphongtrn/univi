@@ -1,0 +1,70 @@
+# configs/hybrid_pretrained_spokendigits.yaml
+# PRETRAINED-vision hybrid on the PRIOR-PROOF spoken-digit AUDIO diagnostic.
+#
+# The audio analog of the random-string OCR test: transcribe a random sequence of
+# spoken digits (FSDD) from its log-mel spectrogram. Digits are uniform i.i.d., so
+# the pretrained Qwen LANGUAGE PRIOR gives NO shortcut (unlike librispeech English
+# transcripts) — the only way below the guessing floor is to READ the spectrogram.
+# This cleanly tests: does the frozen Gemma-12B vision → Qwen transfer read AUDIO?
+#
+# VISION FROZEN (freeze_vision: false               # TRAINABLE vision: spectrograms are OOD for Gemma vision, let it adapt
+# barely moved during the OCR run (rel-delta ~0), so freezing is free and makes this
+# the clean LLaVA recipe — train only the adapter + decoder. Drops ~50M params of
+# optimizer state; 2-group LR (adapter 3e-4, decoder 2e-5).
+#
+#   Launch SOLO:
+#     HF_HUB_OFFLINE=1 nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/hybrid_pretrained_spokendigits.yaml \
+#       > data/checkpoints/hybrid-pretrained-spokendigits-trainvis-v0-run.log 2>&1 &
+
+model:
+  vision_source: "google/gemma-4-12B-it"
+  text_source: "unsloth/Qwen3-1.7B"
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/spoken-digits-v0"
+  max_train_images: 4
+  subsets:
+    - "spoken-digits"
+  train_splits:
+    spoken-digits: ["train"]
+  validation_splits:
+    spoken-digits: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/hybrid-pretrained-spokendigits-trainvis-v0"
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 16
+  gradient_accumulation_steps: 4     # effective batch 64
+  num_train_epochs: 20
+  max_steps: 600                     # bounded diagnostic; watch early
+
+  freeze_vision: false               # TRAINABLE vision: spectrograms are OOD for Gemma vision, let it adapt
+  lr_adapter: 3.0e-4
+  lr_vision:  1.0e-4                 # higher (OOD adaptation); still < adapter 3e-4
+  lr_decoder: 2.0e-5
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "spoken-digits"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "hybrid-pretrained-spoken-digits-trainvision"
+  tags: ["hybrid", "pretrained-vision", "trainable-vision", "audio", "prior-proof", "spoken-digits"]

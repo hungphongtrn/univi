@@ -1,0 +1,18 @@
+# configs/hybrid_ablation.yaml — visual-grounding ablation for the issue-#6
+# hybrid model (random-init Gemma-vision-embedder + Qwen3-1.7B), against the
+# same per-subset validation splits used to train it. Used by
+# `univi.hybrid.ablation` (a thin wrapper around eval_ablation.py's
+# model-independent machinery).
+#
+# "base_model" here is NOT a pretrained checkpoint (there isn't one for this
+# architecture) -- it is a freshly random-initialized model built from the same
+# vision_source/text_source configs used to build the trained model, so the
+# ablation can report "training effect" = trained Δperm - random-init Δperm.
+base_model: "random:google/gemma-4-12B-it,data/hybrid/qwen3-1.7b"
+checkpoint_path: "data/checkpoints/hybrid-bounded-v0/checkpoint-3000"
+eval_datasets:
+  librispeech: "data/materialized/univi-3M-v0-split/librispeech/validation"
+  densefusion: "data/materialized/univi-3M-v0-split/densefusion/validation"
+  fineweb: "data/materialized/univi-3M-v0-split/fineweb-edu/validation"
+  smoltalk: "data/materialized/univi-3M-v0-split/smoltalk/validation"
+output: "data/eval/hybrid-ablation/results.json"
