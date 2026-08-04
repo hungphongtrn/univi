@@ -1,0 +1,96 @@
+# configs/h15_poisoned_p50.yaml
+# H15 — STRONG-DOSE ARM (poison rate 0.50).
+#
+# WHY A DOSE ABOVE THE PRE-REGISTERED 0.15. The doc claims p = 0.15 makes the
+# prior "actively wrong ... at all positions". In CHARACTER terms that is true
+# (every 6th-7th alphabetic char). In TOKEN terms — the unit the loss is
+# computed in — it is not: measured over 200 real rows
+# (scratchpad/h15_position_profile.py, data/eval/h15-position-profile.json), at
+# depth 20-50 only 9.68 of 30 tokens/row (32.3%) touch a poisoned character and
+# only 1.99 (6.6%) are ENTIRELY inside poisoned characters. So at p = 0.15 more
+# than two thirds of the tokens at depth remain fully prior-predictable, and a
+# null result would be unable to distinguish "the prior is not the constraint"
+# from "the dose was too weak".
+#
+# MEASURED at p = 0.50 (150 rows, cap 200, data/eval/h15-position-profile-p50.json):
+# at depth 20-50, **20.38 of 30 tokens/row (67.9%) touch** a poisoned character
+# and **6.45 (21.5%) are pure** — against 9.68 / 1.99 at p = 0.15, i.e. 3.2x the
+# power for the prior-proof pure-token metric. Word shapes, layout, punctuation
+# and real-text rendering are preserved (this is what distinguishes it from
+# `random-strings`, the p -> 1 limit already measured at K = 48.5 tokens, H13 §4).
+#
+# If GPU budget allows only two arms, run THIS one and p = 0.00 — the endpoints
+# carry the contrast; p = 0.15 is the interpolating rung.
+#
+# Measured lengths at p = 0.50: cap 64 -> 46.3 tok/row (92.6% readable),
+# cap 200 -> 175.0 tok/row; mix at 46k/4k rows = 76.5% readable.
+# Row loss at cap 64 is 1/200; at cap 48 it would be 72/200 (36%) — never use
+# cap 48 on this arm.
+#
+# Everything else — see the fully commented configs/h15_poisoned_p15.yaml.
+#
+# MATERIALIZE (CPU only, ~9 min, ~0.5 GB):
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-poisoned-p50 --subset-name poisoned-text \
+#       --poison-rate 0.5 --max-target-tokens 64 --max-pages 1 \
+#       --train-rows 46000 --val-rows 500 --num-proc 8
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-poisoned-p50 --subset-name poisoned-text-long \
+#       --poison-rate 0.5 --max-target-tokens 200 --max-pages 1 \
+#       --train-rows 4000 --val-rows 500 --num-proc 8
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-deepval-p50 --subset-name poisoned-text \
+#       --poison-rate 0.5 --max-target-tokens 1400 --max-pages 4 \
+#       --train-rows 1 --val-rows 500 --num-proc 8
+
+model:
+  vision_source: "google/gemma-4-12B-it"
+  text_source: "unsloth/Qwen3-1.7B"
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  init_from: "data/checkpoints/hybrid-pretrained-randstr-v0/final"
+  max_soft_tokens: 280
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h15-poisoned-p50"
+  max_train_images: 1
+  subsets:
+    - "poisoned-text"
+    - "poisoned-text-long"
+  validation_splits:
+    poisoned-text: ["validation"]
+    poisoned-text-long: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h15-poisoned-p50-v0"
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16
+  num_train_epochs: 20
+  max_steps: 400
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+  max_length: 1024
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+  log_blank_ce: true
+  do_eval: true
+  validation_subsets:
+    - "poisoned-text"
+    - "poisoned-text-long"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 4
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h15-poisoned-p50"
+  tags: ["hybrid", "pretrained-vision", "poisoned-text", "strong-dose", "h15"]

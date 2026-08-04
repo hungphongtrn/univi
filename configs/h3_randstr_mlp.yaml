@@ -1,0 +1,87 @@
+# configs/h3_randstr_mlp.yaml — encoder-free VLM, H3 escalation: MLP connector.
+#
+# CONTROLLED follow-up to configs/h3_randstr.yaml. H3 (linear Fuyu-style connector)
+# collapsed grounding to ZERO on the isolated random-string OCR task — aligned =
+# permuted = blank, the image was provably ignored (data/eval/h3-ablation-h3.json).
+# Pre-registered next step (stall ⇒ hyp B, capacity): give the from-scratch vision
+# path its own non-linear capacity so it isn't wholly out-competed by the pretrained
+# decoder's format-modeling shortcut.
+#
+# ONLY CHANGED VARIABLE vs H3: the connector.
+#   H3   : connector = linear  (Linear D→D, no non-linearity)
+#   here : connector = mlp     (Linear D→4D → GELU → Linear 4D→D)
+# Everything else is H3 EXACTLY: single LR 3e-4, no freeze, warm-start decoder +
+# lower embedder (ln1/fc/ln2/pos/ln3) from encoder-free-v0/best. The connector keys
+# change shape, so the strict=False embedder warm-start reuses everything up to the
+# connector and fresh-inits the MLP (check the "missing/unexpected" line in the log:
+# expect unexpected=[connector.weight,connector.bias], missing=[connector.0/2.*]).
+#
+# BOUNDED FAST TEST: max_steps 1000 (~9h) with eval every 100. Watch the first ~5
+# evals — if eval plateaus at ~2.21 with flat Δperm/Δblank like H3, kill early (the
+# MLP didn't help; escalate to a conv stem). If eval dives below 2.21 and post-hoc
+# Δblank rises, the connector was the bottleneck ⇒ let it finish, then re-run the
+# diagnostic (with --connector mlp).
+#
+#   Launch SOLO (host-RAM OOM lesson):
+#     HF_HUB_OFFLINE=1 nohup uv run python train_encoder_free.py \
+#       --config configs/h3_randstr_mlp.yaml \
+#       > data/checkpoints/h3-randstr-mlp-v0-run.log 2>&1 &
+#   Evaluate:
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/h3_ablation.py \
+#       --checkpoint data/checkpoints/h3-randstr-mlp-v0/best --tag h3-mlp --connector mlp
+
+model:
+  model_name: "data/checkpoints/encoder-free-v0/best"   # WARM-START decoder + lower embedder from H1
+  max_seq_length: 8192
+  load_in_4bit: true
+  image_token: "<|image_pad|>"
+  chat_template: "auto"
+  image_size: 512
+  patch_size: 32
+  connector: "mlp"                   # <<< the escalation (H3 used "linear")
+  mlp_ratio: 4
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h3-randstr-v0"
+  max_train_images: 4
+  subsets:
+    - "random-strings"
+  train_splits:
+    random-strings: ["train"]
+  validation_splits:
+    random-strings: ["validation"]
+
+training:
+  per_device_train_batch_size: 64
+  per_device_eval_batch_size: 64
+  gradient_accumulation_steps: 1
+  num_train_epochs: 20               # bounded by max_steps
+  max_steps: 1000                    # bounded fast test (~9h); watch early, kill if it replicates H3
+
+  # H1/H3 recipe EXACTLY: single LR, decoder trainable from step 0 --------
+  learning_rate: 3.0e-4              # both embedder and decoder (decoder_lr unset)
+  # decoder_lr:  (unset → reuse learning_rate)
+  # freeze_decoder_steps: 0          # (default) no warmup, no freeze
+  # -----------------------------------------------------------------------
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  reset_position_ids: true
+  gradient_checkpointing: true
+  output_dir: "data/checkpoints/h3-randstr-mlp-v0"
+
+  validation_subsets:
+    - "random-strings"
+  max_eval_samples_per_subset: 128
+  eval_steps: 100                    # frequent — reading should emerge fast if it will
+
+  logging_steps: 10
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h3-randstr-ocr-mlp-connector"
+  tags: ["encoder-free", "h3", "mlp-connector", "ocr-diagnostic"]

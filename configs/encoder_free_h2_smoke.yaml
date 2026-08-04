@@ -1,0 +1,53 @@
+# configs/encoder_free_h2_smoke.yaml — smoke test for the H2 recipe code path.
+#
+# Exercises the new freeze→unfreeze transition and the split param-group LRs on
+# the small smoke-v0 dataset: freeze_decoder_steps=2 with max_steps=6 means steps
+# 1-2 run decoder-frozen (embedder-only), then the decoder unfreezes at step 2 and
+# steps 3-6 run joint with the two LR groups. Eval + W&B off for speed.
+#
+#   HF_HUB_OFFLINE=1 uv run python train_encoder_free.py --config configs/encoder_free_h2_smoke.yaml
+
+model:
+  model_name: "unsloth/Qwen3-1.7B"
+  max_seq_length: 8192
+  load_in_4bit: true
+  image_token: "<|image_pad|>"
+  chat_template: "auto"
+  image_size: 512
+  patch_size: 32
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/smoke-v0"
+  max_train_images: 4
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+    librispeech: ["train"]
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 1
+  max_steps: 6
+  learning_rate: 3.0e-4
+  decoder_lr: 2.0e-5
+  freeze_decoder_steps: 2
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  reset_position_ids: true
+  eval_steps: 0
+  logging_steps: 1
+  save_steps: 1000
+  output_dir: "data/checkpoints/encoder-free-h2-smoke-v0"
+  seed: 3407
+  gradient_checkpointing: true
+  report_to: []

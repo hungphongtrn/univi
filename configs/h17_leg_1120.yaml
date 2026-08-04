@@ -1,0 +1,208 @@
+# configs/h17_leg_1120.yaml
+# H17 — LEG 2 (1120 soft tokens) of the three-leg soft-token-budget series.
+#
+# Spec: docs/hypothesis/todo/H17-raise-soft-token-budget.md, "The training design
+# is REPAIRED (2026-07-29)". (That doc names these files h17_d3_{280,560,1120};
+# they are written here as h17_leg_{280,560,1120} at the orchestrator's request.
+# Same three configs, different filename.)
+#
+# SUPERSEDES configs/h17_density_560.yaml / h17_density_1120.yaml, which encode
+# the five-rung ladder that killed H13 and MUST NOT be launched.
+#
+# ===========================================================================
+# THE INVARIANT: h17_leg_280 / _560 / _1120 are byte-identical except for
+#   - model.max_soft_tokens            (280 / 560 / 1120)   <- the ONLY variable
+#   - training.output_dir, wandb.run_name                    (bookkeeping)
+#   - per_device_*_batch_size / gradient_accumulation_steps  (VRAM only; the
+#     EFFECTIVE BATCH stays 64 in all three legs, which is the real invariant —
+#     the doc states per-device size is free)
+# Violating this makes every K number in the series uninterpretable.
+# ===========================================================================
+#
+# WHAT THIS LEG CHANGES — AND WHAT IT DELIBERATELY DOES NOT. 560 -> 1120 is
+# 2.06x the emitted tokens (529 -> 1089) with the OPTICAL CONTENT HELD FIXED BY
+# CONSTRUCTION: the processor's square-page resize target is a function of the
+# BUDGET ALONE (1104 px at 560, 1584 px at 1120), so both rungs are UPSAMPLES of
+# the same 1024 render and carry the same optical information. Whatever K does
+# across this leg is attributable to the number of soft tokens and to nothing
+# else. This is why the data MUST NOT be re-rendered at a larger canvas — that
+# would re-confound the one leg built to control optics. (A canvas raise survives
+# only as the doc's conditional third arm, and only if leg 2 is flat while leg 1
+# scales.)
+#
+# Pre-registered bar: K must rise >= 1.73x (sqrt 3) on this leg too, compounding
+# to >= 3x across the full 4.25x range. Report a partial rise (between 1x and
+# 1.73x) as PARTIAL, never as confirmation of (A').
+#
+# RUN ORDER: LAST. Run 280 -> 560 first. A null here without the 560 rung
+# licenses nothing about the architecture — that is the confound this three-leg
+# design exists to remove.
+#
+# OOD HANDICAP IS LARGEST HERE. H07 only ever exercised position ids 0-15; this
+# leg runs a 33x33 grid to position id 32. Measured with no retraining, the H07
+# checkpoint at 1120 reads NOTHING on d3 (Delta-perm +0.01%) and its Delta-blank
+# goes NEGATIVE (-13.13%) — a blank page beats the real one. That is why the
+# budget must be a TRAINING variable, and why the step-400 hard bar below exists.
+#
+# LANE: randstr-d3 ONLY (479 chars/page, ~234 supervised tokens/row, K ~= 48.5
+# under H07). NOT the five-rung ladder. H13's collapse was token-weighted
+# gradient share — rows were balanced 20k/rung but loss is normalised per
+# supervised token, so d4 alone supplied 63.04% of the gradient and 85.8% of all
+# supervised tokens lay beyond the ~48-token scan depth, where the loss-minimising
+# behaviour is to emit the uniform-letter marginal. A single-length lane makes
+# token-weighted share uniform across rows BY CONSTRUCTION, so nothing has to be
+# reweighted (and nothing should be — a weighting scheme is a second variable).
+# d2/d4 are still PROBED post-hoc at every budget, at zero training cost.
+#
+# WARM-START (model.init_from): the residual risk is INSIDE the row — 79.5% of
+# d3's supervised tokens still lie past depth 48 (measured below). H07's
+# checkpoint already reads at Delta-perm +114.7% on randstr (+113.84% re-measured
+# by H13 on d1); starting there removes the bootstrap lottery that H13 lost.
+# train_pretrained.py loads WEIGHTS ONLY — fresh optimizer, fresh cosine schedule.
+#
+# ---------------------------------------------------------------------------
+# KILL GATE (two-stage, pre-registered — copied verbatim from the H17 doc).
+# Ablate on randstr-d3/validation. H07 reached Delta-perm +27.4% by step 200 from
+# a COLD adapter at its native budget.
+#
+#   * Step 200 — progress check. Delta-perm on d3 must be > +1.0% AND above the
+#     same run's step-100 value (reading is being established, not destroyed —
+#     the H05 mode).
+#   * Step 400 — hard bar. Delta-perm on d3 must reach >= +3.05%, the reading
+#     this same init already achieves at its native 280 budget.
+#
+# The bar is ABSOLUTE, not relative to step 0: step-0 Delta-perm was measured at
+# +3.05% (280), +0.03% (560), +0.01% (1120), so anchoring to it would make the
+# gate vacuous at exactly the two legs it exists to protect.
+# Fallback if the gate fires: add a 20% d1 anchor — but then ALL THREE legs must
+# be re-run with that lane, or the series is broken.
+# ---------------------------------------------------------------------------
+#
+#   Launch SOLO (never alongside another GPU job — the encoder-free host-RAM OOM):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h17_leg_1120.yaml \
+#       > data/checkpoints/h17-d3-1120-v0-run.log 2>&1 &
+#
+#   Gate read-out at steps 100 / 200 / 400 (Delta-perm, NOT eval CE):
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/hybrid_pretrained_ablation.py \
+#       --checkpoint data/checkpoints/h17-d3-1120-v0/checkpoint-200 \
+#       --val-dataset data/materialized/h13-density-v0/randstr-d3/validation \
+#       --floor data/materialized/h13-density-v0/randstr-d3/floor.json \
+#       --tag h17-d3-1120-step200 --max-length 4096
+#
+#   Final read-out — K, the discriminator (NEVER state a criterion in eval CE):
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/h13_analyze.py \
+#       --checkpoint data/checkpoints/h17-d3-1120-v0/final \
+#       --rungs randstr-d2 randstr-d3 randstr-d4 --max-length 4096
+#     (--max-soft-tokens is inferred from the checkpoint's recorded budget; do NOT
+#      override it. --max-length 4096 IS required: the probes default to 2048 and
+#      a d4 probe row at 1120 is 1089 + 932 + 32 ~= 2053, over the line.)
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+  # ---- THE ONLY CHANGED VARIABLE ACROSS THE THREE LEGS ----------------------
+  # Verified CPU-side on real d3 pages (scratchpad/h17_config_verify.py ->
+  # data/eval/h17-config-verification.json): budget 1120 EMITS 1089 soft tokens
+  # on a 33x33 grid, max position id 32, 1024x1024 page resized to 1584x1584
+  # (1.55x UP — interpolated, no new optical information over 560). The budget
+  # and the emitted count are different numbers.
+  max_soft_tokens: 1120
+  # ---------------------------------------------------------------------------
+
+  # WARM-START from the H07 checkpoint: weights only, fresh optimizer + schedule.
+  # Verified CPU-side (no GPU, no weights loaded onto a device): the checkpoint
+  # holds 322 tensors, the model has 323, and the only difference is the tied
+  # language_model.lm_head.weight that Qwen3 never serializes and that
+  # train_pretrained.py explicitly tolerates. Zero unexpected, zero shape
+  # mismatch. NO TENSOR IS SHAPED BY max_soft_tokens — the state dict is
+  # bit-for-bit loadable at 280, 560 and 1120 alike. (vision_tower.pos_embedding
+  # is (1120, 2, 3840), but that 1120 is mm_posemb_size, the position-index
+  # TABLE, not the soft-token budget; it is the same shape at every budget. What
+  # DOES change is which of its rows are exercised: max position id 15 / 22 / 32.
+  # H07 only ever trained rows 0-15, which is the pre-registered OOD handicap.)
+  init_from: "data/checkpoints/hybrid-pretrained-randstr-v0/final"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  # H13's data UNCHANGED (canvas 1024). Re-rendering at a larger canvas would
+  # re-confound leg 2 (which exists to hold optics fixed), shift chars/page by
+  # +5-8%, and break comparability with H13's 280-token K values.
+  path: "data/materialized/h13-density-v0"
+  max_train_images: 4                # inert: every d3 row is single-image
+  subsets:
+    - "randstr-d3"
+  train_splits:
+    randstr-d3: ["train"]
+  validation_splits:
+    randstr-d3: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h17-d3-1120-v0"
+
+  # VRAM (estimated, CPU-side; see data/eval/h17-config-verification.json.vram):
+  # 1.778B params bf16 + bf16 grads + AdamW8bit state = 9.93 GB static; logits
+  # dominate the rest because transformers' ForCausalLMLoss upcasts the full
+  # (B, S, 151670) logit tensor to fp32. At B=2, S_max=1358 -> ~16.0 GB
+  # (~16.8 GB on the pessimistic 14 B/logit accounting), under the 26 GB ceiling.
+  # B=4 -> ~21.3 GB (feasible, ~1.6x faster, but only ~4.7 GB of margin);
+  # B=8 -> ~31.7 GB, OVER. Effective batch stays 64.
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 32    # effective batch 64 — H07 exposure, the invariant
+  num_train_epochs: 20               # inert; max_steps governs
+  max_steps: 500                     # 500 * 64 = 32,000 rows = 1.6 epochs of the 20k split
+  # KNOWN, ACCEPTED CAVEAT: the doc asks for d3 to be re-materialized at 40k
+  # train rows so the run stays under one epoch (H14 does the same). That has
+  # NOT been done — data/materialized/h13-density-v0/randstr-d3/train holds
+  # 20,000 rows, so this is 1.6 epochs and rows are seen ~1.6x. Targets are
+  # 400 uniform random letters, so memorization is a weak confound rather than
+  # a fatal one, and it is IDENTICAL across all three legs, so it cannot
+  # manufacture a K trend. Re-materialize (~0.4 h CPU, offline) if a clean
+  # sub-epoch run is wanted — but then re-run ALL THREE legs, not one.
+
+  # 3-group LR (adapter > vision > decoder), NO freeze — H07's recipe verbatim.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  # MEASURED, not guessed. univi.trainer._filter_training_tokens estimates a row
+  # as original_token_length + n_images*image_token_budget(max_soft_tokens) + 256
+  # and SILENTLY DROPS overflowing rows. On randstr-d3 (20,000 train / 500 val)
+  # the max estimate is 788 @280, 1068 @560, 1628 @1120, and the max ASSEMBLED
+  # sequence (real Qwen3 tokenizer through HybridCollator._build_row) is 525 /
+  # 798 / 1358. At 4096 all three budgets retain 20000/20000 and 500/500 —
+  # 100.00%, zero collator truncation — so all three legs train and evaluate on
+  # IDENTICAL data. 4096 rather than the just-sufficient 2048 because the repair
+  # moved where the trap bites, it did not remove it: reintroduce d4, or run a
+  # probe at its 2048 default, and rows vanish again. Costs nothing —
+  # HybridCollator pads to the BATCH max, not to max_length.
+  max_length: 4096
+
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "randstr-d3"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50                     # trajectory ONLY — eval CE is not the criterion
+  # save_steps 100 exists to serve the kill gate: the gate needs CHECKPOINTS at
+  # 100, 200 and 400 to ablate, not eval losses. save_total_limit 6 keeps all
+  # five (100..500) plus room for the best-model bookkeeping. ~6.7 GB each.
+  save_steps: 100
+  save_total_limit: 6
+  logging_steps: 10
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h17-d3-1120-leg2"
+  tags: ["hybrid", "pretrained-vision", "soft-token-budget", "prior-proof", "h17", "d3-only", "warm-start"]

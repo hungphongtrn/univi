@@ -1,0 +1,102 @@
+# configs/h13_density.yaml
+# H13 — DENSITY LADDER. Separates (A) bandwidth from (C) scan.
+#
+# H11 found the positional reading decay appears at the SAME token positions on
+# randstr (25 chars/page) and fineweb (2832 chars/page) — a ~100x density gap.
+# That is the signature of a missing scan (C), not a bandwidth ceiling (A). But
+# randstr targets are only ~14.5 tokens long, so we have never observed a DEEP
+# position on a prior-proof lane. This ladder varies chars/page and target length
+# independently on a lane with zero language shortcut.
+#
+#   rung  letters/page  ~answer tokens  font  lines/48px patch
+#   d1      25            ~15           14    ~2.8   (replicates H07, +115% Dperm)
+#   d2     100            ~60           14    ~2.8
+#   d3     400           ~230           14    ~2.8
+#   d4    1600           ~900           14    ~2.8   (approaches fineweb density)
+#   d5     400           ~230           40    ~1.0   (d3's density, line-demux isolated)
+#
+# DISCRIMINATOR: K = the character position beyond which positional reading gain
+# drops below 50% of the 0-100-char gain.
+#   K scales with density        => (A) bandwidth  => H17 is the fix
+#   K fixed at same token index  => (C) scan       => H18 becomes the main line
+#   d5 >> d3                     => lines-per-patch demux => fix render geometry (free)
+#
+# Recipe is H07's EXACTLY (the one that read at +115%): 3-group LR, NO freeze.
+# The only changed variable vs H07 is the data ladder.
+#
+#   Launch SOLO:
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h13_density.yaml \
+#       > data/checkpoints/h13-density-v0-run.log 2>&1 &
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h13-density-v0"
+  max_train_images: 4
+  subsets:
+    - "randstr-d1"
+    - "randstr-d2"
+    - "randstr-d3"
+    - "randstr-d4"
+    - "randstr-d5"
+  train_splits:
+    randstr-d1: ["train"]
+    randstr-d2: ["train"]
+    randstr-d3: ["train"]
+    randstr-d4: ["train"]
+    randstr-d5: ["train"]
+  validation_splits:
+    randstr-d1: ["validation"]
+    randstr-d2: ["validation"]
+    randstr-d3: ["validation"]
+    randstr-d4: ["validation"]
+    randstr-d5: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h13-density-v0"
+  # d4 rows are ~900 answer tokens (vs 15 for d1), so the per-device batch is cut
+  # 16 -> 4 to stay inside the 26 GB VRAM budget; accum is raised to hold the
+  # effective batch at 64, matching H07 exposure.
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16    # effective batch 64
+  num_train_epochs: 20
+  max_steps: 1000
+
+  # 3-group LR (adapter > vision > decoder), NO freeze — H07's recipe verbatim.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  max_length: 2048                   # d4: 280 soft tokens + ~900 answer + prompt
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "randstr-d1"
+    - "randstr-d2"
+    - "randstr-d3"
+    - "randstr-d4"
+    - "randstr-d5"
+  max_eval_samples_per_subset: 128
+  eval_steps: 100
+  logging_steps: 10
+  save_steps: 250
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h13-density-ladder"
+  tags: ["hybrid", "pretrained-vision", "density-ladder", "prior-proof", "h13"]

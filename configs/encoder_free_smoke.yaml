@@ -1,0 +1,50 @@
+# configs/encoder_free_smoke.yaml — encoder-free VLM smoke run.
+#
+# Port of HuggingFace M4's "Train Your Own Encoder-Free VLM in $100" onto the
+# Univi materialized mixture: a Qwen 3 1.7B decoder (Unsloth FastModel,
+# full_finetuning) reads images through a tiny from-scratch patch embedder — no
+# pretrained vision encoder. Trained with a hand-written PyTorch loop, bnb
+# AdamW8bit, and Liger fused-linear cross-entropy.
+#
+#   uv run python train_encoder_free.py --config configs/encoder_free_smoke.yaml --max-steps 20
+
+model:
+  model_name: "unsloth/Qwen3-1.7B"
+  max_seq_length: 8192
+  load_in_4bit: true          # ignored by Unsloth under full_finetuning (loads bf16)
+  image_token: "<|image_pad|>"   # already in Qwen3 vocab → no embedding resize
+  chat_template: "auto"          # "auto" = Qwen3's native template; else Unsloth name
+  image_size: 512             # resize-shorter + center-crop target (tutorial)
+  patch_size: 32              # 512 / 32 = 16 → 16×16 = 256 patches per image
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    librispeech: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+
+training:
+  per_device_train_batch_size: 1   # knapsacks per micro-batch
+  gradient_accumulation_steps: 8
+  max_steps: 20
+  max_length: 2048                 # knapsack length (tutorial's 2048)
+  learning_rate: 3.0e-4
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  reset_position_ids: true         # restart RoPE positions per packed member
+  logging_steps: 1
+  save_steps: 1000
+  output_dir: "data/checkpoints/encoder-free-smoke-v0"
+  seed: 3407
+  gradient_checkpointing: true

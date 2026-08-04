@@ -1,0 +1,307 @@
+# configs/h20_librispeech_1120.yaml
+# H20 — AUDIO NEEDS <=120 ms/token-column TO TRANSCRIBE.
+# Pre-registration: docs/hypothesis/todo/H20-audio-phoneme-resolution.md
+#
+# At 280 soft tokens a spectrogram page is 244 ms per token-column, against
+# phonemes of 50-150 ms. Spoken DIGITS survive that coarseness (H08, Dperm
+# +134.8%); continuous librispeech does not (H09 +12.9% with ZERO phonetic
+# correspondence in decodes, H10 position-0 reading gain -12.7 pts). This run
+# quadruples the budget to 1120 -> 120.5 ms/column (measured: 1079 soft tokens
+# in an 83x13 grid for a 1000x160 spectrogram page, exactly as H17 reports) and
+# asks whether phonetic reading appears.
+#
+# ###########################################################################
+# SUPERSEDED 2026-07-29 — DO NOT LAUNCH. Use instead:
+#     configs/h20_leg1_wide_560.yaml   (leg 1: 2000x160 @ 560,  498 tok/page,
+#                                       120.5 ms/col, 13.3 mel bins/cell)
+#     configs/h20_leg2_wide_1120.yaml  (leg 2: 2000x160 @ 1120, 1062 tok/page,
+#                                        84.7 ms/col,  8.9 mel bins/cell)
+# The wide render those two need now EXISTS:
+#     data/materialized/h20-audio-wide-v0
+# built by data/preprocessing/widen_audio_pages.py, and every geometry figure
+# below is confirmed on real widened pages in data/eval/h20-wide-verify.json.
+#
+# This file's arm (1000x160 @ 1120) is DOMINATED: 1079 tokens/page for
+# 120.5 ms/column, where leg 1 buys the same 120.5 ms/column for 498 tokens and
+# leg 2 buys 84.7 ms/column for 1062. There is no budget at which this render
+# wins. It is kept only as the record of what was pre-registered on 2026-07-28.
+#
+# It also carries two settings the legs deliberately dropped:
+#   * gap_weighted_loss: true — H16 is still TODO and has never been run;
+#     enabling an unvalidated objective change alongside the render change makes
+#     a null uninterpretable. The legs run stock CE with log_blank_ce as
+#     instrumentation only.
+#   * per_device_eval_batch_size: 2 at 1120 — the eval selection can draw a
+#     4-page librispeech row (4 x 1062 + 167 + 21 = 4436 tokens), which at
+#     batch 2 is ~26.5 GiB, over the 26 GB ceiling.
+# ###########################################################################
+#
+# ---------------------------------------------------------------------------
+# READ FIRST — THIS FILE RUNS THE **DOMINATED** ARM (2026-07-28)
+# ---------------------------------------------------------------------------
+# Direct measurement of the processor's audio geometry
+# (scratchpad/h20_audio_resolution.py -> data/eval/h20-audio-resolution.json)
+# revised H20's design after this config was written:
+#
+#   * The 1000x160 page is UPSAMPLED at every budget (1.968x time / 1.800x freq
+#     even at 280), so the budget ladder supplies ZERO new optical information;
+#     a round-trip of the model-visible page back to 1000x160 costs 3.288% of
+#     the page sd at 280 and 3.268% at 1120 — flat.
+#   * Time columns scale as sqrt(budget) (41 -> 59 -> 83), so 280 -> 1120 is a
+#     2.02x time-resolution gain, NOT 4.25x.
+#   * The render's ASPECT RATIO moves ms/column exactly as hard, at no token
+#     cost. On a 2000x160 render, budget 1120 gives 118x9 = 1062 tokens/page at
+#     84.7 ms/column — FEWER tokens than this file's 1079 and 1.42x finer.
+#
+# So the geometry this file trains on (1000x160 @ 1120) is dominated: same
+# sequence cost, coarser time axis. The revised design is:
+#   leg 1  2000x160 @  560 -> 498 tok/page, 120.5 ms/col, 13.3 mel bins/cell
+#                            (= today's frequency granularity — the only
+#                             single-variable arm available)
+#   leg 2  2000x160 @ 1120 -> 1062 tok/page, 84.7 ms/col, 8.9 mel bins/cell
+#
+# TO RUN THE REVISED DESIGN, materialize the wide render first (CPU only, NO
+# audio corpus needed: a LANCZOS stretch of the stored 1000x160 PNG differs from
+# a from-audio re-render at output_width 2000 by 0.72% of the page sd), then
+# change exactly two lines below:
+#   dataset.path:            data/materialized/h20-audio-wide-v0
+#   model.max_soft_tokens:   560 (leg 1)  /  1120 (leg 2, unchanged)
+# Until that root exists this file is left LAUNCHABLE as-is, running the
+# original arm. It is not wrong — it is just the expensive way to reach
+# 120.5 ms/column.
+#
+# PRE-REGISTERED READ (do not move the goalposts):
+#   Confirms: position-0 reading gain > +10 pts (currently -12.7)
+#             AND Dblank >= +30%
+#             AND greedy decodes show NONZERO word-level overlap with targets
+#                 (currently zero -- the model only tracks utterance duration).
+#   Refutes:  decodes still show no phonetic correspondence at 120 ms/column =>
+#             the vision path cannot represent speech at any budget we can
+#             afford, and audio needs a different front-end, not a finer render.
+#
+#   Launch SOLO (never alongside another GPU job -- the encoder-free host-RAM OOM):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h20_librispeech_1120.yaml \
+#       > data/checkpoints/h20-librispeech-1120-v0-run.log 2>&1 &
+#
+#   Read-out (the decisive measurements are the probes, NOT eval CE):
+#     scratchpad/hybrid_pretrained_ablation.py        (Dperm / Dblank)
+#     scratchpad/hybrid_4lane_position_decay.py       (position-0 reading gain)
+#     scratchpad/hybrid_4lane_generate.py             (greedy decodes / word overlap)
+#     Do NOT pass --max-soft-tokens: every probe defaults to the CHECKPOINT's
+#     recorded budget, and overriding it reads pixels at a geometry the model
+#     never trained on.
+#
+# ---------------------------------------------------------------------------
+# DATASET ROOT — why it is a new path
+# ---------------------------------------------------------------------------
+# librispeech lives in data/materialized/univi-3M-v0-split, spoken-digits in
+# data/materialized/spoken-digits-v0, and univi.trainer._load_local takes ONE
+# `dataset.path`. `data/materialized/h20-audio-v0` is therefore a thin merge
+# root: SYMLINKS to both subset dirs (no data copied) + a merged manifest.
+#
+# It also carries `spoken-digits-15pct/train`, a deterministic 18,355-row
+# subsample (shuffle seed 42) of the 30,000-row spoken-digits train split.
+# REASON: `dataset.max_train_rows_per_subset` is a SINGLE GLOBAL cap applied to
+# every lane, so it cannot express "librispeech 85% / spoken-digits 15%" -- the
+# natural mixture would be 30000/134014 = 22.4% spoken digits. The subsample
+# gives 18355/(18355+104014) = 15.00%, which is what H20 asks for.
+#
+# Rebuild the root from scratch:
+#   mkdir -p data/materialized/h20-audio-v0
+#   ln -sfn "$PWD/data/materialized/univi-3M-v0-split/librispeech"   data/materialized/h20-audio-v0/librispeech
+#   ln -sfn "$PWD/data/materialized/spoken-digits-v0/spoken-digits"  data/materialized/h20-audio-v0/spoken-digits
+#   # then: load spoken-digits/train, .shuffle(seed=42).select(range(18355)),
+#   #       .flatten_indices().save_to_disk(".../h20-audio-v0/spoken-digits-15pct/train")
+#   # and write manifest.json mapping config_name spoken-digits -> that path.
+# The merged manifest.json in that root documents all of this.
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached) -> Gemma4UnifiedVisionConfig
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder (weights cached)
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+  # ---- THE HYPOTHESIS ------------------------------------------------------
+  # 280 -> 1120. MEASURED on real pages from both lanes with the vendored
+  # Gemma4UnifiedImageProcessor (CPU), 46 librispeech + 24 spoken-digits pages,
+  # every one of them 1000x160:
+  #     280  -> 1968x288, grid 41x6  =  246 tok, max pos 40/5, 243.9 ms/column
+  #     560  -> 2832x432, grid 59x9  =  531 tok, max pos 58/8, 169.5 ms/column
+  #     1120 -> 3984x624, grid 83x13 = 1079 tok, max pos 82/12, 120.5 ms/column
+  # Max position ids sit far inside the pretrained factorized position table's
+  # 1120 rows, so nothing is extrapolated. The grid HAS 41/59/83 time columns,
+  # so "ms per token-column" is a measured cell time-extent, not a fiction --
+  # but the columns grow as sqrt(budget), so 4.25x the budget is 2.02x the time
+  # resolution. Set 560 for leg 1 (only on the 2000x160 render; on THIS render
+  # 560 gives 169.5 ms/column and is not a rung of the revised design).
+  max_soft_tokens: 1120
+  # --------------------------------------------------------------------------
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h20-audio-v0"
+  # Librispeech TRAIN tops out at 3 pages (measured histogram {1: 20548,
+  # 2: 83449, 3: 17}); only the VALIDATION split reaches 4 ({1: 2136, 2: 506,
+  # 3: 52, 4: 9}). 4 keeps every row of both. See the max_length note below.
+  max_train_images: 4
+  subsets:
+    - "librispeech"
+    - "spoken-digits"
+  train_splits:
+    librispeech: ["train"]
+    spoken-digits: ["train"]
+  validation_splits:
+    librispeech: ["validation"]
+    spoken-digits: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h20-librispeech-1120-v0"
+
+  # ---- VRAM / batch --------------------------------------------------------
+  # PEAK MUST STAY UNDER 26 GB, AND THE LAUNCHER MUST CONFIRM IT EMPIRICALLY
+  # (watch nvidia-smi over the first ~20 steps).
+  #
+  # Two multipliers stack here. (1) 4x the soft tokens: measured assembled
+  # sequence lengths at 1120 are ~1127 for spoken-digits (always 1 page) and
+  # min/mean/max 1128/2063/2262 for librispeech over a 48-row sample, up to
+  # ~3400 for the 17 three-page rows -- against ~294/~536 at 280. (2) the H16
+  # blind branch below adds a second forward pass; it is forward-only and its
+  # logits are freed before the aligned graph exists, so the cost is ~+35%
+  # wall-clock rather than +35% memory, but it does add a transient full-logits
+  # activation (batch x seq x 151936 vocab).
+  #
+  # Reference points: the 4-lane run at per_device 16 / seq<=2048 already sat at
+  # ~29 GB; H16 (blind branch, fineweb, seq<=2048) chose 4 x accum 16. H20's
+  # sequences are comparable to H16's and it runs the same blind branch, so it
+  # takes the same setting. EFFECTIVE BATCH 64 IS THE INVARIANT (H07/H09/H13/H16
+  # exposure); per-device size is free -- if 26 GB is exceeded, halve to 2 and
+  # double accum to 32.
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 2      # eval has no gradient-checkpointing relief
+                                     # AND runs the blank forward (log_blank_ce)
+  gradient_accumulation_steps: 16    # effective batch 64
+  # --------------------------------------------------------------------------
+
+  num_train_epochs: 20
+  max_steps: 800                     # top of H20's 600-800 band; 51,200 examples
+                                     # seen ~ 43.5k librispeech + 7.7k digits.
+                                     # Save every 200 so a 600-step read exists.
+
+  # TRAINABLE VISION IS NOT OPTIONAL (H08): with the vision tower frozen the
+  # spoken-digit lane sat flat at the floor and never read -- spectrograms are
+  # out-of-distribution for Gemma's vision pretraining, so frozen features do
+  # not encode them and no adapter can recover it. lr_vision matches the run
+  # that DID read audio (hybrid_pretrained_spokendigits_trainvis).
+  freeze_vision: false
+  lr_adapter: 3.0e-4                 # from-scratch bridge — fastest
+  lr_vision:  1.0e-4                 # pretrained Gemma embedder — OOD adaptation
+  lr_decoder: 2.0e-5                 # pretrained Qwen3 — refine, don't overwrite
+
+  # ---- H16 gap-weighted loss ----------------------------------------------
+  # librispeech's English transcripts are EXACTLY the prior-shortcut lane H16
+  # was built for: H10 showed reading is purchased only where the prior fails,
+  # and on librispeech the prior almost never fails, so unweighted CE is
+  # dominated by tokens the decoder gets for free. Reweighting by the per-token
+  # blind-branch gap puts the gradient on the tokens where the spectrogram
+  # actually has to supply something.
+  gap_weighted_loss: true
+  gap_beta: 1.0
+  log_blank_ce: true                 # THE GUARD, and it is pre-registered:
+  # eval blank-CE must not inflate by more than +10% over the run's FIRST eval.
+  # If it does, the model is being made WORSE BLIND rather than BETTER SIGHTED
+  # and the result is VOID. Live-checkable: eval_blank_ce / eval_aligned_ce /
+  # eval_prior_gap_ce / eval_blank_ce_inflation are logged at every eval.
+  # KILL THE RUN if eval_blank_ce_inflation passes +0.10.
+  # --------------------------------------------------------------------------
+
+  # 8192, not 4096. H17's correction #1 is directionally right but cites the
+  # WRONG split: 4 x 1079 = 4316 > 4096 only ever bites the librispeech
+  # VALIDATION split (9 rows at 4 pages); TRAIN never exceeds 3 pages. Measured
+  # retention through univi.trainer's filter path at max_soft_tokens 1120:
+  #   max_length 4096: train 104014/104014 + 30000/30000 (100%), but
+  #                    librispeech VALIDATION 2694/2703 -> 9 rows (0.33%) silently
+  #                    dropped, i.e. the eval set quietly loses its longest rows.
+  #   max_length 8192: 100% everywhere, all four splits.
+  # 8192 costs nothing at run time -- HybridCollator pads to the BATCH max, not
+  # to max_length -- so it is pure safety against silent truncation (a truncated
+  # placeholder run is what raises "Image placeholder count != projected soft
+  # tokens"). max_train_images 3 would be the alternative fix; it drops the same
+  # 9 eval rows instead of keeping them, which is strictly worse for eval.
+  #
+  # RE-VERIFIED 2026-07-28 by an independent path (scratchpad/h20_audio_
+  # resolution.py, calling the real univi.trainer._filter_training_tokens with
+  # per_image_tokens = univi.trainer.image_token_budget(b); 1122 at 1120, 282 at
+  # 280 = the legacy constant): at max_length 8192 ALL FOUR splits retain 100.00%
+  # at BOTH budgets -- librispeech train 104014/104014, librispeech validation
+  # 2703/2703, spoken-digits-15pct train 18355/18355, spoken-digits validation
+  # 1000/1000. The revised legs are safer still, not riskier: 498 tok/page (leg 1)
+  # and 1062 (leg 2) are both BELOW the 1079 this was validated at, and the
+  # 4-page validation rows cost 4 x 1062 + 50 + 256 = 4554 << 8192.
+  max_length: 8192
+
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:                # per-lane eval_<lane>_loss; the digits lane
+    - "librispeech"                  # is the ANCHOR -- if it degrades, the run is
+    - "spoken-digits"                # losing audio reading it already had.
+  max_eval_samples_per_subset: 64    # eval is 4x longer per row at 1120 and runs
+                                     # the blind branch too; 64 keeps it cheap
+  eval_steps: 50                     # 16 guard readings over 800 steps
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 4
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h20-librispeech-1120-phoneme-resolution"
+  tags: ["hybrid", "pretrained-vision", "trainable-vision", "audio", "librispeech",
+         "soft-token-budget", "gap-weighted-loss", "h20"]
+
+# ---------------------------------------------------------------------------
+# UNMEASURABLE / CONTRADICTORY AS WRITTEN — read before interpreting the result
+# ---------------------------------------------------------------------------
+# 1. SUPERSEDED 2026-07-28 — this note said "'~120 ms per token-column' is NOT a
+#    measured property of this render ... 'column' is a convenient fiction ...
+#    THE RATIO (4.25x more tokens per page) IS SOLID; the absolute ms/column
+#    figure is not". BOTH HALVES ARE WRONG. Measured: the patch grid is 41x6 at
+#    280 and 83x13 at 1120, so there ARE 41 and 83 time columns and 243.9 /
+#    120.5 ms are exact cell time-extents. And the ratio is NOT the solid part:
+#    columns grow as sqrt(budget), so 4.25x the budget = 2.02x the time
+#    resolution. Read the criterion as "120.5 ms/column, 2.02x finer than
+#    today", not as "4.25x the budget".
+# 2. REVISED 2026-07-28 — this note said the doc's optional "re-render at
+#    output_width 2000 -> ~85 ms/column" is a SECOND changed variable
+#    deliberately not taken. The 85 ms figure is confirmed exactly (2000x160 @
+#    1120 = 118x9 = 1062 tok, 84.7 ms/column) and the re-render is now the
+#    PREFERRED intervention, not a second variable to avoid: at a fixed hop the
+#    extra width is interpolation, it costs FEWER tokens than this file's 1079,
+#    and it is the only way to hold the FREQUENCY axis fixed while varying time
+#    (leg 1: 2000x160 @ 560 = 83x6, 120.5 ms/column, 13.3 mel bins/cell, the
+#    same 6 grid rows over 80 mels as today). The confound this note worried
+#    about is real but unavoidable in the other direction too: on THIS render
+#    the budget refines both axes at once, which is also two variables.
+# 3. H20 asks for "spoken-digits as a 15% anchor" but the trainer has no
+#    per-lane row cap; see the DATASET ROOT note above for how 15.00% is
+#    obtained. If the merge root is rebuilt without the subsample, the share is
+#    22.4%, not 15%.
+# 4. Cost: H20 says ~9 h GPU. At 800 steps x effective batch 64, ~4x the
+#    sequence length of every previous audio run, plus the blind branch's ~+35%
+#    wall clock, that estimate is optimistic. Budget for a first-20-step
+#    throughput measurement before committing. Leg 1 (560 on the wide render,
+#    498 tok/page) is ~half the sequence length and is the cheap kill.
+# 5. UNTOUCHED WASTE, measured 2026-07-28 on the whole split from render_config:
+#    librispeech train is 104,014 rows / 187,497 pages, mean utterance 12.6 s,
+#    and audio covers only 69.0% of the rendered time axis -- 31.0% of this
+#    lane's soft tokens are RIGHT-PADDED SILENCE (44.4% on validation, mean 7.2
+#    s). Trimming pages to the utterance would recover ~1.45x of the effective
+#    budget for free. That is orthogonal to the budget/render levers and NO leg
+#    of the revised design tests it; it is not done here because it would change
+#    pages-per-row and break comparability with H09/H10.

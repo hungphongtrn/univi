@@ -1,0 +1,53 @@
+# configs/h3_randstr_smoke.yaml — 8-step GPU smoke of the H3 pipeline.
+# Verifies warm-start (decoder + embedder auto-load), packing, forward/backward,
+# eval, and checkpoint save end-to-end on the tiny smoke dataset. NOT a result.
+#   HF_HUB_OFFLINE=1 uv run python train_encoder_free.py --config configs/h3_randstr_smoke.yaml
+
+model:
+  model_name: "data/checkpoints/encoder-free-v0/best"
+  max_seq_length: 8192
+  load_in_4bit: true
+  image_token: "<|image_pad|>"
+  chat_template: "auto"
+  image_size: 512
+  patch_size: 32
+
+dataset:
+  num_proc: 1
+  source: "local"
+  path: "data/materialized/h3-randstr-v0-smoke"
+  max_train_images: 4
+  subsets:
+    - "random-strings"
+  train_splits:
+    random-strings: ["train"]
+  validation_splits:
+    random-strings: ["validation"]
+
+training:
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 1
+  num_train_epochs: 5
+  max_steps: 8
+
+  learning_rate: 3.0e-4
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  reset_position_ids: true
+  gradient_checkpointing: true
+
+  validation_subsets:
+    - "random-strings"
+  max_eval_samples_per_subset: 16
+  eval_steps: 4
+
+  logging_steps: 1
+  save_steps: 8
+  output_dir: "data/checkpoints/h3-randstr-v0-smoke"
+  seed: 3407
+
+  report_to: []

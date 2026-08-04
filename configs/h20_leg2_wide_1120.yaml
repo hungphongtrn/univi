@@ -1,0 +1,288 @@
+# configs/h20_leg2_wide_1120.yaml
+# H20 — LEG 2 (THE MAIN RUN) of the two-leg wide-render design:
+#       2000x160 @ 1120 soft tokens.
+#
+# RUN ORDER: SECOND. Leg 1 (configs/h20_leg1_wide_560.yaml) is the cheap,
+# single-variable arm and should report first. A confirming leg 2 without leg 1
+# cannot attribute the gain to TIME resolution, because 560 -> 1120 refines the
+# time axis (120.5 -> 84.7 ms/column) and the frequency axis (13.3 -> 8.9 mel
+# bins/cell) simultaneously.
+#
+# Spec: docs/hypothesis/todo/H20-audio-phoneme-resolution.md
+# Prep measurements: data/eval/h20-wide-verify.json, data/eval/h20-lane-audit.json
+#
+# ===========================================================================
+# THE INVARIANT: h20_leg1_wide_560.yaml and h20_leg2_wide_1120.yaml are
+# identical except for
+#   - model.max_soft_tokens                                  (560 / 1120)  <- the variable
+#   - training.output_dir, wandb.run_name                    (bookkeeping)
+#   - per_device_*_batch_size / gradient_accumulation_steps  (VRAM only —
+#     EFFECTIVE BATCH STAYS 64 in both legs, which is the real invariant and
+#     matches H07/H09/H13/H14/H16/H17 exposure)
+# Anything else that differs makes the leg-1-vs-leg-2 attribution void.
+# ===========================================================================
+#
+# WHAT THIS LEG IS FOR. On the WIDE 2000x160 render, budget 1120 gives a
+# 118 x 9 patch grid: **84.7 ms per token-column at 1062 soft tokens per page**
+# — FEWER tokens than the 1079 the production 1000x160 page costs at the same
+# budget, and 1.42x finer in time. It is the finest rung the doc pre-registers,
+# and it is the rung whose null licenses anything: the refute branch is stated
+# at 84.7 ms/column with the frequency axis 1.5x finer than today.
+# TWO quantities move against leg 1 (time 120.5 -> 84.7 ms, frequency 13.3 ->
+# 8.9 mel bins/cell), which is why leg 1 exists and must run first.
+#
+# MEASURED ON REAL WIDENED PAGES (scratchpad/h20_wide_verify.py, CPU, real
+# Gemma4UnifiedImageProcessor, both lanes, 100% of probed pages identical):
+#
+#   render     budget  grid    tokens/page  ms/column  mel bins/cell
+#   1000x160     280   41 x  6      246       243.9        13.3   <- H09/H10 today
+#   2000x160     280   59 x  4      236       169.5        20.0
+#   2000x160     560   83 x  6      498       120.5        13.3   <- leg 1
+#   2000x160    1120  118 x  9     1062        84.7         8.9   <- THIS LEG
+#   1000x160    1120   83 x 13     1079       120.5         6.2   <- DOMINATED
+#
+# The last row is the arm configs/h20_librispeech_1120.yaml runs: it costs 1079
+# tokens/page for 120.5 ms/column, i.e. MORE sequence than this leg for a
+# COARSER time axis. Do not launch that file.
+#
+# WHY A WIDER PAGE IS NOT RESIZED AWAY: the processor targets constant AREA
+# (s = sqrt(B*48^2/(H*W))), so grid columns = sqrt(B * W/H) and the token count
+# is ~B whatever the aspect ratio. The critical width at height 160 is 3,984 px
+# at budget 280; 2000 is nowhere near it. Widening therefore moves ms/column
+# exactly as hard as the budget does, AT NO TOKEN COST.
+#
+# ---------------------------------------------------------------------------
+# PRE-REGISTERED READ — Delta-perm / Delta-blank / reading gain, NEVER eval CE
+# ---------------------------------------------------------------------------
+#   Confirms (per the H20 doc):
+#     * position-0 reading gain > +10 pts on librispeech (H10 measured -12.7)
+#     * Delta-blank >= +30%
+#     * greedy decodes show NONZERO word-level overlap with targets
+#       (H09 measured zero -- the model tracked utterance duration only)
+#   Refutes: no phonetic correspondence at leg 2's 84.7 ms/column. Leg 1 alone
+#     refutes nothing -- a flat leg 1 with a confirming leg 2 means the gain
+#     needed the extra tokens or the finer frequency axis, which this design
+#     cannot separate. Say so; do not attribute it to time.
+#
+#   Read-out (probes, not eval CE):
+#     scratchpad/hybrid_pretrained_ablation.py    (Delta-perm / Delta-blank)
+#     scratchpad/hybrid_4lane_position_decay.py   (position-0 reading gain)
+#     scratchpad/hybrid_4lane_generate.py         (greedy decodes / word overlap)
+#   Do NOT pass --max-soft-tokens: every probe defaults to the CHECKPOINT's
+#   recorded budget, and overriding it reads pixels at a geometry the model
+#   never trained on.
+#
+#   *** PASS --max-length 8192 TO EVERY PROBE. *** The probes default to 2048.
+#   MEASURED through the real univi.trainer._filter_training_tokens at budget
+#   1120 on this root: max_length 2048 retains only 20,548 of 104,014
+#   librispeech train rows -- it SILENTLY DROPS 80.24% of the lane, keeping
+#   exactly the single-page rows. 4096 retains 100% of train but 2694/2703 of
+#   VALIDATION (the 9 four-page rows vanish). 6144 and 8192 retain 100.00%
+#   everywhere. A probe run at the default would report Delta-perm on a
+#   silently truncated, shortest-utterance-only subset.
+#
+#   Launch SOLO (never alongside another GPU job -- the encoder-free host-RAM OOM):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h20_leg2_wide_1120.yaml \
+#       > data/checkpoints/h20-leg2-wide-1120-v0-run.log 2>&1 &
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+  # ---- THE VARIABLE --------------------------------------------------------
+  # 1120 on the 2000x160 render EMITS 1062 soft tokens (118 x 9), max position
+  # id (117, 8), page resized 2000x160 -> 5664x432. Budget and emitted count are
+  # different numbers; 1062 is what the sequence costs. Every image_position_id
+  # stays far inside the pretrained factorized table's 1120 rows.
+  max_soft_tokens: 1120
+  # --------------------------------------------------------------------------
+
+  # ---- WARM-START ----------------------------------------------------------
+  # H08's audio-reading checkpoint: pretrained Gemma-12B vision + adapter +
+  # Qwen3, trained on prior-proof spoken digits with TRAINABLE vision, which
+  # read at Delta-perm +134.8% / reading gain +17.6 pts. It is the ONLY
+  # checkpoint in the repo whose vision tower has adapted to SPECTROGRAM
+  # statistics -- and H08's whole finding is that frozen (Gemma-pretrained)
+  # vision features do not encode spectrograms at all, because they are OOD.
+  # Starting a cold adapter here would re-run the bootstrap lottery H13 lost.
+  #
+  # VERIFIED CPU-side (no GPU, no weights on a device): the checkpoint holds
+  # 322 tensors with a key set and shapes BYTE-IDENTICAL to
+  # hybrid-pretrained-randstr-v0/final, which H17 already verified loads at
+  # 280/560/1120. NO TENSOR IS SHAPED BY max_soft_tokens.
+  # vision_tower.pos_embedding is (1120, 2, 3840) at every budget -- that 1120
+  # is mm_posemb_size, the position-index TABLE, not the soft-token budget.
+  #
+  # OOD HANDICAP, recorded before the run, and it is LARGEST HERE: the warm
+  # start trained a 41 x 6 grid (position ids x<=40, y<=5). This leg runs
+  # 118 x 9, so time rows 41-117 AND frequency rows 6-8 are at their pretrained
+  # Gemma values, never adapted to spectrograms. Leg 1 (83 x 6) is OOD on the
+  # time axis only. If leg 2 underperforms leg 1, this is a candidate cause and
+  # it is not the same thing as "84.7 ms/column does not help".
+  init_from: "data/checkpoints/hybrid-pretrained-spokendigits-trainvis-v0/final"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  # WIDE RENDER, built by data/preprocessing/widen_audio_pages.py (CPU, image
+  # space, no audio corpus): both lanes re-materialized 1000x160 -> 2000x160
+  # with PIL LANCZOS, the renderer's own filter. At the production 10 ms hop the
+  # page is already 1 render pixel per mel frame, so the extra width is
+  # interpolation EITHER WAY: widening the stored page and re-rendering the mel
+  # at output_width 2000 differ by 0.727% of the page's own sd (measured on 7
+  # real LibriSpeech pages by --self-test; H20 reports 0.72% by an independent
+  # path). This is a REALLOCATION OF THE TOKEN GRID, not new optical detail --
+  # and no new detail is needed, since every axis is already upsampled at 280.
+  path: "data/materialized/h20-audio-wide-v0"
+  # librispeech TRAIN tops out at 3 pages; VALIDATION reaches 4. 4 keeps every
+  # row of both splits.
+  max_train_images: 4
+  subsets:
+    - "librispeech"
+    - "spoken-digits"
+  # NO train_splits: block. It is read only by univi.trainer._load_hub; with
+  # source: local the training splits come from the manifest's
+  # is_training_split flag and _load_local never looks at it (H14 finding #5 --
+  # the train_splits blocks in h13_density.yaml and hybrid_pretrained_randstr
+  # .yaml are inert). validation_splits IS read, by _load_eval_datasets.
+  validation_splits:
+    librispeech: ["validation"]
+    spoken-digits: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h20-leg2-wide-1120-v0"
+
+  # ---- VRAM ----------------------------------------------------------------
+  # Estimated on H17's calibrated model (data/eval/h17-config-verification.json:
+  # 1.778B params bf16 + bf16 grads + AdamW8bit = 9.93 GiB static, 0.9 GiB CUDA
+  # context, logits at 12 B/element over a 151,670 vocab, decoder activations
+  # 1.833e-4 GiB per micro-batch token), fed with THIS leg's measured worst-case
+  # sequence -- found by scoring EVERY row of the split, not by sampling:
+  # 3 pages x 1062 + 151 target + 21 scaffold = 3358 tokens.
+  #   per-device 1 -> 17.3 GiB   2 -> 23.6 GiB   4 -> 36.2 GiB
+  # 1 is chosen. 2 is inside the nominal 26 GB ceiling but NOT inside the
+  # ~23.9 GB actually free while another container holds ~16.1 GB of the 40 GB
+  # card -- and 3-page rows are rare (17 of 104,014), so a 23.5 GiB spike would
+  # arrive tens of steps in, after the run looked safe.
+  #
+  # IF THE CARD IS OTHERWISE EMPTY AT LAUNCH (check nvidia-smi:
+  # memory.used < 2 GB), 2 x 16 is a legitimate ~2x speedup inside the 26 GB
+  # ceiling. That is the ONLY sanctioned deviation, and accum must move with it
+  # so the effective batch stays 64.
+  #
+  # THE MODEL IS NOT A MEASUREMENT. Its own calibration anchors disagree with
+  # observed peaks by up to 7 GB (H13 predicted 20.05 / observed ~21; H14
+  # predicted ~14.8 / observed 21.9). Watch nvidia-smi over the first ~20 steps.
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 64    # effective batch 64 -- THE INVARIANT
+  # Eval has no gradient-checkpointing relief AND runs a second no-grad blank
+  # forward (log_blank_ce). The 64 rows the trainer will ACTUALLY draw were
+  # reproduced exactly (filters + shuffle(seed=42).select(64)): {1 page: 48,
+  # 2: 13, 3: 3}, longest 3 x 1062 + 152 + 21 = 3317 tokens. That is 17.17 GiB
+  # at per-device 1 and 23.40 GiB at 2 -- 2 is inside the 26 GB ceiling but not
+  # inside the ~23.9 GB free beside the other container. The whole-split worst
+  # is a 4-page row at 4436 tokens (LONGER than any training row); seed 42 does
+  # not draw one, but a different `data_seed` would, so 1 is also the safe
+  # choice against that.
+  per_device_eval_batch_size: 1
+  # --------------------------------------------------------------------------
+
+  num_train_epochs: 20               # inert; max_steps governs
+  # 600 is the BOTTOM of the doc's pre-registered 600-800 band, taken because
+  # leg 2 must run at micro-batch 1 and both legs must match exposure.
+  # 600 x 64 = 38,400 rows against 122,369 train rows = 0.31 epochs, so no row
+  # is seen twice and memorization is not a confound. H07 reached Delta-perm
+  # +114.7% in exactly 600 steps at effective batch 64.
+  max_steps: 600
+
+  # TRAINABLE VISION IS NOT OPTIONAL (H08): with the vision tower frozen the
+  # spoken-digit lane sat flat at the floor and never read -- spectrograms are
+  # out-of-distribution for Gemma's vision pretraining, so frozen features do
+  # not encode them and no adapter can recover it. These three LRs are exactly
+  # the run that DID read audio (hybrid_pretrained_spokendigits_trainvis).
+  freeze_vision: false
+  lr_adapter: 3.0e-4                 # from-scratch bridge — fastest
+  lr_vision:  1.0e-4                 # pretrained Gemma embedder — OOD adaptation
+  lr_decoder: 2.0e-5                 # pretrained Qwen3 — refine, don't overwrite
+
+  # ---- H16 blind branch: INSTRUMENTATION ONLY ------------------------------
+  # DEVIATION FROM THE H20 DOC, RECORDED BEFORE RESULTS. The Design section asks
+  # for "gap-weighted loss from H16". H16 is still TODO -- it has never been
+  # run, so nothing is known about what it does to a training trajectory.
+  # Enabling it would put an UNVALIDATED objective change into the same run as
+  # the render change, and leg 1's entire claim is that exactly one variable
+  # moves. If leg 1 then came back flat, the render and the objective would be
+  # inseparable. So:
+  #   gap_weighted_loss: false  -- the loss is stock per-token CE, as in
+  #                                H07/H08/H09/H13/H14/H17
+  #   log_blank_ce:      true   -- pure MEASUREMENT. With gap_weighted_loss off,
+  #                                compute_loss returns the stock path on its
+  #                                first line during training (no blank forward,
+  #                                no gradient effect); only EVAL runs the extra
+  #                                no-grad blank pass.
+  # What it buys: eval_aligned_ce / eval_blank_ce / eval_prior_gap_ce /
+  # eval_blank_ce_inflation at every eval -- the live H04 soft-prompt-collapse
+  # guard. PRE-REGISTERED KILL: if eval_blank_ce_inflation passes +0.10 the
+  # model is being made WORSE BLIND rather than BETTER SIGHTED and the run is
+  # VOID. Run H16 as its own hypothesis if it is wanted.
+  gap_weighted_loss: false
+  log_blank_ce: true
+  # --------------------------------------------------------------------------
+
+  # MEASURED, not guessed, through the real univi.trainer._filter_training_tokens
+  # with per_image_tokens = univi.trainer.image_token_budget(1120) = 1122, and
+  # the real HybridCollator on real widened rows. The filter estimates a row as
+  # original_token_length + n_images*1122 + 256 and SILENTLY DROPS overflow.
+  # Worst filter estimate is on librispeech VALIDATION (4 pages, stored otl 146):
+  # 146 + 4*1122 + 256 = 4890. Worst ASSEMBLED sequence is 4436 (4 x 1062 + 167
+  # + 21). 8192 retains 100.00% of all four splits and can never truncate;
+  # 4096 would silently drop the 4-page validation rows.
+  # It costs nothing at run time -- HybridCollator pads to the BATCH max, not to
+  # max_length -- so it is pure insurance against the failure mode where a
+  # truncated placeholder run raises "Image placeholder count != projected soft
+  # tokens".
+  #
+  # LATENT DEFECT, recorded: original_token_length on the audio lanes was
+  # written by a GEMMA tokenizer and UNDER-COUNTS the Qwen3 length the collator
+  # actually produces -- by up to 20 tokens on librispeech train and 26 on
+  # validation (measured over all 106,717 rows, data/eval/h20-lane-audit.json).
+  # Harmless at 8192 against a 2180-token worst case; it would NOT be harmless
+  # at a tight max_length, where the filter could retain a row the collator then
+  # truncates. Do not tighten max_length on these lanes without re-measuring.
+  max_length: 8192
+
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  # Collation is CPU-bound and NOT free on this lane: one 2000x160 page at 1120
+  # costs ~141 ms/row to process (~92 ms at 560), and emit_blank_images (which
+  # log_blank_ce switches on) DOUBLES it -- the collator builds blank tensors on
+  # every TRAINING batch even though, with gap_weighted_loss off, training
+  # discards them. At effective batch 64 that is ~12 s/step of pure collation if
+  # it is not overlapped. 2 workers hide it behind the GPU step. Kept low on
+  # purpose: host RAM on this box has run to swap before (the encoder-free OOM),
+  # and this run must be SOLO anyway.
+  dataloader_num_workers: 2
+
+  do_eval: true
+  validation_subsets:                # per-lane eval_<lane>_loss; spoken-digits
+    - "librispeech"                  # is the ANCHOR -- if it degrades, the run
+    - "spoken-digits"                # is losing audio reading it already had.
+  max_eval_samples_per_subset: 64
+  eval_steps: 50                     # trajectory ONLY -- eval CE is not the criterion
+  save_steps: 100                    # the probes need CHECKPOINTS, not eval losses
+  save_total_limit: 7
+  logging_steps: 10
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h20-leg2-wide1120-85ms-per-column"
+  tags: ["hybrid", "pretrained-vision", "trainable-vision", "audio", "librispeech",
+         "wide-render", "h20", "leg2", "warm-start"]

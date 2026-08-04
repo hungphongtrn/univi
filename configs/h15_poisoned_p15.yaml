@@ -1,0 +1,181 @@
+# configs/h15_poisoned_p15.yaml
+# H15 — PRIOR-POISONED REAL TEXT, dose p = 0.15 (the pre-registered dose).
+#
+# THIS FILE IS THE TEMPLATE FOR THE WHOLE H15 DOSE LADDER. The other two arms
+# are byte-identical except for four lines:
+#
+#   arm            dataset.path                          output_dir                          wandb.run_name
+#   p = 0.00 ctrl  data/materialized/h15-poisoned-p00     data/checkpoints/h15-poisoned-p00-v0  h15-poisoned-p00
+#   p = 0.15       data/materialized/h15-poisoned-p15     data/checkpoints/h15-poisoned-p15-v0  h15-poisoned-p15
+#   p = 0.50       data/materialized/h15-poisoned-p50     data/checkpoints/h15-poisoned-p50-v0  h15-poisoned-p50
+#
+# (configs/h15_poisoned_p00.yaml and configs/h15_poisoned_p50.yaml are those
+# two files. p = 1.00 is NOT run: the `random-strings` lane already IS the
+# p -> 1 limit, and H13 measured its depth ceiling at K = 48.5 tokens.)
+#
+# =============================================================================
+# WHY THE LANE IS SHORT — the H13 repair
+# =============================================================================
+# H13 established that the model reads only ~48 answer tokens deep and that a run
+# whose supervised tokens fall mostly BEYOND that depth collapses into the
+# uniform-marginal basin (H13 died at 14.2% readable; H07 succeeded at 100%;
+# H14 was repaired to 75.2% before launch).
+#
+# H15 as previously specified (`--max-target-tokens 1400`) measures **923.2
+# target tokens/row = 5.2% readable** on the real Qwen3 tokenizer over 200 real
+# fineweb-edu rows (scratchpad/h15_readable_fraction.py,
+# data/eval/h15-readable-fraction.json). That is 2.7x WORSE than the run that
+# died, and it is numerically H13's d4 rung (932 tok/row, 5.2% readable) run
+# alone at 100% of the gradient. It would have collapsed.
+#
+# The repair keeps the token-weighted readable fraction at ~75% while still
+# SUPERVISING to ~3.8x the scan depth, by splitting the lane into two LENGTH
+# arms and sizing them by TOKEN weight, not row count:
+#
+#   arm                  cap   tgt tok/row   readable   rows    token share
+#   poisoned-text        64    44.3          92.8%      46,000  73.7%
+#   poisoned-text-long   200   181.7         26.4%       4,000  26.3%
+#   ------------------------------------------------------------------------
+#   MIX                                      75.4%      50,000  100%
+#
+# (measured at p=0.15; the p=0.00 and p=0.50 arms land at 73.7% and 76.5% —
+# the design is robust across the dose ladder.)
+#
+# Deep positions are MEASURED, not supervised, on a separate 500-row val split
+# at `--max-target-tokens 1400` (923 tok/row) that is never trained on. This is
+# exactly H13's move: H07 was trained on 14-token targets and its K was measured
+# at 48.5 on 931-token d4 rows.
+#
+# =============================================================================
+# MATERIALIZATION — REQUIRED, and NOT yet run. CPU only, ~9 min/dose at
+# --num-proc 8, ~0.6 GB/dose.
+# =============================================================================
+#   # short arm
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-poisoned-p15 --subset-name poisoned-text \
+#       --poison-rate 0.15 --max-target-tokens 64 --max-pages 1 \
+#       --train-rows 46000 --val-rows 500 --num-proc 8
+#   # deep arm (SAME root — the materializer merges manifests on purpose)
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-poisoned-p15 --subset-name poisoned-text-long \
+#       --poison-rate 0.15 --max-target-tokens 200 --max-pages 1 \
+#       --train-rows 4000 --val-rows 500 --num-proc 8
+#   # measurement-only DEEP val split (never trained on; own root, 500 rows)
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-deepval-p15 --subset-name poisoned-text \
+#       --poison-rate 0.15 --max-target-tokens 1400 --max-pages 4 \
+#       --train-rows 1 --val-rows 500 --num-proc 8
+#
+# Do NOT use `--max-target-tokens 48`: measured row loss from
+# `_fit_token_budget` returning "" is 2% at p=0.15 and **36% at p=0.50** (a row
+# whose first rendered line already exceeds the cap is silently dropped), i.e.
+# the drop rate is dose-dependent and would be a selection confound. At cap 64
+# it is 0/200 rows at p<=0.30 and 1/200 at p=0.50.
+#
+# =============================================================================
+# LAUNCH (SOLO — a concurrent probe once OOM'd the host and killed a run)
+# =============================================================================
+#   HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#   nohup uv run python -m univi.hybrid.train_pretrained \
+#     --config configs/h15_poisoned_p15.yaml \
+#     > data/checkpoints/h15-poisoned-p15-v0-run.log 2>&1 &
+#
+# READ OUT (not while training holds the card) — position-resolved reading gain
+# is the PRIMARY instrument, on the deep val split:
+#   HF_HUB_OFFLINE=1 uv run python scratchpad/hybrid_4lane_position_decay.py \
+#     --checkpoint data/checkpoints/h15-poisoned-p15-v0/final \
+#     --val-path data/materialized/h15-deepval-p15/poisoned-text/validation \
+#     --tag h15-p15-deep -n 150
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  # H13 lesson: warm-start from a checkpoint that ALREADY reads, so the adapter
+  # does not have to bootstrap. Weights only — fresh optimizer and LR schedule.
+  # NOTE this checkpoint read RANDOM STRINGS, never English; the control arm
+  # (p=0.00) is what makes any depth difference attributable to POISONING rather
+  # than to "it finally saw real text".
+  init_from: "data/checkpoints/hybrid-pretrained-randstr-v0/final"
+  # H17's knob, pinned at the historical default ON PURPOSE — H15 changes the
+  # DATA. A 1024x1024 page really costs 256 soft tokens (resized to 768 => 16x16
+  # grid); only the dataset length FILTER charges the conservative 282.
+  max_soft_tokens: 280
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h15-poisoned-p15"
+  max_train_images: 1        # every capped row renders to exactly 1 page (measured)
+  # BOTH length arms. Row counts (46k/4k) are chosen so the TOKEN-weighted
+  # readable fraction is 75.4% — do NOT "balance" these to 25k/25k, which would
+  # drop it to 34% and reproduce H13's collapse. This is the H13 lesson in the
+  # one place it can bite.
+  subsets:
+    - "poisoned-text"
+    - "poisoned-text-long"
+  # No `train_splits:` — inert for source: local (read only by _load_hub).
+  validation_splits:
+    poisoned-text: ["validation"]
+    poisoned-text-long: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h15-poisoned-p15-v0"
+
+  # Effective batch 64, matching H07/H13/H14 exposure. Mean assembled sequence is
+  # ~345 tokens (256 image soft tokens + ~46 or ~182 target + 32 chat scaffold),
+  # i.e. 0.70x H14's 493 — bounded above by a geometry already measured safe.
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16
+  num_train_epochs: 20               # ceiling only; max_steps wins
+  # 400 steps x 64 = 25,600 rows = 0.51 epochs of the 50k lane (H07 saw 0.38).
+  # ~11-13 s/step EXTRAPOLATED from H14's measured 14.5 s/step at 493 tokens
+  # => ~1.2-1.4 h/arm, ~4 h for the three-arm ladder.
+  max_steps: 400
+
+  # 3-group LR, NO freeze — H07's recipe verbatim. Freezing is the single change
+  # that has produced soft-prompt collapse in this program (H04).
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  # Worst case otl 200 + image_token_budget(280)=282 + 256 template = 738.
+  # 1024 => 100% retention and the real assembled sequence (<=470) can never
+  # be truncated.
+  max_length: 1024
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  # LIVE COLLAPSE ALARM. One extra no-grad blank-image forward per EVAL batch
+  # (training path untouched: gap_weighted_loss stays off, so compute_loss
+  # early-returns to the stock path). Emits eval_*_aligned_ce / _blank_ce /
+  # _prior_gap_ce / _blank_ce_inflation.
+  #
+  # READ IT AS AN ALARM, NOT AS GROUNDING. prior_gap_ce is a Delta-BLANK quantity
+  # and H13 §1 showed a fully dead run with Delta-perm = 0 still had Delta-blank
+  # of +1% to +8.7% (ink-presence, not content). Pre-registered use: if
+  # eval_prior_gap_ce falls below 0.05 nats and stays there for 3 consecutive
+  # evals, the run is collapsing -> kill it, do not spend the remaining hours.
+  log_blank_ce: true
+
+  do_eval: true
+  validation_subsets:
+    - "poisoned-text"
+    - "poisoned-text-long"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  # 200 mirrors H07 so the @200-vs-final grounding-growth comparison is available
+  # (H07 went Dperm +27% @200 -> +115% final). eval CE is NOT a grounding monitor.
+  save_steps: 200
+  save_total_limit: 4
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h15-poisoned-p15"
+  tags: ["hybrid", "pretrained-vision", "poisoned-text", "prior", "depth", "h15"]

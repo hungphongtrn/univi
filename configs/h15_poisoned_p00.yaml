@@ -1,0 +1,96 @@
+# configs/h15_poisoned_p00.yaml
+# H15 — CLEAN-TEXT CONTROL ARM (poison rate 0.00).
+#
+# THIS ARM IS NOT OPTIONAL. Without it, H15's "reading gain at depth" has nothing
+# to be compared against except H10's +1 pt, which was measured on a DIFFERENT
+# checkpoint (hybrid-4lane-v0/final), a different mixture, a different target
+# length and a different recipe. A cross-run historical comparison cannot
+# attribute a depth difference to poisoning. This run is identical to
+# configs/h15_poisoned_p15.yaml in every respect except the source text is NOT
+# poisoned, so the difference between them IS the effect of the prior.
+#
+# Everything else — see the fully commented configs/h15_poisoned_p15.yaml.
+#
+# MATCHING NOTE. The arms are matched on TARGET-TOKEN length, not on characters
+# per page: at the same token cap, clean text runs 4.51 chars/token against
+# poisoned text's 2.96, so the control's page carries ~1.5x more characters.
+# H13 licenses this — position-0 reading gain is statistically identical at d3
+# (+28.7 +/- 3.7) and d4 (+28.0 +/- 3.7) across a 4x density change, and K is
+# invariant over a 16x span. Matching on tokens keeps the readable fraction and
+# the gradient structure comparable, which is the quantity that killed H13.
+# Measured control lengths: cap 64 -> 52.7 tok/row (88.4% readable),
+# cap 200 -> 186.4 tok/row; mix at 46k/4k rows = 73.7% readable.
+#
+# MATERIALIZE (CPU only, ~9 min, ~0.7 GB):
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-poisoned-p00 --subset-name poisoned-text \
+#       --poison-rate 0.0 --max-target-tokens 64 --max-pages 1 \
+#       --train-rows 46000 --val-rows 500 --num-proc 8
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-poisoned-p00 --subset-name poisoned-text-long \
+#       --poison-rate 0.0 --max-target-tokens 200 --max-pages 1 \
+#       --train-rows 4000 --val-rows 500 --num-proc 8
+#   HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES="" uv run python -m data.preprocessing.poisoned_text \
+#       --out data/materialized/h15-deepval-p00 --subset-name poisoned-text \
+#       --poison-rate 0.0 --max-target-tokens 1400 --max-pages 4 \
+#       --train-rows 1 --val-rows 500 --num-proc 8
+#
+# At poison_rate 0.0 the lane is ordinary fineweb-edu transcription rendered
+# through THIS materializer's layout pass (targets are the WRAPPED lines, so
+# target and image agree exactly) — deliberately, so the only difference from
+# the treatment arm is the poisoning itself, not the whitespace convention.
+# `poison_mask` is empty on every row and the poisoned-position metrics are
+# undefined here; the control is scored with the ALL-TOKEN position-resolved
+# reading gain, which is defined on both arms.
+
+model:
+  vision_source: "google/gemma-4-12B-it"
+  text_source: "unsloth/Qwen3-1.7B"
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  init_from: "data/checkpoints/hybrid-pretrained-randstr-v0/final"
+  max_soft_tokens: 280
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h15-poisoned-p00"
+  max_train_images: 1
+  subsets:
+    - "poisoned-text"
+    - "poisoned-text-long"
+  validation_splits:
+    poisoned-text: ["validation"]
+    poisoned-text-long: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h15-poisoned-p00-v0"
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16
+  num_train_epochs: 20
+  max_steps: 400
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+  max_length: 1024
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+  log_blank_ce: true
+  do_eval: true
+  validation_subsets:
+    - "poisoned-text"
+    - "poisoned-text-long"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 4
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h15-poisoned-p00"
+  tags: ["hybrid", "pretrained-vision", "poisoned-text", "control", "h15"]

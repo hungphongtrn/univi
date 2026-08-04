@@ -1,0 +1,92 @@
+# configs/h3_randstr.yaml — encoder-free VLM, H3 "prior-proof" OCR diagnostic (A100-40GB).
+#
+# ISOLATED diagnostic (NOT a mixture lane). Trains the encoder-free VLM on ONE
+# lane only: render random lowercase-letter strings → transcribe. Random strings
+# have zero language structure, so the pretrained Qwen3 LM prior gives NO shortcut
+# and a content-blind steering prefix (the H2 failure mode) CANNOT lower loss —
+# the only way below the guessing floor is to READ the pixels. This cleanly
+# separates the two live hypotheses for why grounding saturates at Δperm~3%:
+#   (A) gradient competition — the LM prior soaks up reward in the mixture; or
+#   (B) capacity — the tiny Fuyu-style linear embedder just can't learn OCR.
+#
+# Recipe = H1 EXACTLY (H2's lesson: never freeze the decoder against a from-scratch
+# embedder — it optimizes content-blind steering). Single LR 3e-4 for BOTH groups
+# (decoder_lr unset), decoder trainable from step 0 (freeze_decoder_steps 0).
+#
+# WARM-START from H1 best: model_name points at the checkpoint dir, so the decoder
+# loads via FastModel.from_pretrained AND the embedder auto-loads from its
+# embedder.pt (see build_encoder_free_univi). Tests whether H1's shallow-but-real
+# reading is a SEED that grows once the LM shortcut is removed.
+#
+# No-reading floor (data/materialized/h3-randstr-v0/floor.json): eval CE cannot go
+# below ~5.64 nats/tok without reading; a trained reader → ~0. SUCCESS = eval loss
+# dives well below the floor + post-hoc Δperm explodes toward Gemma-like magnitude.
+# NULL = eval pins at the floor even with zero competition ⇒ the linear embedder is
+# capacity-limited at this budget (escalate: 16px patches → MLP connector → conv stem).
+#
+#   Materialize first (CPU):
+#     uv run python -m data.preprocessing.random_strings \
+#       --out data/materialized/h3-randstr-v0 --train-rows 100000 --val-rows 2000
+#   Launch SOLO (host-RAM OOM lesson — no concurrent RAM-heavy jobs):
+#     HF_HUB_OFFLINE=1 nohup uv run python train_encoder_free.py \
+#       --config configs/h3_randstr.yaml > data/checkpoints/h3-randstr-v0-run.log 2>&1 &
+
+model:
+  model_name: "data/checkpoints/encoder-free-v0/best"   # WARM-START decoder + embedder from H1
+  max_seq_length: 8192
+  load_in_4bit: true
+  image_token: "<|image_pad|>"
+  chat_template: "auto"
+  image_size: 512
+  patch_size: 32
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h3-randstr-v0"
+  max_train_images: 4
+  subsets:
+    - "random-strings"
+  train_splits:
+    random-strings: ["train"]
+  validation_splits:
+    random-strings: ["validation"]
+
+training:
+  per_device_train_batch_size: 64
+  per_device_eval_batch_size: 64
+  gradient_accumulation_steps: 1
+  num_train_epochs: 20               # random strings — many passes; bounded by max_steps
+  max_steps: 1500                    # ~13h at ~30s/step
+
+  # H1 recipe EXACTLY: single LR, decoder trainable from step 0 -----------
+  learning_rate: 3.0e-4              # both embedder and decoder (decoder_lr unset)
+  # decoder_lr:  (unset → reuse learning_rate, the original single-LR behavior)
+  # freeze_decoder_steps: 0          # (default) no warmup, no freeze
+  # -----------------------------------------------------------------------
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  reset_position_ids: true
+  gradient_checkpointing: true
+
+  validation_subsets:
+    - "random-strings"
+  max_eval_samples_per_subset: 128
+  eval_steps: 100                    # frequent — reading should emerge fast if it will
+
+  logging_steps: 10
+  save_steps: 500
+  output_dir: "data/checkpoints/h3-randstr-v0"
+  seed: 3407
+
+  report_to: ["wandb"]
+
+wandb:
+  project: "univi-encoder-free"
+  entity: "yuuart"
+  run_name: "h3-randstr-ocr-warmstart"
+  tags: ["encoder-free", "qwen3-1.7b", "h3", "prior-proof", "random-strings", "ocr"]
+  mode: "online"

@@ -1,0 +1,94 @@
+# configs/encoder_free_h2.yaml — encoder-free VLM, H2 recipe (A100-40GB).
+#
+# Same model/data/architecture as configs/encoder_free.yaml, but two changes that
+# target the H1 diagnosis (the pretrained Qwen3 prior out-competes the from-scratch
+# vision path → uniformly shallow reading, ~3% Δperm across all four lanes):
+#
+#   1. Vision-path warmup — freeze the decoder for the first 800 opt steps and
+#      train the embedder ONLY (LLaVA stage-1 alignment), so the pixel features
+#      mature before the decoder can lean on its language prior.
+#   2. Split learning rates — embedder 3e-4 (fast, from-scratch); decoder 2e-5
+#      (slow, refine the trillion-token prior instead of overwriting it). The
+#      original single 3e-4 let the decoder win the gradient race.
+#
+# BOUNDED run (max_steps 2000, ~17h at ~31s/step) with frequent eval so the
+# trajectory reveals early whether the recipe lifts grounding. Re-ablate the
+# resulting checkpoint with scratchpad/h1_ablation.py and compare Δperm to the
+# H1 baseline (fineweb +3.15%, densefusion +3.57%, smoltalk +3.43%, libri +1.87%).
+#
+#   HF_HUB_OFFLINE=1 uv run python train_encoder_free.py --config configs/encoder_free_h2.yaml
+#
+# Run SOLO — do NOT launch concurrent RAM-heavy jobs (a concurrent load OOM-killed
+# the original run; host swap runs tight at ~38 GB RSS).
+
+model:
+  model_name: "unsloth/Qwen3-1.7B"
+  max_seq_length: 8192
+  load_in_4bit: true
+  image_token: "<|image_pad|>"
+  chat_template: "auto"
+  image_size: 512
+  patch_size: 32
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  subsets:                    # SAME full mixture as baseline (single-variable test)
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+    librispeech: ["train"]
+  validation_splits:
+    fineweb-edu: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+    librispeech: ["validation"]
+
+training:
+  per_device_train_batch_size: 64
+  per_device_eval_batch_size: 64
+  gradient_accumulation_steps: 1
+  num_train_epochs: 1
+  max_steps: 2000                   # bounded probe of the recipe (~17h)
+
+  # H2 recipe knobs -------------------------------------------------------
+  learning_rate: 3.0e-4             # embedder (from-scratch vision path)
+  decoder_lr: 2.0e-5                # pretrained Qwen3 decoder (slow refine)
+  freeze_decoder_steps: 800         # embedder-only warmup, then auto-unfreeze
+  # -----------------------------------------------------------------------
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  reset_position_ids: true
+  gradient_checkpointing: true
+
+  validation_subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  max_eval_samples_per_subset: 128
+  eval_steps: 250                   # frequent — reveal the trajectory early
+
+  logging_steps: 10
+  save_steps: 500
+  output_dir: "data/checkpoints/encoder-free-h2-v0"
+  seed: 3407
+
+  report_to: ["wandb"]
+
+wandb:
+  project: "univi-encoder-free"
+  entity: "yuuart"
+  run_name: "encoder-free-h2-warmup-splitlr"
+  tags: ["encoder-free", "qwen3-1.7b", "h2", "warmup", "split-lr"]
+  mode: "online"

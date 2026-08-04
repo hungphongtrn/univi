@@ -1,0 +1,107 @@
+# configs/h16_gap_weighted.yaml
+# H16 — PRIOR-GAP-WEIGHTED LOSS. Attacks (B) objective.
+# Pre-registration: docs/hypothesis/todo/H16-prior-gap-weighted-loss.md
+#
+# H10 showed reading is purchased where, and only where, the prior fails: on
+# fineweb the first answer token is 70% correct with the image and 0.7% without,
+# and the gain collapses to ~+1 pt within ten tokens. H16 reweights the loss by
+# the per-token blind-branch gap so the tokens that carry a real image-vs-prior
+# difference dominate the gradient instead of being averaged away.
+#
+# Per batch, a no-grad BLANK-image (mid-gray 128) forward gives CE_blank_t; then
+#
+#   w_t  = 1 + gap_beta * max(0, CE_blank_t - CE_aligned_t.detach())
+#   w    = w / mean(w over SUPERVISED tokens)          # masked tokens get w = 0
+#   loss = sum_t w_t * CE_aligned_t / num_items_in_batch
+#
+# gap_beta = 0 (or a gap of 0 everywhere) reduces EXACTLY to the unweighted loss,
+# and `gap_weighted_loss: false` is bit-identical to every previous run.
+#
+# PRE-REGISTERED READ (do not move the goalposts):
+#   Confirms: positional reading gain at answer tokens 10-100 >= +10 pts
+#             (scratchpad/hybrid_4lane_position_decay.py) AND Dperm >= +30%
+#             (scratchpad/hybrid_pretrained_ablation.py).
+#   GUARD:    eval blank-CE must not inflate by more than +10%. If it does, the
+#             model is being pushed to be WORSE BLIND rather than BETTER SIGHTED
+#             and the result is VOID. This is live-checkable: the trainer logs
+#             eval_blank_ce / eval_aligned_ce / eval_prior_gap_ce /
+#             eval_blank_ce_inflation at every eval (inflation is relative to the
+#             FIRST eval of the run; kill if it passes +0.10).
+#
+# VRAM: peak must stay UNDER 26 GB. The blind branch is forward-only and runs
+# BEFORE the aligned forward (its logits are freed before the aligned graph
+# exists), so the extra cost is ~+35% wall-clock rather than +35% memory — but it
+# does add a transient full-logits activation, and fineweb rows are long (up to
+# max_length). The per-device batch is therefore 4 (not the 16 the randstr lane
+# used; the 4-lane run at 16 already sat at ~29 GB) with accum 16 to hold the
+# effective batch at 64. THE LAUNCHER MUST CONFIRM PEAK VRAM EMPIRICALLY and drop
+# per_device_train_batch_size further (4 -> 2, accum 16 -> 32) if it exceeds 26 GB.
+#
+#   Launch SOLO:
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h16_gap_weighted.yaml \
+#       > data/checkpoints/h16-gap-weighted-v0-run.log 2>&1 &
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  subsets:
+    - "fineweb-edu"                  # fineweb-ONLY: the lane H10 measured the decay on
+  train_splits:
+    fineweb-edu: ["train"]
+  validation_splits:
+    fineweb-edu: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h16-gap-weighted-v0"
+  per_device_train_batch_size: 4     # see the VRAM note above
+  per_device_eval_batch_size: 2      # eval runs the blind forward too, with no
+                                     # gradient-checkpointing relief
+  gradient_accumulation_steps: 16    # effective batch 64 (H07/H13 exposure)
+  num_train_epochs: 20
+  max_steps: 600                     # bounded, per the pre-registration
+
+  # --- H16 knobs (absent => stock loss, unchanged) ----------------------
+  gap_weighted_loss: true
+  gap_beta: 1.0                      # weights = 1 + gap-in-nats; a mean gap of
+                                     # ~0.3-1 nat gives a ~0.5x-5x spread, which
+                                     # reweights hard without collapsing the
+                                     # effective batch onto a few tokens
+  log_blank_ce: true                 # the degeneracy guard (defaults to the value
+                                     # of gap_weighted_loss; set explicitly here)
+  # ---------------------------------------------------------------------
+
+  # 3-group LR (adapter > vision > decoder), NO freeze — H07's recipe verbatim.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "fineweb-edu"
+  max_eval_samples_per_subset: 64
+  eval_steps: 50                     # 12 guard readings over the run
+  logging_steps: 10
+  save_steps: 200
+  save_total_limit: 3
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h16-gap-weighted-fineweb"
+  tags: ["hybrid", "pretrained-vision", "fineweb", "gap-weighted-loss", "objective", "h16"]

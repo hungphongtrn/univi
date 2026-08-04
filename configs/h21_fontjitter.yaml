@@ -1,0 +1,240 @@
+# configs/h21_fontjitter.yaml
+# H21 LEG 1 — is glyph-scale generalisation LEARNABLE?
+#
+# Spec: docs/hypothesis/todo/H21-vision-path-not-scale-invariant.md
+#
+# ONE variable: the glyph scale of the rendered page. Same d2 geometry (20 groups
+# x 5 letters = 119 chars, ~60 supervised tokens), same canvas (1024), same
+# recipe as H07, same soft-token budget. Only the FONT varies across rows.
+#
+#   TRAINED   fonts 14, 24, 40   (20,000 rows each, distinct RNG seeds)
+#   HELD OUT  fonts 18 and 31    (never trained; both strictly INTERIOR to the
+#                                 trained range, so a failure is a failure to
+#                                 INTERPOLATE — the weakest form of scale
+#                                 generalisation and therefore the informative one)
+#   CONTEXT   fonts 20, 28 (interior) and 52 (extrapolation) — probed, in no branch
+#
+# ===========================================================================
+# DEVIATION FROM THE DOC, FORCED BY THE RENDERER — READ THIS FIRST
+# ===========================================================================
+# The doc asks for trained fonts {10, 20, 40} with 14 and 28 held out.
+# `data/preprocessing/render_utils.py` does `font_size = max(font_size, 14)` in
+# every render entry point, so **font 10 renders BYTE-IDENTICALLY to font 14**
+# (verified: md5 of the rendered page is the same for 8, 10, 12 and 14 —
+# `scratchpad/h21_materialize_fonts.py --self-test`).
+#
+# Launched as written, the "held-out" font 14 would have been TRAINED under the
+# label "font 10", and the CONFIRMS branch would have fired on a font the model
+# had seen 20,000 times. The experiment would have been worthless and the failure
+# invisible in every log.
+#
+# The repair keeps everything the doc's design choices actually rest on and gives
+# up only the one property the clamp makes unobtainable:
+#   * three discrete trained fonts spanning the same ~14-40 range           KEPT
+#   * two held-out fonts strictly INTERIOR to that range                    KEPT
+#     (18 and 31 are the geometric midpoints of 14-24 and 24-40)
+#   * one extrapolation rung above the range (52), reported, never a branch KEPT
+#   * uniform token-weighted gradient share by construction                 KEPT
+#   * distinct train seeds per font, so no string is seen three times       KEPT
+#   * "the production font 14 is never trained"                             LOST
+# 14 is the SMALLEST font this renderer can produce, so "held out AND interior"
+# is unsatisfiable for it. Consequence to carry into the write-up: the trained-
+# font mean includes font 14, which the warm-start checkpoint already reads, so
+# that lane's number is partly inherited rather than learned. The criterion is
+# held-out-vs-trained-mean and both held-out fonts are new to BOTH this run and
+# the warm start, so the comparison itself is unaffected.
+#
+# (If a sub-14 glyph is ever wanted: render on a LARGER canvas at font 14 — the
+# processor resizes any square page to 768 px at budget 280, so canvas 1434 gives
+# an effective 7.5 px glyph. That changes the resampling path as well as the
+# glyph size, so it is a different manipulation, not a cheaper one.)
+#
+# ===========================================================================
+# ONE TRAINING SUBSET, NOT THREE — and why that needed no code change
+# ===========================================================================
+# `univi.trainer.VALID_SUBSETS` is a closed set and contains no name meaning
+# "font F". Rather than add names, the three font blocks are concatenated into
+# the single already-valid subset `random-strings`, i.e. a per-ROW font mixture.
+# The font of every row stays recoverable:
+#     source_dataset_id = synthetic/randstr-f14 | -f24 | -f40   (20,000 each)
+#     render_config.font_size
+# The doc's design choice 1 said per-row jitter "would need a per-row font draw
+# in the materializer"; this is that draw, done by concatenating per-font blocks
+# outside the materializer. It is strictly closer to the doc's stated ideal than
+# three discrete lanes would have been, and it makes the token-weighted share
+# uniform by construction (design choice 4) with no weighting scheme.
+#
+# ===========================================================================
+# DATA — ALREADY MATERIALIZED (2026-07-29, CPU-only)
+# ===========================================================================
+#   data/materialized/h21-fontmix-v0/random-strings/{train,validation}
+#       60,000 train (20,000 x fonts 14/24/40, seeds 3407+7919k), 1,500 val.
+#       58.05 target tokens/row -> 60.05 SUPERVISED (H13 §7: response-only
+#       masking also supervises `<|im_end|>\n`).
+#   data/materialized/h21-fonts-v0/randstr-f{14,18,20,24,28,31,40,52}/validation
+#       300 rows each, ONE shared seed => byte-identical targets on every rung,
+#       so every cross-font comparison in the read-out is PAIRED BY ROW.
+#       Verified: pairwise pixel-distinct on all 64 checked rows (this is the
+#       assertion that would have caught the font-10 clamp), 1 page/row on every
+#       rung, targets identical across all 8 rungs.
+#   Rebuild:  CUDA_VISIBLE_DEVICES="" HF_HUB_OFFLINE=1 uv run python \
+#               scratchpad/h21_materialize_fonts.py --mode leg1
+#             CUDA_VISIBLE_DEVICES="" HF_HUB_OFFLINE=1 uv run python \
+#               scratchpad/h21_materialize_fonts.py --mode leg0 --val-rows 300
+#
+# MEASURED PRE-LAUNCH (CPU, no GPU touched):
+#   * token retention through the REAL univi.trainer.load_dataset:
+#         train 60,000/60,000 = 100.00%   val 1,500/1,500 = 100.00%
+#     worst-case filter estimate 605 tokens vs max_length 1024 (the filter charges
+#     otl + image_token_budget(280)=282 + 256). The margin is structural, not
+#     lucky: 100 letters can tokenise to at most ~119 tokens.
+#   * readable fraction at the ~48-token scan depth: 79.9%
+#     (H13 died at 14.2%; H14 was repaired to 75.2% and CONFIRMED; H07 100%).
+#   * real assembled sequence through HybridCollator: mean 332.9, MAX 336 tokens
+#     (256 soft + ~60 supervised + scaffold) — IDENTICAL at fonts 14/24/40/52,
+#     because the font changes pixels, not tokens. 1024 can never truncate.
+#   * 1 image/row on 60,000/60,000 rows.
+#
+# ===========================================================================
+# VRAM — 21.57 GB estimated (23.15 GB pessimistic) at bs16, seq 336
+# ===========================================================================
+# Same accounting as scratchpad/h17_config_verify.estimate_vram (bf16 weights +
+# bf16 grads + AdamW8bit state = 9.93 GB static; logits dominate because
+# ForCausalLMLoss upcasts the full (B, S, 151670) tensor to fp32):
+#     bs4 13.52 | bs8 16.20 | bs16 21.57 | (pessimistic 14B/logit: 23.15 at bs16)
+# Budget ceiling 26 GB: bs16 FITS.
+# TOTAL-CARD FEASIBILITY: the 40 GB A100 currently shows ~16 GB held by another
+# container, i.e. ~24 GB free. 23.15 GB pessimistic at bs16 leaves under 1 GB of
+# headroom against that. If the other container is still resident at launch, drop
+# to `per_device_train_batch_size: 8` + `gradient_accumulation_steps: 8`
+# (16.99 GB pessimistic) — the EFFECTIVE batch stays 64 either way, which is the
+# only quantity that must match H07.
+#
+#   Launch SOLO (a concurrent probe once OOM'd the host and killed a run):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h21_fontjitter.yaml \
+#       > data/checkpoints/h21-fontmix-v0-run.log 2>&1 &
+#
+#   LEG 0 first (zero training, ~0.5 h) — it is the sanity gate for everything:
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/h21_font_sweep.py \
+#       --checkpoint data/checkpoints/hybrid-pretrained-randstr-v0/final \
+#       --tag h21-leg0 -n 150
+#
+#   LEG 1 read-out (NOT while training holds the card) — same script, same rungs,
+#   plus the pre-registered branch table on the HELD-OUT fonts:
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/h21_font_sweep.py \
+#       --checkpoint data/checkpoints/h21-fontmix-v0/final \
+#       --tag h21-leg1 -n 150 --trained-fonts 14 24 40 --heldout-fonts 18 31
+#
+#   Criteria are Delta-perm / Delta-blank / per-position reading gain. NEVER eval
+#   CE: H13 §7 found random_strings.py's floor.json divides string entropy by
+#   TARGET tokens while response-only masking also supervises `<|im_end|>\n`,
+#   inflating it by T/(T-2) = 1.0345 at these ~60-token targets. Both conventions
+#   are written into this lane's floor.json; neither is used by any branch.
+
+# VRAM GEOMETRY CHANGED 2026-07-29 (before any run): 16x4 -> 8x8, effective
+# batch UNCHANGED at 64. Reason: the 40 GB card is SHARED — another container
+# has been observed holding ~16 GB. At 16x4 this leg is 21.57 GB (23.15
+# pessimistic); 23.15 + 16 = 39.2 of 40 GB, which would very likely OOM if that
+# container returns. This queue runs unattended, so it must survive that.
+# Costs wall-clock only, not the science.
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+
+  # WARM START — weights only, fresh optimizer and cosine schedule.
+  # WHY: H13 §8's standing instruction is to warm-start from a checkpoint that
+  # already reads, because the adapter is the only from-scratch component and a
+  # cold start re-runs the bootstrap lottery H13 lost (grad_norm 0.06 by step 110,
+  # loss pinned at the no-reading floor, VOID). H21's own VOID branch exists for
+  # exactly that failure and says nothing about scale, so a cold start would risk
+  # spending 2.6 h to learn nothing about the question.
+  # WHICH: hybrid-pretrained-randstr-v0/final is H07's checkpoint. It reads
+  # randstr at Delta-perm +114.7% (+113.84% re-measured by H13 §4) — at FONT 14
+  # ONLY, which is precisely the state this run must extend to fonts 24 and 40.
+  # It has never seen fonts 18, 24, 31, 40 or 52, so neither held-out font is
+  # contaminated by the warm start.
+  # COST, recorded before the run: font 14 is both trained here AND already read
+  # by the init, so the trained-font mean is partly inherited. Read the branch
+  # off the held-out-vs-trained-mean RATIO, and report font 14's absolute number
+  # separately from 24 and 40.
+  init_from: "data/checkpoints/hybrid-pretrained-randstr-v0/final"
+
+  # H17's knob, pinned at the historical default ON PURPOSE. H21 changes the
+  # RENDER GEOMETRY; H17 changes the budget. Two variables at once would make
+  # either result uninterpretable, and H21's "what no branch licenses" item 2
+  # says so explicitly. NOTE the real per-image cost is 256 soft tokens (a
+  # 1024x1024 page resizes to 768x768 => a 16x16 grid); only the dataset length
+  # FILTER charges the conservative 282.
+  max_soft_tokens: 280
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h21-fontmix-v0"
+  max_train_images: 1        # every row is exactly one page (measured, 60000/60000)
+  subsets:
+    - "random-strings"       # ONE lane; the font varies per ROW inside it
+  # No `train_splits:` — it is read ONLY by univi.trainer._load_hub; with
+  # `source: local` the training splits come from the manifest's
+  # `is_training_split` flag and `_load_local` never looks at it.
+  validation_splits:
+    random-strings: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h21-fontmix-v0"
+
+  # H07's geometry VERBATIM: 16 x 4 = effective batch 64. H07 ran this at seq
+  # ~303 and 20.16 GB; this run's seq is 336. If the card is shared at launch,
+  # use 8 x 8 instead (see the VRAM note above) — the effective batch is the
+  # invariant, the per-device split is free.
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 8
+  num_train_epochs: 20               # inert ceiling; max_steps governs
+  # 500 x 64 = 32,000 rows against a 60,000-row lane = 0.53 epochs, so no string
+  # is seen twice (H07 saw 0.38 epochs). H07 reached Delta-perm +115% in 600
+  # steps at 6.6 s/step; this run's sequences are 1.11x longer => ~7.3 s/step
+  # => ~1.0 h, inside the doc's 2.6 h budget.
+  max_steps: 500
+
+  # 3-group LR (adapter > vision > decoder), NO freeze — H07's recipe verbatim.
+  # Vision stays TRAINABLE: freezing is the single change that has produced
+  # soft-prompt collapse in this programme (H04), and a glyph-scale change is
+  # exactly the kind of low-level statistic the vision tower would have to adapt.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  # MEASURED, not guessed. _filter_training_tokens charges
+  # otl + image_token_budget(280)=282 + 256; the max estimate over the real
+  # 60,000-row split is 605. Retention at 1024 is 60000/60000 = 100.00% and the
+  # real assembled sequence maxes at 336, so 1024 can never truncate a target.
+  max_length: 1024
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "random-strings"       # trajectory ONLY — eval CE is not a criterion (H12)
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  # Checkpoints at 100..500 so the grounding-growth curve can be read at several
+  # points (H07 went Delta-perm +27% @200 -> +115% final) and so a VOID can be
+  # diagnosed from where grad_norm turned over rather than from the final state.
+  save_steps: 100
+  save_total_limit: 6
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h21-fontmix-scale-generalisation"
+  tags: ["hybrid", "pretrained-vision", "prior-proof", "render-geometry",
+         "glyph-scale", "warm-start", "h21"]

@@ -1,0 +1,100 @@
+# configs/hybrid_4lane.yaml
+# PRETRAINED-vision hybrid on the REAL 4-lane univi mixture — read everything at
+# once, check no lane drowns.
+#
+# Architecture (univi/hybrid/pretrained.py):
+#   Gemma-4-12B unified vision embedder (PRETRAINED, -> 3840 soft tokens)
+#     -> Linear(3840 -> 2048)   [from-scratch adapter]
+#     -> Qwen3-1.7B decoder (PRETRAINED)
+#
+# WHY THIS RUN: the prior-proof unit tests passed one modality at a time — OCR text
+# reads FROZEN (in-distribution for Gemma vision), spoken-digit AUDIO reads only with
+# TRAINABLE vision (spectrograms are OOD). This run mixes all four real lanes at once
+# to test the two open risks together:
+#   (1) does the hybrid read text + natural-image + instruction + audio SIMULTANEOUSLY,
+#   (2) does audio DROWN? In the Gemma run librispeech was 3.5% of the mixture and
+#       collapsed to the ignore-floor (rel Δperm 0.16%) while every other lane read.
+#
+# NO-DROWNING FIX = BALANCED MIXTURE. librispeech has only 104k train rows vs ~950k-1M
+# for the others; `max_train_rows_per_subset` caps every lane to ~104k so each modality
+# gets an equal 25% share of the gradient. VISION TRAINABLE (audio needs it), 3-group LR.
+#
+# Decisive read is the post-hoc 4-lane grounding ablation (eval_ablation-style Δperm /
+# Δblank per lane); the per-lane eval_<lane>_loss trajectory here is the live drowning
+# monitor.
+#
+#   Launch SOLO:
+#     HF_HUB_OFFLINE=1 nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/hybrid_4lane.yaml \
+#       > data/checkpoints/hybrid-4lane-v0-run.log 2>&1 &
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached) -> Gemma4UnifiedVisionConfig
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder (weights cached)
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"  # range-downloaded pretrained
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/univi-3M-v0-split"
+  max_train_images: 4
+  max_train_rows_per_subset: 104014   # cap every lane to librispeech's size -> equal 25% share
+  subsets:
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  train_splits:
+    fineweb-edu: ["train"]
+    densefusion: ["train"]
+    smoltalk: ["train"]
+    librispeech: ["train"]
+  validation_splits:
+    fineweb-edu: ["validation"]
+    densefusion: ["validation"]
+    smoltalk: ["validation"]
+    librispeech: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/hybrid-4lane-v0"
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 4      # OOM'd at 16: eval forward has no grad-checkpointing
+                                     # relief, so cross_entropy logits (batch*2048*~152k vocab)
+                                     # stack on top of training's already-resident 29GB and
+                                     # blow the last 10GB. 4x smaller batch -> ~3GB, fits.
+  gradient_accumulation_steps: 4     # effective batch 64
+  num_train_epochs: 20
+  max_steps: 4000                    # ~256k examples seen; 25% audio = ~64k audio rows
+                                     # (>1.6x the 600-step pure-audio run that already read)
+
+  # 3-group LR (adapter > vision > decoder), NO freeze -------------------
+  freeze_vision: false               # TRAINABLE vision: audio (spectrograms) is OOD for Gemma
+  lr_adapter: 3.0e-4                 # from-scratch bridge — fastest
+  lr_vision:  1.0e-4                 # pretrained Gemma embedder — moderate (audio OOD adaptation)
+  lr_decoder: 2.0e-5                 # pretrained Qwen3 — slowest (refine, don't overwrite)
+  # ---------------------------------------------------------------------
+
+  max_length: 2048
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:                # per-lane eval_<lane>_loss = the live drowning monitor
+    - "fineweb-edu"
+    - "densefusion"
+    - "smoltalk"
+    - "librispeech"
+  max_eval_samples_per_subset: 64    # halved: faster per-eval, still stable per-lane signal
+  eval_steps: 400                    # less frequent: fewer eval passes over the 4000-step run
+  logging_steps: 10
+  save_steps: 500
+  save_total_limit: 4
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "hybrid-pretrained-4lane-mixture"
+  tags: ["hybrid", "pretrained-vision", "trainable-vision", "4-lane", "mixture", "no-drowning"]

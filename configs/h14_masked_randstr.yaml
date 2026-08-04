@@ -1,0 +1,137 @@
+# configs/h14_masked_randstr.yaml
+# H14 — MASK-DEPENDENT TARGETS. Attacks (B) prior and (C) scan together.
+#
+# Random runs of words are occluded on the rendered page and the target carries
+# ONE `<mask>` sentinel per occluded run (doc variant (b)). The mask is drawn
+# i.i.d. per row, so no prior can supply the target; and to know a span is hidden
+# the model must LOCALIZE it, which is the cursor mechanism H11 says is missing.
+#
+# STAGING (the doc's decision): the `masked-randstr` lane ONLY. Prove the mask
+# mechanism on the already-prior-proof, already-reading (+115% Dperm at H07) lane
+# before porting to real text (`masked-text`, not built).
+#
+# Recipe is H07's EXACTLY (the one that read at +115%): 3-group LR, NO freeze.
+# Freezing is what caused the H04/H2 soft-prompt collapse — never freeze here.
+# The only changed variable vs H07 is the data lane.
+#
+# >>> MATERIALIZATION IS STILL REQUIRED — data/materialized/h14-masked-v0 does
+# >>> NOT exist yet. Build it (CPU-only, ~40 min at 50k rows) BEFORE launching:
+# >>>
+# >>>   HF_HUB_OFFLINE=1 uv run python -m data.preprocessing.masked_regions \
+# >>>       --out data/materialized/h14-masked-v0 --n-groups 80 \
+# >>>       --train-rows 50000 --val-rows 500
+# >>>
+# >>> 50k, not the module docstring's 20k: at effective batch 64 this run sees
+# >>> 700 * 64 = 44,800 rows. With 20k rows that is 2.24 epochs, i.e. every page
+# >>> is shown twice and memorization becomes a (weak) confound on a lane whose
+# >>> whole point is that the target is unguessable. 50k keeps it under one epoch,
+# >>> matching H07 (which saw 0.38 epochs of h3-randstr-v0).
+#
+#   Launch SOLO (a concurrent probe once OOM'd the host and killed a run):
+#     HF_HUB_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+#     nohup uv run python -m univi.hybrid.train_pretrained \
+#       --config configs/h14_masked_randstr.yaml \
+#       > data/checkpoints/h14-masked-randstr-v0-run.log 2>&1 &
+#
+#   Read it out with (NOT while training holds the card):
+#     HF_HUB_OFFLINE=1 uv run python scratchpad/h14_masked_eval.py \
+#       --checkpoint data/checkpoints/h14-masked-randstr-v0/final -n 150
+
+model:
+  vision_source: "google/gemma-4-12B-it"          # config only (cached)
+  text_source: "unsloth/Qwen3-1.7B"               # pretrained Qwen3 decoder
+  vision_weights: "data/hybrid/gemma12b-vision/vision_embedder.pt"
+  # H17 knob, pinned at the historical default ON PURPOSE: H14 changes the DATA,
+  # H17 changes the budget. Two variables at once would make either result
+  # uninterpretable. NOTE the real per-image cost here is 256 soft tokens, not
+  # 280 — a 1024x1024 page resizes to 768x768 => 2304 patches => /9 = 256 (only
+  # the dataset length FILTER charges the conservative 282).
+  max_soft_tokens: 280
+
+dataset:
+  num_proc: 4
+  source: "local"
+  path: "data/materialized/h14-masked-v0"         # NOT YET MATERIALIZED — see above
+  max_train_images: 4
+  subsets:
+    - "masked-randstr"
+  # NOTE: there is deliberately no `train_splits:` key. It is read ONLY by
+  # univi.trainer._load_hub; with `source: local` the training splits come from
+  # the manifest's `is_training_split` flag and `_load_local` never looks at it.
+  # So the `train_splits:` blocks in configs/h13_density.yaml and
+  # configs/hybrid_pretrained_randstr.yaml (both `source: local`) are inert.
+  # `validation_splits` IS read on both paths (univi.trainer._load_eval_datasets).
+  validation_splits:
+    masked-randstr: ["validation"]
+
+training:
+  output_dir: "data/checkpoints/h14-masked-randstr-v0"
+
+  # BATCH GEOMETRY — effective batch 64, matching H07/H13 exposure.
+  # 4 x 16 is H13's geometry, reused deliberately. Measured on the materialized
+  # rows (20 real rows through the real HybridCollator): one masked-randstr row
+  # assembles to 493 tokens on average, 535 at worst (256 image soft tokens + 209
+  # target tokens + 32 of chat scaffold). H13 ran this same 4 x 16 with d4 rows of
+  # ~1230 tokens inside its 26 GB budget, so H14's peak activation is bounded
+  # ABOVE by a configuration already measured safe — roughly 0.4x the per-microbatch
+  # token count. 8 x 8 would very likely also fit (3.9k tokens/microbatch vs H13's
+  # measured-safe 4.9k) and would cut wall-clock, but it changes the micro-batch
+  # geometry at the same time as the lane for no scientific gain.
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 16    # effective batch 64
+  num_train_epochs: 20               # ceiling only; max_steps wins
+  # STEP BUDGET — the doc budgets ~5 h GPU.
+  # H07: 600 steps at eff-64, 16 x 4, ~15-token targets => 1:05:36 (6.6 s/step).
+  # H13: 4 x 16, mean seq ~577 tokens => 31.1 s/step measured at step 671
+  #      (5:47:58 elapsed), i.e. ~8.6 h for its 1000 steps.
+  # H14 shares H13's geometry with mean seq 493 (0.85x) => ~26 s/step
+  #      => 700 steps ~= 5.1 h. That is >= H07's 600-step exposure (which was
+  #      enough to reach +115% Dperm) with margin for a harder task, and a
+  #      pre-registered early kill at step 600 still replicates H07 exactly.
+  max_steps: 700
+
+  # 3-group LR (adapter > vision > decoder), NO freeze — H07's recipe verbatim.
+  # Vision stays TRAINABLE: it is free for this lane (rendered text is in-distribution
+  # for Gemma vision, and H07 showed the tower barely moves), and freezing is the
+  # single change that has produced soft-prompt collapse in this program.
+  lr_adapter: 3.0e-4
+  lr_vision:  5.0e-5
+  lr_decoder: 2.0e-5
+
+  # MEASURED, not guessed. Exact target-token distribution over the planned 20k/50k
+  # train draw (same seeded RNG stems as the materializer, tokenizer
+  # data/checkpoints/encoder-free-v0/best): mean 209.3, p99 231, MAX 247 tokens.
+  # univi.trainer._filter_training_tokens charges otl + image_token_budget(280)=282
+  # + 256 template => worst case 785. Retention at this budget:
+  #     max_length=768  -> 19770/20000 rows (98.85%)  [drops real rows]
+  #     max_length=1024 -> 20000/20000 rows (100.00%) <- chosen
+  #     max_length=2048 -> 20000/20000 rows (100.00%)  [no extra retention]
+  # The real assembled sequence is only 535 tokens at worst, so 1024 leaves 489
+  # tokens of headroom and can never truncate a target.
+  max_length: 1024
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true
+  loss_masking: "response_only"
+
+  do_eval: true
+  validation_subsets:
+    - "masked-randstr"
+  max_eval_samples_per_subset: 128
+  eval_steps: 50
+  logging_steps: 10
+  # 200 mirrors H07 so the same @200-vs-final grounding-growth comparison is
+  # available (H07 went Dperm +27% @200 -> +115% final). save_total_limit 4 keeps
+  # 200/400/600 alongside `final`; eval CE is NOT a grounding monitor (H12), so
+  # the growth has to be read from the ablation at several checkpoints.
+  save_steps: 200
+  save_total_limit: 4
+
+wandb:
+  project: "univi-encoder-free"
+  run_name: "h14-masked-randstr"
+  tags: ["hybrid", "pretrained-vision", "masked-regions", "prior-proof",
+         "localization", "h14"]
