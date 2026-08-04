@@ -3,16 +3,16 @@
 **Status:** DONE (2026-07-29) — **REFUTED.** The readable ceiling is **invariant to character
 density** over a 16× range. Density-proportional bandwidth is excluded; the surviving accounts are
 **(C) fixed scan depth** and a **fixed-absolute-capacity** flavour of (A), which
-[H17](../todo/H17-raise-soft-token-budget.md) now discriminates.
+[H17](../done/H17-raise-soft-token-budget.md) now discriminates.
 **The H13 training run itself is VOID** (collapsed to the no-reading floor); the verdict comes from
 running the pre-registered discriminator against the
 [H07](../done/H07-pretrained-vision-adapter-qwen.md) checkpoint instead. See
 [Verdict](#verdict-2026-07-29).
-· **Cost:** ~6 h GPU (wasted) + ~25 min probe · Separates **(A) bandwidth** from **(C) scan** · Related: [H11](../done/H11-position-decay-is-prior-induced.md), [H12](../done/H12-contrastive-decoding-probe.md), [H17](../todo/H17-raise-soft-token-budget.md), [H18](../todo/H18-no-learned-scan.md)
+· **Cost:** ~6 h GPU (wasted) + ~25 min probe · Separates **(A) bandwidth** from **(C) scan** · Related: [H11](../done/H11-position-decay-is-prior-induced.md), [H12](../done/H12-contrastive-decoding-probe.md), [H17](../done/H17-raise-soft-token-budget.md), [H18](../todo/H18-no-learned-scan.md)
 
 **Promoted to first place** by [H12](../done/H12-contrastive-decoding-probe.md): contrastive decoding
 recovered no mid-page content, which is H12's pre-registered "refute" branch and explicitly promotes
-this hypothesis and [H17](../todo/H17-raise-soft-token-budget.md) over the objective-side line.
+this hypothesis and [H17](../done/H17-raise-soft-token-budget.md) over the objective-side line.
 
 ## Claim
 
@@ -53,7 +53,7 @@ Instrument every rung with **per-position** reading gain
 Define **K** = the character position beyond which positional reading gain drops below 50% of the
 0–100-char gain.
 
-- **K scales with density** (collapse point moves) ⇒ **(A) bandwidth** ⇒ [H17](../todo/H17-raise-soft-token-budget.md) is the fix.
+- **K scales with density** (collapse point moves) ⇒ **(A) bandwidth** ⇒ [H17](../done/H17-raise-soft-token-budget.md) is the fix.
 - **K fixed at the same token index across all rungs** ⇒ **(C) scan failure** ⇒ [H18](../todo/H18-no-learned-scan.md); the fix is architectural or curricular, and more tokens will not help.
 - **D5 ≫ D3** ⇒ the mechanism is lines-per-patch demultiplexing, not chars-per-token ⇒ fix by render
   geometry (free) before token budget (costly).
@@ -177,7 +177,7 @@ rather than assumed.
 Script `scratchpad/h13_ink_occupancy.py` (CPU, no model weights, `CUDA_VISIBLE_DEVICES=""` — H13 is
 still training and this repo's rule is that training runs SOLO). Output
 `data/eval/h13-ink-occupancy.json`, plus `-560.json` / `-1120.json` for the budget sweep used by
-[H17](../todo/H17-raise-soft-token-budget.md). 30 validation rows per rung, taken by index (not
+[H17](../done/H17-raise-soft-token-budget.md). 30 validation rows per rung, taken by index (not
 shuffled) so d3 and d5 pair.
 
 **Method.** Ink is counted on the *processor's own output*: the merged patch vector of soft token
@@ -276,7 +276,7 @@ canvas**. But the patch grid lives on the **resized 768** image, where one cell 
 **64 original px**. Corrected: **d1–d4 = 3.76 lines/cell, d5 = 1.33** — every figure is 4/3 too low,
 and d5's stated intent of ~1.0 line/patch was overshot to 1.33. The *ratio* between the arms (2.82×)
 and hence the rung's design logic are unaffected. Note that
-[H17](../todo/H17-raise-soft-token-budget.md)'s table quotes 3.8 lines per 48px patch for fineweb,
+[H17](../done/H17-raise-soft-token-budget.md)'s table quotes 3.8 lines per 48px patch for fineweb,
 which matches the resized measurement (3.76) — the two docs disagree by exactly 4/3 and **H17 is the
 correct one**.
 
@@ -391,7 +391,7 @@ bandwidth predicts position-0 should degrade too. It does not.
    strictly established is: *the collapse point is invariant to page density.* That kills the
    density-proportional account and nothing more.
 2. **The two survivors differ in one testable way** — raising the soft-token budget relieves a
-   capacity limit but not a scan limit. So [H17](../todo/H17-raise-soft-token-budget.md) is **not**
+   capacity limit but not a scan limit. So [H17](../done/H17-raise-soft-token-budget.md) is **not**
    undermined by "more tokens will not help"; it becomes the precise discriminator between (C) and
    (A′). Its pre-registered "K must scale ≥3× for 4× the tokens" is exactly the right test.
 3. **Measured on a model trained at ONE density.** H07 saw only d1-geometry font-14 randstr. Its K
@@ -442,9 +442,9 @@ regenerated before being quoted.
 - **[H18](../todo/H18-no-learned-scan.md)** — resolved to the extent H13 can resolve it: the
   collapse point is density-invariant, consistent with no learned scan. But (A′) is not excluded, so
   H18 should not be closed as CONFIRMED until H17 reports.
-- **[H17](../todo/H17-raise-soft-token-budget.md)** — **promoted to the critical path.** It is now
+- **[H17](../done/H17-raise-soft-token-budget.md)** — **promoted to the critical path.** It is now
   the discriminator between (C) and (A′), not merely "the fix if (A)".
-- **[H14](../in-progress/H14-masked-region-targets.md)** — as configured it measured **209.7 target tokens/row,
+- **[H14](../done/H14-masked-region-targets.md)** — as configured it measured **209.7 target tokens/row,
   i.e. 22.9 % readable**, squarely in H13's failure regime (14.2 % died; H07's 100 % succeeded).
   Launching it unchanged would very likely buy another VOID. Redesigned before launch — see its doc.
 - **Every future run on this architecture** — check the *token-weighted* readable fraction before

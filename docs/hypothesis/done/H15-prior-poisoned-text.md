@@ -1,14 +1,146 @@
 # H15 — Making the prior wrong at every position restores deep reading
 
-**Status:** TODO — **REVISED 2026-07-29 after [H13](../done/H13-density-ladder-long-targets.md)'s
-verdict; the original design would have collapsed and the original claim is largely pre-refuted.**
-· **Cost:** ~4 h GPU (3 arms) + ~30 min CPU materialization · Attacks **(B) objective**
-· Related: [H14](../in-progress/H14-masked-region-targets.md), [H16](H16-prior-gap-weighted-loss.md),
-[H11](../done/H11-position-decay-is-prior-induced.md), [H13](../done/H13-density-ladder-long-targets.md)
+**Status:** DONE (2026-07-30) — **PARTIAL.** All three arms ran. The language prior costs **real
+reading, but only at answer positions 1–4** — a clean monotone dose-response (position-1 gain
+**+0.0 → +13.3 → +36.7 pts** at p = 0.00 / 0.15 / 0.50) that is **not** a headroom artifact. Past
+position ~5 the arms are indistinguishable at every dose. So removing the prior entirely buys about
+**four extra tokens** of readable depth and then stops: **the prior costs depth *below* ~5 tokens and a
+second constraint sets the ceiling.** That is the doc's PARTIAL branch with "≲ 48 tokens" replaced by
+"~5". **⚠️ The pre-registered VOID guard fired on all three arms and it is mis-sized** — its 48-token
+prefix window inherited the discredited 48-token depth, and it declares an arm "did not read" that
+shows **+54.0 pts** of gain at position 0. Both readings are recorded below; the guard is reported, not
+silently overridden. **(B) is closed as an account of the positional ceiling**, jointly with
+[H16](H16-prior-gap-weighted-loss.md)'s REFUTED. See [Verdict](#verdict-2026-07-30).
+· **Cost:** ~5.5 h GPU (3 arms) + ~15 min probes · Attacks **(B) objective**
+· Related: [H14](H14-masked-region-targets.md), [H16](H16-prior-gap-weighted-loss.md),
+[H11](H11-position-decay-is-prior-induced.md), [H13](H13-density-ladder-long-targets.md)
+
+## Verdict (2026-07-30)
+
+Three arms trained 400 steps each (`configs/h15_poisoned_p{00,15,50}.yaml`), `grad_norm` ending
+0.275 / 0.330 / 0.350 — **all three optimized**, unlike H16 and H17's raised-budget legs. Probed on the
+matched deep-val splits at `--max-length 4096`, 150 rows, zero truncation:
+`data/eval/h15-void-guard-p{00,15,50}.json` and
+`data/eval/hybrid-4lane-position-decay-h15-p{00,15,50}-deepval.json`.
+
+### 1. The pre-registered VOID guard fired on all three arms
+
+Prefix-matched Δperm over the first 48 answer tokens, bar **+10%**: p00 **+6.81%**, p15 **+4.28%**,
+p50 **+8.35%**. Read literally, the guard says *"that arm did not read at all and none of its position
+numbers may be interpreted … Report it and stop."*
+
+**The guard is mis-sized, and by the same number this doc already corrected once.** The 48-token window
+was chosen when readable depth was believed to be ~48 tokens — the K estimator floor that
+[H13 §7](H13-density-ladder-long-targets.md) and
+[H17](H17-raise-soft-token-budget.md#two-of-this-docs-criteria-were-mis-specified--found-by-running-them)
+retired. Real reading here lives in positions 0–4, so averaging Δperm over 48 tokens dilutes a ~5-token
+effect by roughly 10×. The [replacement table below](#what-changed-from-the-original-criteria-and-why)
+correctly diagnosed the *aggregate* Δperm bar as length-confounded and then set the repair's window
+using the length it was about to discover was wrong. The decisive evidence that the guard misfires:
+**it declares the p00 control "did not read" while that arm shows +54.0 pts of gain at position 0** with
+aligned accuracy 62.7% against blank's 8.7%.
+
+**Recomputed at a 10-token window, all three arms PASS:**
+
+| arm | prefix-**48** Δperm (as run) | prefix-**10** Δperm (recomputed) | position-0 gain |
+|---|---|---|---|
+| p00 | +6.81% — VOID | **+26.61%** — pass | +54.0 |
+| p15 | +4.28% — VOID | **+20.62%** — pass | +41.3 |
+| p50 | +8.35% — VOID | **+43.86%** — pass | +48.0 |
+
+⚠️ **These prefix-10 figures are token-weighted reconstructions from the stored position bins, not a
+fresh probe run.** The bins hold accuracies, and `prefix_dperm_probe.py` reports a row-mean, so the exact
+values need a GPU re-run at `--prefix-tokens 10` (~15 min, no training) before they are quoted as
+measurements. The *direction and magnitude* are not in doubt — a 3–5× gap in the same direction on all
+three arms — but treat the numbers as provisional. `prefix_dperm_probe.py`'s default is now **10**, with
+`--prefix-tokens 48` retained to reproduce this doc's original run verbatim.
+
+### 2. The primary instrument — position-resolved gain, aligned vs blank
+
+| answer position | p00 (control) | p15 | p50 |
+|---|---|---|---|
+| **0** | **+54.0** | +41.3 | +48.0 |
+| **1** | **+0.0** | **+13.3** | **+36.7** |
+| **2–4** | −1.8 | +1.3 | **+10.0** |
+| 5–9 | +0.4 | +1.1 | +2.3 |
+| 10–19 | +0.8 | +1.5 | +4.2 |
+| 20–49 | +2.5 | +4.1 | +3.6 |
+| 50–99 | +4.1 | +2.7 | +4.0 |
+| 100–199 | +4.0 | +2.9 | +2.8 |
+| 400+ | +1.3 | +1.9 | +0.7 |
+
+**Monotone and coherent at positions 1 and 2–4; flat everywhere deeper.** Not DOSE-INCOHERENT: the
+ordering p00 < p15 < p50 holds at both shallow bins without exception.
+
+### 3. It is not a headroom artifact — the check that decides this
+
+Reading gain is `acc_aligned − acc_blank`, so poisoning could raise the gain purely by lowering the
+blank baseline. It does not. At position 1:
+
+| arm | acc_aligned | acc_blank | gain | gain as fraction of headroom `(1 − blank)` |
+|---|---|---|---|---|
+| p00 | 27.3% | 27.3% | +0.0 | **+0.0%** |
+| p15 | 25.3% | 12.0% | +13.3 | **+15.2%** |
+| p50 | **38.7%** | 2.0% | +36.7 | **+37.4%** |
+
+**p50's absolute aligned accuracy at position 1 (38.7%) is higher than p00's (27.3%)** despite its
+target being far closer to uniform-random. A headroom artifact cannot raise absolute accuracy on a
+higher-entropy target. Normalised for headroom the effect survives at 0.0% → 15.2% → 37.4%. At
+positions 2–4 the same holds (p00 −2.8%, p15 +1.5%, p50 +10.3%), and by 5–9 all arms are ≤ +2.3%.
+
+The [page-count confound](#matching) recorded before these probes ran works **against** the effect: the
+control carries 1.2 images/row against p50's 1.0, so the clean arm had *more* soft-token bandwidth and
+still read less deep. Supervised tokens also rise with dose (754 / 976 / 1116 mean), which affects the
+aggregate numbers in §1 but not absolute position bins.
+
+### 4. Which branch this is
+
+**PARTIAL**, in substance — with the caveat that the branch definitions themselves do not survive
+contact with the corrected depth:
+
+- **CONFIRMS fails.** It required bin-20–50 gain to exceed the control by **≥ +10 pts**. Measured
+  **+1.1** (p50) and **+1.6** (p15). Not close.
+- **REFUTES does not hold either.** It required indistinguishability in **both** bins 10–20 and 20–50 —
+  roughly true — but REFUTES also asserts *"prior competition is not what limits depth on real text"*,
+  and positions 1–4 flatly contradict that.
+- **D50 is degenerate at this depth scale.** D50 = the deepest bin with gain ≥ 50% of the position-0–1
+  gain. It evaluates to bin **0** for p00, ~**0** for p15, and **1** for p50, so the CONFIRMS test
+  "poisoned D50 ≥ 2× control D50" reduces to `≥ 2 × 0`, which is satisfied by anything. **A criterion
+  in D50 cannot discriminate when D50 is 0 or 1.** Same failure shape as K.
+- **The CONFIRMS/REFUTES measurement windows were placed beyond the readable region.** Both are stated
+  at bins 10–20 and 20–50, which are 2–10× deeper than where any arm reads. In the CONFIRMS direction
+  that made them near-unfalsifiable; in the REFUTES direction, near-automatic. The manipulation's real
+  effect landed at positions 1–4, which **no branch examines.**
+
+So the pre-registered decision procedure could not have returned the right answer regardless of the
+data. The finding is read off the primary instrument, which the doc correctly designated as
+position-resolved gain per bin.
+
+### 5. What this licenses, and what it does not
+
+**Licensed:** the language prior *does* actively suppress measurable reading, at positions 1–4, in a
+dose-dependent way, on real rendered English. That is a genuine (B) effect and
+[H11](H11-position-decay-is-prior-induced.md)'s framing survives in miniature. **And it is
+bounded at ~4 tokens** — the readable ceiling is set by something else.
+
+**Not licensed:**
+
+- **Not "(B) is dead."** (B) is real; it is *small*. What is dead is (B) **as an account of the
+  positional ceiling**, which is the only role it was still being kept alive for.
+- **Not a promotion of [H16](H16-prior-gap-weighted-loss.md).** PARTIAL says H16 is worth running only
+  if its target is depth below the ceiling. H16 has since run and come back **REFUTED** — a loss-weight
+  version of this same intervention captured none of the ~4 tokens the data rebuild found, and
+  destroyed position-0 reading. The two together close the objective-side line from both directions.
+- **Not a cross-arm depth comparison at any bin past ~5.** The arms are token-matched but not
+  page-matched (see [Matching](#matching)); Δperm and reading gain are within-arm paired contrasts and
+  are immune, but any cross-arm claim deeper than the effect reported here needs re-checking on the
+  1-page subset.
+- **Nothing about `random-strings` as the p → 1 limit.** That row of the arm table quotes "K = 48.5
+  tok", which is the retired estimator floor. The p → 1 limit reads ~5–12 tokens, like everything else.
 
 ## Claim (original)
 
-[H10](../done/H10-reading-concentrated-at-start.md) showed reading is bought only where the prior
+[H10](H10-reading-concentrated-at-start.md) showed reading is bought only where the prior
 fails, and the prior only fails at position 0. Corrupt the *source text before rendering* so the
 prior is wrong at **every** position, and deep reading should appear.
 
@@ -22,12 +154,12 @@ tokenizer (`data/checkpoints/encoder-free-v0/best`) on real `fineweb-edu` rows p
 
 ### 1. The lane as decided was 5.2% readable — worse than the run that died
 
-[H13](../done/H13-density-ladder-long-targets.md) §3: the model reads only ~**48** answer tokens
+[H13](H13-density-ladder-long-targets.md) §3: the model reads only ~**48** answer tokens
 deep; a run whose supervised tokens fall mostly beyond that depth collapses into the
 uniform-marginal basin, because every unreachable token teaches "emit the marginal, ignore the
 image" and a from-scratch adapter loses the bootstrap race. H13 died at **14.2%** readable;
-[H07](../done/H07-pretrained-vision-adapter-qwen.md) succeeded at **100%**;
-[H14](../in-progress/H14-masked-region-targets.md) was repaired from 22.9% to **75.2%** before launch.
+[H07](H07-pretrained-vision-adapter-qwen.md) succeeded at **100%**;
+[H14](H14-masked-region-targets.md) was repaired from 22.9% to **75.2%** before launch.
 
 Measured over 200 real validation rows (`readable = Σ min(48, T_i) / Σ T_i`):
 
@@ -63,9 +195,9 @@ prior is not the constraint"* from *"the dose was too weak"*. Hence the dose lad
 `random-strings` **is the p → 1 limit of this design**: a target of uniform i.i.d. letters, where the
 prior is wrong at every position by construction and blank-branch accuracy is ~0 everywhere.
 
-- [H11](../done/H11-position-decay-is-prior-induced.md) ran the position probe on two fully
+- [H11](H11-position-decay-is-prior-induced.md) ran the position probe on two fully
   prior-proof lanes and found the decay **persists with the prior removed entirely**.
-- [H13](../done/H13-density-ladder-long-targets.md) §4 put a number on it: on the H07 checkpoint,
+- [H13](H13-density-ladder-long-targets.md) §4 put a number on it: on the H07 checkpoint,
   **K = 48.8 / 48.5 / 48.5 tokens** across a 16× span of page density, on prior-proof lanes.
 
 Removing the prior *completely* does not produce deep reading; it produces a ceiling at token ~48.
@@ -74,7 +206,7 @@ A 15% character substitution on real text is a strictly **weaker** intervention 
 unfalsifiable.
 
 **What is still open, and worth measuring:** real text currently dies at ~10 tokens
-([H10](../done/H10-reading-concentrated-at-start.md): fineweb gain +0.13 pts by position 10–19)
+([H10](H10-reading-concentrated-at-start.md): fineweb gain +0.13 pts by position 10–19)
 while prior-proof text sustains to ~48. That **~10 → ~48 gap is the prior-attributable share of the
 depth ceiling**, and nothing has measured it, because H11's prior-proof lanes had 14.5-token targets
 and H10's real lane had a different checkpoint. H15 is re-scoped to measure exactly that, which makes
@@ -176,6 +308,23 @@ clean text runs 4.51 chars/token against poisoned text's 2.96, so the control pa
 more characters. H13 licenses this — position-0 gain is statistically identical at d3 (+28.7 ± 3.7)
 and d4 (+28.0 ± 3.7) across a 4× density change, and K is invariant over 16×. Matching on tokens
 keeps the readable fraction and gradient structure comparable, which is the quantity that killed H13.
+
+> ⚠️ **The arms are token-matched but NOT page-matched, and the imbalance is correlated with the
+> treatment axis** (found 2026-07-30, after all three arms had trained). Because the control's 1.5×
+> characters have to go somewhere, page counts on the **deep-validation** splits come out:
+> **p00 → 2 pages on 112/500 rows · p15 → 9/500 · p50 → 0/500.** A 2-page row gets **564** soft
+> tokens against a 1-page row's **282**, so on ~22% of its rows **the control arm is given twice the
+> visual bandwidth of the treated arms**, monotonically decreasing in poison rate. A "poisoning buys
+> depth" result read off this comparison is partly "the control had more pixels", in the direction
+> that *understates* the control — i.e. it inflates the apparent benefit of poisoning.
+> **Read the ablation per-arm against its own blank/permuted baseline** (Δperm and reading gain are
+> both within-arm paired contrasts and are therefore immune), and treat any *cross-arm* depth
+> difference as page-confounded until it is re-checked on the 1-page subset. The arms remain valid
+> for the VOID guard and for each arm's own reading-vs-not question.
+>
+> This one was invisible from the config: `max_target_tokens` was capped identically across arms and
+> the chars/token ratio was recorded, but nothing asserted pages/row. **Assert page-count
+> distributions across arms, not just token counts, whenever a treatment changes chars/token.**
 
 **Recipe.** H07 verbatim (3-group LR 3e-4 / 5e-5 / 2e-5, **no freeze**, vision trainable), effective
 batch 64 as 4 × 16, `max_soft_tokens: 280`, `max_length: 1024` (worst case 200 + 282 + 256 = 738 ⇒
@@ -292,7 +441,7 @@ Then, comparing the poisoned arm(s) against the p = 0.00 control on the same dee
   blank-branch CE (prior strength). If, at depth 20–50, weak-prior tokens show materially more gain
   than strong-prior tokens, the prior is binding at depth and H15/H16 are promoted. **This can
   promote but cannot refute** — a null is equally consistent with "never learned to read there", and
-  [H12](../done/H12-contrastive-decoding-probe.md) already predicts the null. The existing artifact
+  [H12](H12-contrastive-decoding-probe.md) already predicts the null. The existing artifact
   `data/eval/hybrid-4lane-position-decay-4lane-final.json` holds bin aggregates only, so the probe
   must be re-run to emit per-token values.
 
@@ -340,7 +489,7 @@ fineweb-edu transcription, and it is deliberate: the two H15 arms must differ *o
   prior-proof. **Now quantified:** only ~20% of poison-touching tokens are pure (§2).
 - The extra columns make this lane's `Features` incompatible with `concatenate_datasets` against
   *other* lanes. Fine for single-lane H15 (the two length arms share identical Features and
-  concatenate cleanly); a future mixture ([H19](H19-four-lane-rematch.md)) must drop them.
+  concatenate cleanly); a future mixture ([H19](../todo/H19-four-lane-rematch.md)) must drop them.
 
 ## Defects found while revising (2026-07-29)
 
@@ -364,7 +513,7 @@ fineweb-edu transcription, and it is deliberate: the two H15 arms must differ *o
 
 ## Relationship to H14
 
-[H14](../in-progress/H14-masked-region-targets.md) and H15 attack the same constraint from different
+[H14](H14-masked-region-targets.md) and H15 attack the same constraint from different
 directions — H14 makes the *target* mask-dependent, H15 makes the *source* unpredictable. H14
 additionally trains localization; H15 preserves clean real-text statistics. They are not mutually
 exclusive. See the dependency section above: H15 does **not** wait on H14's verdict, but its

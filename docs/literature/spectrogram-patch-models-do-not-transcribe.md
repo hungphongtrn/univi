@@ -1,6 +1,6 @@
 # Spectrogram patch models classify but do not transcribe
 
-**Confidence:** Established · **Used by:** [H20](../hypothesis/todo/H20-audio-phoneme-resolution.md), [H17](../hypothesis/todo/H17-raise-soft-token-budget.md)
+**Confidence:** Established · **Used by:** [H20](../hypothesis/todo/H20-audio-phoneme-resolution.md), [H17](../hypothesis/done/H17-raise-soft-token-budget.md)
 
 ## Claim
 

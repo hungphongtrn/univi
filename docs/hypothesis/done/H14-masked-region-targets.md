@@ -1,6 +1,11 @@
 # H14 — Mask-dependent targets force reading *and* localization
 
-**Status:** RUNNING (launched 2026-07-29, readable-density variant) · **Cost:** ~1.6 h GPU · Attacks **(B) objective** and **(C) scan** together · Origin: user proposal, 2026-07-28 · Related: [H13](../done/H13-density-ladder-long-targets.md), [H15](H15-prior-poisoned-text.md), [H18](H18-no-learned-scan.md)
+**Status:** DONE (2026-07-29) — **CONFIRMS.** All three pre-registered thresholds cleared on the
+readable-density variant. Headline: the model **localizes masked spans at 95.65%** while
+transcribing visible words at **0.86%** — a two-order-of-magnitude dissociation between *where* and
+*what* that was not pre-registered and that bears directly on
+[H17](../done/H17-raise-soft-token-budget.md). See [Verdict](#verdict-2026-07-29).
+· **Cost:** 1.3 h train + 1.2 h eval · Attacks **(B) objective** and **(C) scan** together · Origin: user proposal, 2026-07-28 · Related: [H13](../done/H13-density-ladder-long-targets.md), [H15](../done/H15-prior-poisoned-text.md), [H18](../todo/H18-no-learned-scan.md)
 
 ## Design change forced by H13 (2026-07-29, pre-launch)
 
@@ -52,7 +57,7 @@ fluent continuous text and is immediately wrong.
 It is the only proposal that attacks **two** constraints at once:
 
 - **(B) prior** — the target is a function of a random mask, so the prior cannot supply it. Unlike
-  [H15](H15-prior-poisoned-text.md), it does this without corrupting the source text.
+  [H15](../done/H15-prior-poisoned-text.md), it does this without corrupting the source text.
 - **(C) scan** — to know that a span is hidden, the model must **localize**: it has to know where it
   is on the page. This directly trains the cursor mechanism
   [H11](../done/H11-position-decay-is-prior-induced.md) suggests is missing.
@@ -168,7 +173,7 @@ the data. Floor: 4.8966 nats/tok (strict lower bound — visible-letter entropy 
 - The prompt now states the convention (*"…Write `<mask>` in place of each blacked-out region."*) —
   the sentinel string is otherwise unguessable.
 - 12 extra columns are stored; like `poisoned-text` they break `concatenate_datasets` against other
-  lanes, so [H19](H19-four-lane-rematch.md) must `remove_columns` first.
+  lanes, so [H19](../todo/H19-four-lane-rematch.md) must `remove_columns` first.
 - **Geometry caveat feeding the secondary risk below:** at `--n-groups 80` the word pitch is ~50px
   against a 48px patch — roughly **one word per vision patch**, ~2.8 lines/patch. Word-level
   localization sits right at the patch limit, so if [H13](../done/H13-density-ladder-long-targets.md)
@@ -310,3 +315,95 @@ used by `scratchpad/hybrid_4lane_generate.py` if the cache API raises, and says 
 wall-clock estimate, and the VRAM headroom. Decode-based metrics cost ~2 greedy decodes of ~210
 tokens per row; with the cache that is cheap, without it the fallback re-runs the vision tower every
 step and `-n` should be cut hard.
+
+---
+
+## Verdict (2026-07-29)
+
+**CONFIRMS.** `data/checkpoints/h14-masked-short-v0/final` (400 steps, warm-started, readable-density
+variant), evaluated by `scratchpad/h14_masked_eval.py` on 150 validation rows →
+`data/eval/h14-masked-short.json` / `.log`.
+
+### Gates and pre-registered criteria
+
+| | measure | result | bar | |
+|---|---|---|---|---|
+| GATE | reads the image at all | Δperm **+23.90%**, reading gain **+4.25 ± 0.24** pts | — | **READS** |
+| GATE | mask-A rebuild == stored PNG | **150/150** rows pixel-identical | — | control is like-for-like |
+| C1 | span-boundary accuracy | **75.40%** [74.69, 76.08] | ≥ 60% | **PASS** |
+| C1′ | *first*-sentinel-token accuracy | **95.65%** [93.67, 97.48] | > 50.41% degenerate floor | **PASS** |
+| C2 | hallucinated-content rate | **0.0000%** [0, 0] | ≤ 15% | **PASS** |
+| C3 | mask-permutation change rate | **100.00%** [100, 100] | ≥ 80% | **PASS** |
+| GUARD | visible-word accuracy | **0.86%** [0.57, 1.18] | > 1.18e-05 guess floor | above floor |
+
+The redesign worked: at 75.2% readable with a warm start, the run did **not** reproduce
+[H13](../done/H13-density-ladder-long-targets.md)'s collapse. Train loss 6.152 → 4.909 with
+`grad_norm` holding 0.35–0.66 throughout (H13 slid to 0.06 by step 110).
+
+### The finding that was not pre-registered: *where* ≫ *what*
+
+| the model … | score |
+|---|---|
+| localizes masked spans (first sentinel token) | **95.65%** |
+| responds to *which* spans are masked (permutation control) | **100%** of rows change |
+| transcribes visible words (positional exact match) | **0.86%** |
+| visible-word teacher-forced token accuracy | 7.01% |
+
+Both ends are above their floors, so both are real — but they differ by ~100×. **The model knows
+almost exactly where the occluded regions are and barely knows what the visible letters say.**
+
+**Why this matters for (A′) vs (C).** Masks are large, coarse, low-frequency, spatially salient
+rectangles; letters are fine high-frequency detail. Reliable extraction of *coarse layout* alongside
+failure on *fine content* is what a **resolution / capacity** limit predicts. A pure **scan-failure**
+account predicts the opposite — that the model cannot track position at all — and that is
+contradicted here: the permutation control changes the output on 100% of rows when *only* the mask
+moves, which no mask-independent strategy can do. This is the first direct evidence in the programme
+that **the cursor works and the content channel is the bottleneck**, and it weighs toward **(A′)**
+over **(C)**.
+
+### What this does NOT license
+
+1. **It is not a verdict on (A′) vs (C).** [H17](../done/H17-raise-soft-token-budget.md) is still the
+   experiment that separates them; this is a suggestive dissociation from a single 400-step run, not
+   a manipulation of the budget.
+2. **Localization here may be cheaper than page-position tracking in general.** A black rectangle is
+   a *salient* target. Knowing "a box starts here" is not the same competence as knowing "I am at
+   character 300 of running text", which is what [H18](../todo/H18-no-learned-scan.md) is about.
+3. **Occlusion width leaks run length** — measured 87% of the mutual information, 94% width-only MAP
+   accuracy. Under target variant (b) the target never encodes *k*, so span-boundary accuracy is not
+   inflated; but any *number-of-sentinels* statistic must be read against that leak, not chance.
+4. **Span-boundary accuracy is teacher-forced** — an upper bound on what free decoding would place,
+   and not comparable to the decode-based numbers beside it.
+5. **C2 is a leak detector on this lane, not a prior test.** An occluded word is 3–7 uniform letters,
+   so a non-reader's chance of emitting it is 1.18e-05 and a *reader* cannot emit it either (it is
+   not on the page). Both hypotheses predict ~0; the pre-registered REFUTES branch has almost no
+   power here. A *high* rate would mean the occlusion leaked ink. It only becomes a prior test on the
+   real-text `masked-text` port.
+6. **`<mask>` is 3 Qwen tokens**, so 2 of every 4 scored tokens are near-deterministic continuations
+   and the C1 degenerate floor is 50.41% — the pre-registered 60% bar sits only ~10 points above a
+   non-locating model. **C1′ (95.65%) is the number that measures localization**; treat C1 as the
+   doc-faithful headline, not the discriminating one.
+7. **Density-bounded.** This ran at 24 words/page (d2-like). It licenses "can localize masks at d2
+   density", not "at full-page density". The 80-group set
+   (`data/materialized/h14-masked-v0`, 50k rows, 22.9% readable) is retained to extend it — but note
+   H13 predicts that variant is at collapse risk even warm-started.
+8. **All CIs are row-level cluster bootstraps.** Token- and word-level observations within a page
+   share a mask and a model state.
+
+### Artifacts
+
+- `data/eval/h14-masked-short.json` / `.log` — the eval above.
+- `data/checkpoints/h14-masked-short-v0/{final,checkpoint-200,checkpoint-400}`,
+  log `data/checkpoints/h14-masked-short-v0-run.log`.
+- `configs/h14_masked_short.yaml` (readable-density + warm-start),
+  `configs/h14_masked_randstr.yaml` (80-group, unrun).
+- Data: `data/materialized/h14-masked-short-v0` (24 groups, 30k/500),
+  `data/materialized/h14-masked-v0` (80 groups, 50k/500).
+
+### Process note
+
+The run log contains a `subprocess.TimeoutExpired` traceback from
+`torch._inductor.async_compile.shutdown_compile_workers`. It fires in an **atexit** handler *after*
+400/400 steps completed and all checkpoints were written — teardown only, no effect on the result.
+Aggravated by host CPU contention (a process from an unrelated project on the shared box was at ~99%
+CPU throughout).

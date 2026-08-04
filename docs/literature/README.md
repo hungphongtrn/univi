@@ -11,8 +11,8 @@ behind it, and what it implies for univi — not a paper-by-paper reading list.
 
 | claim | confidence | used by |
 |---|---|---|
-| [Full-page OCR needs ~1k–4k visual tokens, or learned compression](full-page-ocr-token-budget.md) | Established | [H13](../hypothesis/done/H13-density-ladder-long-targets.md), [H17](../hypothesis/todo/H17-raise-soft-token-budget.md) |
-| [Subtracting a blind branch removes the language prior](blind-branch-subtraction.md) | Established (per-token form: our inference) | [H15](../hypothesis/todo/H15-prior-poisoned-text.md), [H16](../hypothesis/todo/H16-prior-gap-weighted-loss.md) |
+| [Full-page OCR needs ~1k–4k visual tokens, or learned compression](full-page-ocr-token-budget.md) | Established | [H13](../hypothesis/done/H13-density-ladder-long-targets.md), [H17](../hypothesis/done/H17-raise-soft-token-budget.md) |
+| [Subtracting a blind branch removes the language prior](blind-branch-subtraction.md) | Established (per-token form: our inference) | [H15](../hypothesis/done/H15-prior-poisoned-text.md), [H16](../hypothesis/done/H16-prior-gap-weighted-loss.md) |
 | [Contrastive decoding recovers grounded content](contrastive-decoding-recovers-grounded-content.md) | Established | [H12](../hypothesis/done/H12-contrastive-decoding-probe.md) |
 | [Synthetic prior-proof pretraining bootstraps reading](synthetic-pretraining-bootstraps-reading.md) | Established | [H13](../hypothesis/done/H13-density-ladder-long-targets.md), [H18](../hypothesis/todo/H18-no-learned-scan.md) |
 | [Spectrogram patch models classify but do not transcribe](spectrogram-patch-models-do-not-transcribe.md) | Established | [H20](../hypothesis/todo/H20-audio-phoneme-resolution.md) |

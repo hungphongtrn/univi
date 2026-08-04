@@ -1,6 +1,6 @@
 # H12 — Mid-page content is present but out-voted by the prior
 
-**Status:** DONE · **Verdict: REFUTED** (2026-07-28) · Cost: 15 min GPU (no training) · Related: [H10](H10-reading-concentrated-at-start.md), [H11](H11-position-decay-is-prior-induced.md), [H13](H13-density-ladder-long-targets.md), [H17](../todo/H17-raise-soft-token-budget.md)
+**Status:** DONE · **Verdict: REFUTED** (2026-07-28) · Cost: 15 min GPU (no training) · Related: [H10](H10-reading-concentrated-at-start.md), [H11](H11-position-decay-is-prior-induced.md), [H13](H13-density-ladder-long-targets.md), [H17](../done/H17-raise-soft-token-budget.md)
 
 ## Claim
 
@@ -53,8 +53,8 @@ Content-word overlap (stopwords stripped) rises from 1.4% → 2.2% (fineweb) and
 - **The refute branch fires.** No α doubles overlap; the information is not sitting in the
   soft-token stream waiting to be un-suppressed at this density. Per the pre-registration this
   **promotes [H13](H13-density-ladder-long-targets.md) and
-  [H17](../todo/H17-raise-soft-token-budget.md)** (bandwidth) over the objective-side
-  [H15](../todo/H15-prior-poisoned-text.md)/[H16](../todo/H16-prior-gap-weighted-loss.md).
+  [H17](../done/H17-raise-soft-token-budget.md)** (bandwidth) over the objective-side
+  [H15](../done/H15-prior-poisoned-text.md)/[H16](../done/H16-prior-gap-weighted-loss.md).
 - **Scope of the claim.** A negative contrastive result bounds what a *decoding-time* intervention
   can recover. It is strong evidence against "present but out-voted", not a proof that the pixels
   carry nothing — a fix that changes *training* could still put content into the stream that is not

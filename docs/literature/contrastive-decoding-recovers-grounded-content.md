@@ -22,11 +22,11 @@ It is a **zero-training diagnostic** for the question we most need answered: is 
 *absent* from the soft-token stream, or *present but suppressed*?
 
 - Present but suppressed ⇒ the constraint is the objective ⇒
-  [H15](../hypothesis/todo/H15-prior-poisoned-text.md),
-  [H16](../hypothesis/todo/H16-prior-gap-weighted-loss.md).
+  [H15](../hypothesis/done/H15-prior-poisoned-text.md),
+  [H16](../hypothesis/done/H16-prior-gap-weighted-loss.md).
 - Absent ⇒ the constraint is bandwidth or scan ⇒
   [H13](../hypothesis/done/H13-density-ladder-long-targets.md),
-  [H17](../hypothesis/todo/H17-raise-soft-token-budget.md).
+  [H17](../hypothesis/done/H17-raise-soft-token-budget.md).
 
 We already generate the aligned/blank logit pair for every ablation, so the marginal cost is
 essentially zero.

@@ -1,6 +1,6 @@
 # Subtracting a blind branch removes the language prior
 
-**Confidence:** Established for VQA · **per-token autoregressive form: our inference** · **Used by:** [H15](../hypothesis/todo/H15-prior-poisoned-text.md), [H16](../hypothesis/todo/H16-prior-gap-weighted-loss.md)
+**Confidence:** Established for VQA · **per-token autoregressive form: our inference** · **Used by:** [H15](../hypothesis/done/H15-prior-poisoned-text.md), [H16](../hypothesis/done/H16-prior-gap-weighted-loss.md)
 
 ## Claim
 
@@ -36,5 +36,5 @@ Our blank-image forward is a natural blind branch, and we already compute it for
 The literature reweights **per question/example**. Univi needs it **per token** of an autoregressive
 answer, because the prior's strength varies *within* a single target
 ([H10](../hypothesis/done/H10-reading-concentrated-at-start.md)). The formulation in
-[H16](../hypothesis/todo/H16-prior-gap-weighted-loss.md) is our adaptation and has no published
+[H16](../hypothesis/done/H16-prior-gap-weighted-loss.md) is our adaptation and has no published
 validation — it must be treated as a hypothesis, including its degeneracy guard.

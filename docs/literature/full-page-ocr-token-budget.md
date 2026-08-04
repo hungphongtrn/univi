@@ -1,6 +1,6 @@
 # Full-page OCR needs ~1k–4k visual tokens, or learned compression
 
-**Confidence:** Established · **Used by:** [H13](../hypothesis/done/H13-density-ladder-long-targets.md), [H17](../hypothesis/todo/H17-raise-soft-token-budget.md), [H20](../hypothesis/todo/H20-audio-phoneme-resolution.md)
+**Confidence:** Established · **Used by:** [H13](../hypothesis/done/H13-density-ladder-long-targets.md), [H17](../hypothesis/done/H17-raise-soft-token-budget.md), [H20](../hypothesis/todo/H20-audio-phoneme-resolution.md)
 
 ## Claim
 

@@ -1,29 +1,143 @@
 # H17 — 280 soft tokens is the page ceiling; 1120 lifts it
 
-**Status:** TODO — **critical path** · **Cost:** ~12 h GPU if killed at leg 1, ~26 h for the full
-sequence (estimated, not measured — see [Cost, staged](#cost-staged)) · **Discriminates (C) fixed
-scan depth vs (A′) fixed absolute capacity** · Promoted by
-[H13](../done/H13-density-ladder-long-targets.md) · Related:
-[H18](H18-no-learned-scan.md), [H20](H20-audio-phoneme-resolution.md),
-[H21](H21-vision-path-not-scale-invariant.md)
+**Status:** DONE (2026-07-30) — **VOID.** All three legs trained and probed; **the discrimination
+failed.** Raising the budget did not relieve a capacity limit and it did not leave reading unchanged
+— it **destroyed** reading, monotonically, and `grad_norm` collapsed monotonically with it
+(0.264 → 0.079 → 0.038). At 1120 the run never reached the no-reading floor. So the optimization
+failed *before* the capacity question could be asked: **(A′) is NOT refuted and (C) is NOT
+confirmed**, and [H18](../todo/H18-no-learned-scan.md) is **not** promoted by this run. Two of this doc's own
+criteria were also found to be mis-specified after the fact (a floored K, a length-confounded Δperm
+gate) — see [Verdict](#verdict-2026-07-30). · **Cost:** ~11 h GPU (3 legs) + ~8 min probes ·
+**Intended to discriminate (C) fixed scan depth vs (A′) fixed absolute capacity — did not** ·
+Promoted by [H13](H13-density-ladder-long-targets.md) · Related:
+[H18](../todo/H18-no-learned-scan.md), [H20](../todo/H20-audio-phoneme-resolution.md),
+[H21](../done/H21-vision-path-not-scale-invariant.md)
+
+## Verdict (2026-07-30)
+
+**VOID — the ladder measured its own training failure, not the soft-token budget.**
+
+Three legs, trained identically except `max_soft_tokens`, each 500 steps at effective batch 64, each
+warm-started from the **same** `data/checkpoints/hybrid-pretrained-randstr-v0/final` (they do **not**
+chain — verified in `configs/h17_leg_{280,560,1120}.yaml`, all three carry the identical `init_from`).
+Probed with `scratchpad/hybrid_4lane_position_decay.py` → `data/eval/h17-K-h17-d3-{280,560,1120}-v0.json`,
+150 rows, `max_length 4096`, `n_truncated_rows: 0` on all three.
+
+| leg | budget | emitted tok | `grad_norm` (end) | Δperm rel | pos-0 gain (pts) | chars 0–10 gain | eval CE vs floor 5.6086 |
+|---|---|---|---|---|---|---|---|
+| baseline | 280 | 256 | **0.264** | +7.36% | **+64.67 ± 3.92** | **+55.68** | 5.531 (−0.079, below) |
+| leg 1 | 560 | 529 | **0.079** | +2.29% | **+68.00 ± 3.82** | **+19.66** | 5.606 (−0.003, below) |
+| leg 2 | 1120 | 1089 | **0.038** | +0.006% | **−1.33 ± 0.94 (ns)** | **−0.12** | 5.643 (**+0.034, NOT below**) |
+
+**Why VOID and not a result.**
+
+1. **Both legs fail this doc's own step-400 hard bar.** It required Δperm on d3 to reach **≥ +3.05%**,
+   "the reading this same init already achieves". Measured **+2.29%** and **+0.006%**.
+   The [sanity gate](#pre-registered-criterion) says a failure at 560 "kills the whole hypothesis
+   cheaply" — and 560 is the leg that recovers the source resolution exactly, where the pretrained
+   embedder is being asked for almost nothing.
+2. **Leg 2 is a training collapse, not a capacity measurement.** `grad_norm` 0.038 is *below* the
+   [H13 collapse signature](H13-density-ladder-long-targets.md) (0.061 at step 110, 0.06–0.09
+   after), `baseline_gain_significant: false`, `K.status: "no_reading_ns"`, and
+   `row_sanity.frac_rows_aligned_gt_blank` 0.353 at `sign_test_p` 0.573 — aligned is *not*
+   distinguishable from blank, and if anything blank wins. Most decisively, **eval CE 5.643 sits
+   ABOVE the 5.609 no-reading floor** (`below_floor: false`): the model never got as far as a
+   non-reader would by predicting the letter marginal. There is nothing here to attribute to 1089
+   soft tokens. Clause 2 of [What no branch licenses](#pre-registered-criterion) — "a null at a
+   budget the model never trained at licenses nothing at all" — is *meant* for the untrained precursor
+   probe, but the reasoning applies with full force to a budget the model was trained at and **failed
+   to converge at**.
+3. **The failure is monotone in the treatment.** `grad_norm` 0.264 → 0.079 → 0.038 and 0–10-char gain
+   +55.7 → +19.7 → −0.1 both track the budget. "More tokens don't help" and "a 280-native init cannot
+   be optimized onto a 1089-token 33×33 positional grid in 500 steps" predict *the same data*. This
+   design cannot separate them, so it cannot answer the question it was built for.
+
+**What this run does NOT license.**
+
+- **Not "(C) fixed scan depth CONFIRMED · (A′) REFUTED."** That cell in the criterion table is
+  explicitly *"conditional on the sanity gate passing and on every leg having trained at its own
+  budget"*. Neither condition holds. (A′) survives untested; (C) survives untested.
+- **Not the promotion of [H18](../todo/H18-no-learned-scan.md) to the main line**, and not the
+  ViT/SigLIP front-end bet, both of which the flat|flat cell would have triggered.
+- **Not a verdict on the budget plumbing.** `max_soft_tokens` threading is sound — the probes read the
+  budget back off each checkpoint, token counts came out at the predicted 256/529/1089, and no row
+  truncated. The plumbing worked; the optimization did not.
+- **Do NOT quote the probe JSON's `verdict.final` field.** At 280 and 560 it reads *"(C) SCAN
+  FAILURE — the start of the page is read at every density…"*. That is
+  `hybrid_4lane_position_decay.py`'s **density-ladder** decision logic (written for H13's five
+  simultaneous rungs) firing on a **single** trained rung, where "at every density" is vacuous. The
+  1120 file self-reports correctly: *"AMBIGUOUS / VOID … (Check the training run actually converged
+  and that the probe's soft-token budget matches it.)"*
+
+**One sub-finding does survive, and it is worth keeping.** At 560, position-0 gain is **+68.0** vs
+280's **+64.7** — CIs overlap, statistically indistinguishable — while `pos0_4_gain` collapses
+**58.3 → 21.3** and the 0–10-char bin collapses **55.7 → 19.7**. The first glyph is read just as well
+at the larger budget; the *continuation* is lost immediately. Whatever the extra tokens cost, they
+cost it in place-keeping and not in first-fixation legibility. This is a hint toward (C) but it is a
+hint from a leg that failed its own bar, not evidence.
+
+### Two of this doc's criteria were mis-specified — found by running them
+
+Both are the same defect class as [H13 §7](H13-density-ladder-long-targets.md)'s floor bug:
+a criterion stated in a statistic that is not comparable across the configurations it is applied to.
+Recorded here because they will recur in any successor.
+
+1. **K is structurally floored at 100 chars, so the "≥ 1.73× per leg" bar is blind to leg 1.**
+   `K.k_chars` is **100 at 280 and 100 at 560** — the baseline window's own right edge — so
+   `k_tokens_from_ratio` is **48.4913 at both**, identical to four decimals, a constant of
+   `100 / 2.0622` chars-per-token rather than a measurement. The bootstrap agrees with itself
+   (`ci_lo = ci_hi = 100.0`) because it is resolving to a floor, not converging on a value. Meanwhile
+   the *actual* reading between those two rungs changed by **2.8×** (0–10-char gain 55.7 → 19.7). **A
+   criterion phrased in K would have reported "flat, K factor 1.00×" for a leg that destroyed most of
+   the reading.** `K_alt_baseline25` is floored too (25 chars at both). The load-bearing readouts are
+   `char_bins` and `pos0_gain`, which are not floored; use those.
+2. **The "≥ +100% Δperm" sanity gate measures target length, not grounding.** It compares against
+   [H07](H07-pretrained-vision-adapter-qwen.md)'s +114.7%, measured on a **~25-char** target
+   lane. These probes run `randstr-d3`: `target_chars_mean` **479**, `target_tokens_mean` **234.3**, of
+   which only the first ~5–12 tokens are ever readable. Aggregate Δperm averages the reading over all
+   234 tokens, so it is diluted by construction — the exact effect
+   [H13 §4](H13-density-ladder-long-targets.md) measured as 14.31% → 0.63% for *identical*
+   reading. The **280 baseline reads unmistakably** (+64.7 pts at position 0, `sign_test_p` 1.7e-34)
+   and still scores only **+7.36%**, i.e. it "fails" a ≥ +100% gate too. [H15](../done/H15-prior-poisoned-text.md)
+   already repaired this for itself by replacing its `Δperm ≥ +30%` bar with a **prefix-matched** Δperm
+   VOID guard over the first 48 answer tokens; H17's gate never got the same repair. **Any successor
+   must state its Δperm bar prefix-matched, or state it in position-resolved gain.**
+
+### What to do instead
+
+The blocking problem is now upstream of the (A′)/(C) question: **`grad_norm` collapse below ~0.1 with
+Δperm ≈ 0 has now voided or degraded four independent runs** — [H13](H13-density-ladder-long-targets.md),
+H16, and both H17 legs — and it scales with the budget. Until a run at 560/1120 can be shown to
+*optimize*, no budget ladder can be interpreted. Concretely, before re-running any leg:
+
+- **A budget leg needs its own recruitment schedule, not H07's.** A from-scratch `Linear(3840→2048)`
+  adapter inherited at 280 is being asked to re-address a 23×23 or 33×33 grid it has never seen;
+  500 steps of cosine at `lr_adapter 3e-4` was evidently not it. Longer warmup on the adapter, more
+  steps, or a budget *curriculum* (280 → 560 → 1120 chained, which these legs deliberately did not do)
+  are the candidates.
+- **`grad_norm` is the live gate, not eval CE.** All three legs' eval CE descended smoothly
+  (5.636 → 5.531, 5.684 → 5.606, 5.718 → 5.644) while reading went to zero. Any successor should abort
+  on `grad_norm < 0.10` sustained, and should probe Δperm at step 200 rather than after 500.
+- **The conditional third arm (`--canvas 1584`) is not licensed** — it fires only "if leg 2 is flat
+  while leg 1 scales", and leg 1 did not scale.
 
 ## Claim
 
 The current 280-soft-token budget physically cannot carry a page of text or phoneme-rate audio.
 Raising it to 1120 should move the readable ceiling proportionally.
 
-**Operational form after [H13](../done/H13-density-ladder-long-targets.md):** the model extracts a
+**Operational form after [H13](H13-density-ladder-long-targets.md):** the model extracts a
 **fixed absolute quantity** of content per page, set by the number of soft tokens. Multiply the
 tokens and the collapse point **K** multiplies with them.
 
 ## This hypothesis' job changed on 2026-07-29
 
 It was written as *"the fix, if the constraint turns out to be (A) bandwidth"*.
-[H13](../done/H13-density-ladder-long-targets.md) reported and made it **the discriminator instead**,
+[H13](H13-density-ladder-long-targets.md) reported and made it **the discriminator instead**,
 which is a stronger role and a different obligation.
 
 H13 measured **K = 48.8 / 48.5 / 48.5 tokens across d2 → d4** — a **16× span of page density** —
-under the [H07](../done/H07-pretrained-vision-adapter-qwen.md) checkpoint, and found position-0
+under the [H07](H07-pretrained-vision-adapter-qwen.md) checkpoint, and found position-0
 reading gain statistically identical at d3 (**+28.7 ± 3.7**) and d4 (**+28.0 ± 3.7**) despite d4
 carrying ~24 chars per inked soft token against d3's ~15. So:
 
@@ -39,7 +153,7 @@ limit but not a scan limit.** That is this experiment. H13 §8 states it directl
 undermined by 'more tokens will not help'; it becomes the precise discriminator between (C) and
 (A′). Its pre-registered 'K must scale ≥3× for 4× the tokens' is exactly the right test."*
 
-Consequently [H18](H18-no-learned-scan.md) **cannot be closed** until this reports, and the criterion
+Consequently [H18](../todo/H18-no-learned-scan.md) **cannot be closed** until this reports, and the criterion
 below now carries an explicit (C)/(A′) verdict in every cell.
 
 ## The numbers
@@ -95,7 +209,7 @@ This doc previously said *"the ladder is rerun at 560 and at 1120"*, i.e. run
 `configs/h17_density_{560,1120}.yaml`, which are `configs/h13_density.yaml` with `max_soft_tokens`
 changed. **Those configs encode the design that killed H13 and must not be launched as written.**
 
-[H13](../done/H13-density-ladder-long-targets.md) §3: rows were balanced 20k/rung but loss is
+[H13](H13-density-ladder-long-targets.md) §3: rows were balanced 20k/rung but loss is
 normalised **per supervised token**, so gradient share follows target length —
 `d1 1.13% · d2 4.11% · d3 15.86% · d4 63.04% · d5 15.86%` — and **85.8% of supervised tokens lay
 beyond the model's ≈48-token scan depth**, where the single loss-minimising behaviour is to emit the
@@ -111,7 +225,7 @@ Four changes, each with its trade-off recorded.
 #### 1. Warm-start from a checkpoint that already reads (`init_from`)
 
 `model.init_from: data/checkpoints/hybrid-pretrained-randstr-v0/final` — the
-[H07](../done/H07-pretrained-vision-adapter-qwen.md) checkpoint, which reads at **Δperm +114.7%** on
+[H07](H07-pretrained-vision-adapter-qwen.md) checkpoint, which reads at **Δperm +114.7%** on
 randstr and which H13 §4 independently re-measured at **+113.84%** on this very ladder's d1 rung.
 The seam is `univi/hybrid/train_pretrained.py` (added for exactly this reason by H13 §8): it loads
 **weights only** — fresh optimizer, fresh LR schedule, so this is warm-*start*, not
@@ -170,7 +284,7 @@ not assumed:
 >
 > - **Step 200 — progress check.** Δperm on d3 must be **> +1.0%** and above the same run's step-100
 >   value (reading is being established, not destroyed — the
->   [H05](../done/H05-isolated-ocr-from-scratch.md) mode).
+>   [H05](H05-isolated-ocr-from-scratch.md) mode).
 > - **Step 400 — hard bar.** Δperm on d3 must reach **≥ +3.05%**, the reading this same init already
 >   achieves at its native 280 budget (measured, see below). A leg that cannot recover, within 400
 >   steps, the reading the architecture demonstrably has at 280 cannot yield a measurable K, and
@@ -349,19 +463,19 @@ arm** of one rung — see the criterion.
 
 Zero-code complement: **re-render at font 28–52** to cut lines-per-patch, and split documents across
 more images (rows currently average 1.43; `max_train_images: 4` allows more). **Re-scoped 2026-07-29
-by [H13](../done/H13-density-ladder-long-targets.md) §6:** its d5 rung (font 40, byte-identical
+by [H13](H13-density-ladder-long-targets.md) §6:** its d5 rung (font 40, byte-identical
 targets to d3) is not a cheap preview of this intervention after all — under the H07 checkpoint d5
 reads **nothing** (pos-0 **+0.0**, Δperm +0.01%) where d3 reads (pos-0 **+28.7**, Δperm +3.05%). But
 H07 never *trained* at font 40, so that is a **scale-generalisation failure, not a bandwidth
 result**, and the "D5 ≫ D3 ⇒ line-demux" branch is **untested, not refuted**. Whether the free lever
-works at all when it is trained is now [H21](H21-vision-path-not-scale-invariant.md)'s question, and
+works at all when it is trained is now [H21](../done/H21-vision-path-not-scale-invariant.md)'s question, and
 H21 is the cheaper experiment (~3 h). See also
 [the cheaper lever](#the-cheaper-lever-already-has-a-partial-result-in-flight), whose "partial result
 in flight" framing is superseded by this paragraph.
 
 ## Pre-registered criterion
 
-**K** is [H13](../done/H13-density-ladder-long-targets.md)'s: the character position beyond which
+**K** is [H13](H13-density-ladder-long-targets.md)'s: the character position beyond which
 positional reading gain drops below 50% of the 0–100-char gain, measured per rung with
 `scratchpad/hybrid_4lane_position_decay.py` / `scratchpad/h13_analyze.py` — **not** aggregate eval CE.
 (H13 §7 is the reason that qualifier is in bold: its `floor.json` computed the no-reading floor over
@@ -382,10 +496,10 @@ report that rather than the K trend.
 
 | leg 1 (280→560) | leg 2 (560→1120) | verdict |
 |---|---|---|
-| K ≥ 1.73× | K ≥ 1.73× | **(A′) fixed absolute capacity CONFIRMED · (C) fixed scan depth REFUTED.** The model extracts a fixed quantity per page and the quantity is set by the token count — leg 2 holds optics fixed, so it is the tokens and not the pixels. [H18](H18-no-learned-scan.md) drops as the primary account. Scale the budget. |
+| K ≥ 1.73× | K ≥ 1.73× | **(A′) fixed absolute capacity CONFIRMED · (C) fixed scan depth REFUTED.** The model extracts a fixed quantity per page and the quantity is set by the token count — leg 2 holds optics fixed, so it is the tokens and not the pixels. [H18](../todo/H18-no-learned-scan.md) drops as the primary account. Scale the budget. |
 | K ≥ 1.73× | flat | **Bounded, not decisive.** The gain came from the 280→560 step and saturates at native resolution. Two sub-readings this design cannot separate — the recovered resolution did it, or tokens help to ~2× then saturate — but the resolution component is bounded at **< 1 pp of single-glyph legibility** (measured below), which makes the second reading much more likely. Reads as *partial* capacity relief with (C) still binding above 560. Does **not** license the ViT bet. Next step is the conditional third arm. |
 | flat | K ≥ 1.73× | Non-monotone; treat as a bug or noise and re-run before interpreting. |
-| flat | flat | **(C) fixed scan depth CONFIRMED · (A′) REFUTED** — *conditional on the sanity gate passing and on every leg having trained at its own budget.* 4.25× the tokens, with the lost resolution restored at the halfway rung and leg 2 optically controlled, moved K by < 3×. [H18](H18-no-learned-scan.md) then becomes the main line and the fix is architectural or curricular, not more tokens. A different pretrained front-end (a real ViT/SigLIP encoder) stays on the table but for a **changed reason**: not "more capacity" but "cross-patch attention supplies the spatial integration `univi/hybrid/vision.py` structurally cannot" — a (C)-motivated bet, and it should be weighed against H18's cheaper interventions (chunked crop curriculum, localization supervision via [H14](H14-masked-region-targets.md)) first. |
+| flat | flat | **(C) fixed scan depth CONFIRMED · (A′) REFUTED** — *conditional on the sanity gate passing and on every leg having trained at its own budget.* 4.25× the tokens, with the lost resolution restored at the halfway rung and leg 2 optically controlled, moved K by < 3×. [H18](../todo/H18-no-learned-scan.md) then becomes the main line and the fix is architectural or curricular, not more tokens. A different pretrained front-end (a real ViT/SigLIP encoder) stays on the table but for a **changed reason**: not "more capacity" but "cross-patch attention supplies the spatial integration `univi/hybrid/vision.py` structurally cannot" — a (C)-motivated bet, and it should be weighed against H18's cheaper interventions (chunked crop curriculum, localization supervision via [H14](H14-masked-region-targets.md)) first. |
 
 **Sanity gate — both rungs, 560 first.** `configs/h17_randstr_560.yaml` then
 `configs/h17_randstr_1120.yaml` must each replicate **≥ +100% Δperm** on the prior-proof randstr lane
@@ -421,20 +535,20 @@ to H13's.
    diagnostic; the genuinely ambiguous zone is a *partial* rise (between 1× and 1.73× per leg), and
    the 1.73× bar exists to stop that zone being read as confirmation. Report a partial rise as
    partial, never as (A′).
-4. **This re-tests nothing about density.** [H13](../done/H13-density-ladder-long-targets.md) settled
+4. **This re-tests nothing about density.** [H13](H13-density-ladder-long-targets.md) settled
    that: K is invariant over a 16× density span. The d2/d4 probe rungs here are a replication check,
    not a new density arm.
 5. Nothing here measures whether *blank* soft tokens are harmful, neutral or a useful positional
    scaffold. The legibility bound below assumes perfect glyph segmentation, which the model does not
    get. And **none of it transfers to audio**: measured, the 1000×160 spectrogram page
    is *upsampled at every budget* (1.97× even at 280), so for audio the entire ladder is grid
-   subdivision with zero optical gain — [H20](H20-audio-phoneme-resolution.md) must derive its own
+   subdivision with zero optical gain — [H20](../todo/H20-audio-phoneme-resolution.md) must derive its own
    criterion rather than reuse this one. (**Independently replicated 2026-07-28** on real materialized
    pages by a different code path — 1.968× on the time axis, 1.800× on the frequency axis, with a flat
    round-trip residual across all three budgets — and H20's criterion has now been re-derived; see its
-   [render-geometry measurement](H20-audio-phoneme-resolution.md#render-geometry-measured-2026-07-28--the-budget-is-the-weaker-of-two-levers).)
+   [render-geometry measurement](../todo/H20-audio-phoneme-resolution.md#render-geometry-measured-2026-07-28--the-budget-is-the-weaker-of-two-levers).)
 6. **Nothing here tests glyph scale.** Font size is a separate lever and H13 §6 shows it fails
-   untrained; that is [H21](H21-vision-path-not-scale-invariant.md), not this.
+   untrained; that is [H21](../done/H21-vision-path-not-scale-invariant.md), not this.
 
 ## Prep status (2026-07-28) — plumbing DONE and verified, nothing run
 
@@ -484,7 +598,7 @@ save/reload at 1120 holds; `tests/test_hybrid.py` green.
 ### Interpretation of the sanity gate, fixed before it runs
 
 "**frozen-vision** randstr at 1120" is ambiguous: the +115% reference
-([H07](../done/H07-pretrained-vision-adapter-qwen.md)) ran the 3-group LR with **no** freeze, and
+([H07](H07-pretrained-vision-adapter-qwen.md)) ran the 3-group LR with **no** freeze, and
 "frozen" in the notes describes the *observed* ≈0 rel-delta of the vision tower, not
 `freeze_vision: true`. The config therefore uses **H07's recipe verbatim so `max_soft_tokens` is the
 only changed variable** — which is what a replication gate requires. If the literal frozen recipe
@@ -494,7 +608,7 @@ were used instead, the ≥ +100% bar would be compared against a recipe that was
 
 The original text read: *"If [H13] shows the collapse is fixed at a token index rather than a
 density, this experiment is predicted to do nothing, and its cost is better spent on
-[H18](H18-no-learned-scan.md)."*
+[H18](../todo/H18-no-learned-scan.md)."*
 
 **That gate is now resolved, and it resolved the other way round from how it was written.** H13 found
 K fixed at token ~48.5 across a 16× density span — which under the old framing would have said
@@ -504,14 +618,14 @@ because chars/token ≈ 2.06 on every rung makes character position and token in
 construction. H13's finding kills only **density-proportional** bandwidth.
 
 So this experiment is **not** predicted to do nothing — it is the only experiment that separates the
-two survivors, and [H18](H18-no-learned-scan.md) is the thing that now waits on *it*, rather than the
-reverse. See [H18's conditional status](H18-no-learned-scan.md#status-conditional-on-h17-2026-07-29).
+two survivors, and [H18](../todo/H18-no-learned-scan.md) is the thing that now waits on *it*, rather than the
+reverse. See [H18's conditional status](../todo/H18-no-learned-scan.md#status-conditional-on-h17-2026-07-29).
 
 ## Fourth correction (2026-07-28): "chars / soft token" divides by the budget, not by INKED tokens
 
 Measured CPU-only by `scratchpad/h13_ink_occupancy.py` →
 `data/eval/h13-ink-occupancy{,-560,-1120}.json`; full method, self-test and caveats in
-[H13's ink-occupancy observation](../done/H13-density-ladder-long-targets.md). No GPU, no
+[H13's ink-occupancy observation](H13-density-ladder-long-targets.md). No GPU, no
 weights (H13 was training; this repo's rule is that training runs SOLO).
 
 Correction 3 above already noted that 280 is the padded budget and a text page really uses 256.
@@ -616,7 +730,7 @@ positional scaffold is unmeasured and needs the GPU.
 The subsection above identified a confound but left it unmeasured, and it is expensive to leave that
 way: the pre-registered *refute* branch promotes a much larger architectural bet, so a null must be
 attributable. Measured CPU-only by `scratchpad/h17_render_resolution.py` →
-`data/eval/h17-render-resolution.json` (no GPU, no weights — [H13](../done/H13-density-ladder-long-targets.md)
+`data/eval/h17-render-resolution.json` (no GPU, no weights — [H13](H13-density-ladder-long-targets.md)
 was training and this repo's rule is that training runs SOLO). Five self-tests gate the numbers,
 including a raster round-trip of the reconstructed model-visible image against `pixel_values` and a
 mutation test that a deliberately shifted glyph-crop origin fails.
@@ -644,7 +758,7 @@ different code path. Two consequences the doc did not previously draw:
 2. **The audio page is upsampled at every budget — 1.97× even at 280.** The 1000×160 render is 1000
    mel frames at 1 px/frame and 80 mel bins already stretched 2×, so there is no lost audio detail to
    recover at *any* rung: for audio the whole ladder is grid subdivision of interpolated pixels.
-   [H20](H20-audio-phoneme-resolution.md) cannot inherit this doc's criterion; raising *its* optical
+   [H20](../todo/H20-audio-phoneme-resolution.md) cannot inherit this doc's criterion; raising *its* optical
    information means a smaller hop / more mels, not a bigger budget.
 
 ### How big is the optical half of the bundle? Bounded, and small
